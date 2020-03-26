@@ -3,23 +3,38 @@
 class Mutant:
     '''The 'Mutant' class stores all information about the organism and the integrated recombinant protein.''' 
     
-    from random import randint
 #     from BioLabSimFun import SequenceRandomizer_Single
-    
+    from random import randint
     # optimal growth temperature, randomly assigned
-    __Opt_Temp = randint(25,40)
+    __Opt_Temp = randint(25,40) # unit: degree celsius
     # random assignment of the production phase, either during growth phase or stationary phase
     __Prod_Phase = 'exponential' if randint(0,1)==0 else 'stationary'
-    
+    # maximum biomass concentration, can be adjusted later, now randomly set
+    __Biomass_max = randint(10,100) # unit: in gCDW/l
+    # resources, e.g. money, for conducting tests
+    __resources = 3
+        
     def __init__(self, Host):
         self.host = Host
         self.promoter = []
+        self.resources = self._Mutant__resources
+
     
     def add_promoter(self, Promoter):
         self.promoter = Promoter
         
     def add_random_promoter(self):
         self.promoter = SequenceRandomizer_Single()
+        
+    def Production_Experiment(self, Cult_Temp):
+        if self._Mutant__resources > 0:
+            r = Gen_GrowthConstant(self, Cult_Temp)
+            GrowthMax = Growth_Maxrate(self, r)
+            myExpression = Expression(self)
+            self._Mutant__resources -= 1
+            self.ExpressionRate = round(GrowthMax * myExpression,2)
+        else:
+            print('Not enough resources available.')
         
 def Cultivation(Mutant, Time):
     '''
@@ -73,7 +88,7 @@ def Expression(Mutant, Predict_File=None):
         
         X_Test = np.array(list_onehot(np.delete(list_integer(Mutant.promoter),Positions_removed, axis=0))).reshape(1,-1)  
         Y_Test_norm = Predictor.predict(X_Test)
-        Expression = Expr_Scaler.inverse_transform(Y_Test_norm)
+        Expression = round(float(Expr_Scaler.inverse_transform(Y_Test_norm)),3)
         
         return Expression
 
@@ -165,3 +180,53 @@ def list_onehot(IntegerList):
             onehot_encoded.append(letter)
         OneHotList.append(onehot_encoded)
     return OneHotList
+
+def Gen_GrowthConstant(Mutant, Cult_Temp, var=5):
+    '''Function that generates the growth rate constant. The growth rate constant depends on the optimal growth temperature and the cultivation temperature. It is sampled from a Gaussian distribution with the mean at the optimal temperature and variance 1.
+    Arguments:
+        Opt_Temp: float, optimum growth temperature, mean of the Gaussian distribution
+        Cult_Temp: float, cultivation temperature for which the growth constant is evaluated
+        var: float, variance for the width of the Gaussian covering the optimal growth temperature
+    Output:
+        growth_rate_const: float, constant for use in logistic growth equation
+    '''
+    
+    import numpy as np
+    from scipy.stats import norm
+    
+    Opt_Temp = Mutant._Mutant__Opt_Temp
+    r_pdf = norm(Opt_Temp, var)
+    growth_rate_const = round(r_pdf.pdf(Cult_Temp),2) / round(r_pdf.pdf(Opt_Temp),var)
+    
+    return growth_rate_const
+    
+
+def Growth_Maxrate(Mutant, growth_rate_const):
+    '''The function calculates the maximum slope during growth.
+        Arguments:
+            Mutant: class, contains maximum biomass concentration as carrying capacity
+            growth_rate_const: float, maximum growth rate constant
+        Output:
+            growth_rate_max: float, maximum growth rate
+    '''
+    capacity = Mutant._Mutant__Biomass_max
+    # Equation for calculating the maximum slope
+    # https://www.tjmahr.com/anatomy-of-a-logistic-growth-curve/
+    GrowthMax = capacity*growth_rate_const/4
+    
+    return GrowthMax
+    
+    
+def Meas_ProductionRate(Mutant,GrowthMax, Expression):
+    '''The function calculates the maximum production rate. We assume growth depending production, hence maximum production happens during maximum growth rate. The maximum growth rate is calculated based on logistic growth with cultivation temperature. Measuring is a resource demanding process.
+    Arguments:
+        Mutant._Mutant__resources: int, available resources for measurement
+        GrowthMax: float, maximal growth rate
+        Expression: float, expression rate
+    Output:
+        ExpressionRate: float, maximum production rate on biomass
+        '''
+    
+    ExpressionRate = GrowthMax * Expression
+    
+    return ExpressionRate
