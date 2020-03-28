@@ -6,58 +6,74 @@ class Mutant:
 #     from BioLabSimFun import SequenceRandomizer_Single
     from random import randint
     # optimal growth temperature, randomly assigned
-    __Opt_Temp = randint(25,40) # unit: degree celsius
+    __OptTemp = randint(25,40) # unit: degree celsius
     # random assignment of the production phase, either during growth phase or stationary phase
-    __Prod_Phase = 'exponential' if randint(0,1)==0 else 'stationary'
-    # maximum biomass concentration, can be adjusted later, now randomly set
-    __Biomass_max = randint(10,100) # unit: in gCDW/l
+    __ProdPhase = 'exponential' if randint(0,1)==0 else 'stationary'
     # resources, e.g. money, for conducting tests
-    __resources = 3
-        
+    __Resources = 3
+    __BiomassMax = None
+    
     def __init__(self, Host):
-        self.host = Host
-        self.promoter = []
-        self.resources = self._Mutant__resources
+        from random import randint
+        self.Host = Host
+        self.Promoter = []
+        self.Resources = self._Mutant__Resources
+        # maximum biomass concentration, can be adjusted later, now randomly set
+        if Host == 'Ecol':
+            self.__BiomassMax = randint(10,100) # unit: in gCDW/l
+        elif Host == 'Pput':
+            self.__BiomassMax = randint(60,150) # unit: in gCDW/l
 
     
     def add_promoter(self, Promoter):
-        self.promoter = Promoter
+        self.Promoter = Promoter
+        self.GC_content = (self.Promoter.count('C') + self.Promoter.count('G')) / len(self.Promoter)
+
+    def __add_random_promoter(self):
+        self.Promoter = SequenceRandomizer_Single()
+        self.GC_content = (self.Promoter.count('C') + self.Promoter.count('G')) / len(self.Promoter)
         
-    def add_random_promoter(self):
-        self.promoter = SequenceRandomizer_Single()
-        
-    def Production_Experiment(self, Cult_Temp):
-        if self._Mutant__resources > 0:
-            r = Gen_GrowthConstant(self, Cult_Temp)
-            GrowthMax = Growth_Maxrate(self, r)
-            myExpression = Expression(self)
-            self._Mutant__resources -= 1
-            self.ExpressionRate = round(GrowthMax * myExpression,2)
+    def measure_promoter_strength(self):
+        if self._Mutant__Resources > 0:
+            self.Promoter_Strength = Expression(self)
+            self._Mutant__Resources -= 1
         else:
             print('Not enough resources available.')
+            self.Promoter_Strength = None
         
-def Cultivation(Mutant, Time):
-    '''
-    The cultivation of the host is managed here. It determines the shape of the growth curve based on the optimal growth temperature. The output is maximum of  active biomass which is used for maximum production rate and the biomass integral which is used for final product titer.
-    Arguments:
-        Mutant: class, contains optimal growth temperature, production phase
-        Time:   float, represents the applied cultivation time
-    Output:
-        Biomass_props: dictionary, subfields
-            Biomass_max: float, represents the maximum of active biomass for which the production rate was maximum
-            Biomass_integral: float, represents the area of the biomass, with which the product titer can be calculated
-    '''
-    from random import random
-    Biomass_max = random(1,10)
-    Biomass_integral = random(50,100)
+    def Production_Experiment(self, CultTemp):
+        if self._Mutant__Resources > 0:
+            r = Gen_GrowthConstant(self, CultTemp)
+            GrowthMax = Growth_Maxrate(self, r)
+            self._Mutant__Resources -= 1
+            self.ExpressionRate = round(GrowthMax * self.Promoter_Strength,2)
+        else:
+            print('Not enough resources available.')
+            self.ExpressionRate = None
+        
+# def Cultivation(Mutant, Time):
+#     '''
+#     The cultivation of the host is managed here. It determines the shape of the growth curve based on the optimal growth temperature. The output is maximum of  active biomass which is used for maximum production rate and the biomass integral which is used for final product titer.
+#     Arguments:
+#         Mutant: class, contains optimal growth temperature, production phase
+#         Time:   float, represents the applied cultivation time
+#     Output:
+#         Biomass_props: dictionary, subfields
+#             Biomass_max: float, represents the maximum of active biomass for which the production rate was maximum
+#             Biomass_integral: float, represents the area of the biomass, with which the product titer can be calculated
+#     '''
+#     from random import random
+#     Biomass_max = random(1,10)
+#     Biomass_integral = random(50,100)
     
-    Biomass_props = {'Biomass_max': Biomass_max, 'Biomass_integral': Biomass_integral}
-    return Biomass_props
+#     Biomass_props = {'Biomass_max': Biomass_max, 'Biomass_integral': Biomass_integral}
+#     return Biomass_props
 
-def Expression(Mutant, Predict_File=None):
+def Expression(Mutant, Predict_File=None, Similarity_Thresh=.4):
     '''Expression of the recombinant protein.
         Arguments:
             Mutant: class, contains optimal growth temperature, production phase
+            Predict_File: string, address of regression file
         Output: 
             Expression: float, expression rate
     '''
@@ -66,31 +82,34 @@ def Expression(Mutant, Predict_File=None):
     import joblib
     import pickle
     
-    if Predict_File!=None:
-        Regressor_File = Predict_File
+    if Sequence_ReferenceDistance(Mutant.Promoter) > Similarity_Thresh:
+        Expression = 0
     else:
-        Data_Folder = 'ExpressionPredictor'
-        if Mutant.host == 'Ecol':
-            Regressor_File = os.path.join(Data_Folder,'Ecol-Promoter-predictor.pkl')
-            Add_Params = os.path.join(Data_Folder,'Ecol-Promoter-AddParams.pkl')
-            Scaler_DictName = 'Ecol Promoter Activity_Scaler'
-        elif Mutant.host == 'Ptai':
-            Regressor_File = os.path.join(Data_Folder,'Ptai-Promoter-predictor.pkl')
-            Add_Params = os.path.join(Data_Folder,'Ptai-Promoter-AddParams.pkl')
-            Scaler_DictName = 'Ptai Promoter Activity_Scaler'
-        else:
-            print('Non-recognized host name. Rename host to either "Ecol" or "Ptai."')
-        
+        if Predict_File!=None:
+            Regressor_File = Predict_File
+        else:    
+            Data_Folder = 'ExpressionPredictor'
+            if Mutant.Host == 'Ecol':
+                Regressor_File = os.path.join(Data_Folder,'Ecol-Promoter-predictor.pkl')
+                Add_Params = os.path.join(Data_Folder,'Ecol-Promoter-AddParams.pkl')
+                Scaler_DictName = 'Ecol Promoter Activity_Scaler'
+            elif Mutant.Host == 'Pput':
+                Regressor_File = os.path.join(Data_Folder,'Ptai-Promoter-predictor.pkl')
+                Add_Params = os.path.join(Data_Folder,'Ptai-Promoter-AddParams.pkl')
+                Scaler_DictName = 'Ptai Promoter Activity_Scaler'
+            else:
+                print('Non-recognized host name. Rename host to either "Ecol" or "Pput."')
+
         Predictor = joblib.load(Regressor_File)
         Params = pickle.load(open(Add_Params, 'rb'))
         Positions_removed = Params['Positions_removed']
         Expr_Scaler = Params[Scaler_DictName]
-        
-        X_Test = np.array(list_onehot(np.delete(list_integer(Mutant.promoter),Positions_removed, axis=0))).reshape(1,-1)  
+
+        X_Test = np.array(list_onehot(np.delete(list_integer(Mutant.Promoter),Positions_removed, axis=0))).reshape(1,-1)  
         Y_Test_norm = Predictor.predict(X_Test)
         Expression = round(float(Expr_Scaler.inverse_transform(Y_Test_norm)),3)
-        
-        return Expression
+
+    return Expression
 
     
 def SequenceRandomizer_Parallel(RefSeq, Base_SequencePosition, n=1000):
@@ -181,7 +200,7 @@ def list_onehot(IntegerList):
         OneHotList.append(onehot_encoded)
     return OneHotList
 
-def Gen_GrowthConstant(Mutant, Cult_Temp, var=5):
+def Gen_GrowthConstant(Mutant, CultTemp, var=5):
     '''Function that generates the growth rate constant. The growth rate constant depends on the optimal growth temperature and the cultivation temperature. It is sampled from a Gaussian distribution with the mean at the optimal temperature and variance 1.
     Arguments:
         Opt_Temp: float, optimum growth temperature, mean of the Gaussian distribution
@@ -194,9 +213,9 @@ def Gen_GrowthConstant(Mutant, Cult_Temp, var=5):
     import numpy as np
     from scipy.stats import norm
     
-    Opt_Temp = Mutant._Mutant__Opt_Temp
-    r_pdf = norm(Opt_Temp, var)
-    growth_rate_const = round(r_pdf.pdf(Cult_Temp),2) / round(r_pdf.pdf(Opt_Temp),var)
+    OptTemp = Mutant._Mutant__OptTemp
+    r_pdf = norm(OptTemp, var)
+    growth_rate_const = round(r_pdf.pdf(CultTemp),2) / round(r_pdf.pdf(OptTemp),var)
     
     return growth_rate_const
     
@@ -209,7 +228,7 @@ def Growth_Maxrate(Mutant, growth_rate_const):
         Output:
             growth_rate_max: float, maximum growth rate
     '''
-    capacity = Mutant._Mutant__Biomass_max
+    capacity = Mutant._Mutant__BiomassMax
     # Equation for calculating the maximum slope
     # https://www.tjmahr.com/anatomy-of-a-logistic-growth-curve/
     GrowthMax = capacity*growth_rate_const/4
@@ -217,16 +236,37 @@ def Growth_Maxrate(Mutant, growth_rate_const):
     return GrowthMax
     
     
-def Meas_ProductionRate(Mutant,GrowthMax, Expression):
-    '''The function calculates the maximum production rate. We assume growth depending production, hence maximum production happens during maximum growth rate. The maximum growth rate is calculated based on logistic growth with cultivation temperature. Measuring is a resource demanding process.
-    Arguments:
-        Mutant._Mutant__resources: int, available resources for measurement
-        GrowthMax: float, maximal growth rate
-        Expression: float, expression rate
+# def Meas_ProductionRate(Mutant,GrowthMax, Expression):
+#     '''The function calculates the maximum production rate. We assume growth depending production, hence maximum production happens during maximum growth rate. The maximum growth rate is calculated based on logistic growth with cultivation temperature. Measuring is a resource demanding process.
+#     Arguments:
+#         Mutant._Mutant__resources: int, available resources for measurement
+#         GrowthMax: float, maximal growth rate
+#         Expression: float, expression rate
+#     Output:
+#         ExpressionRate: float, maximum production rate on biomass
+#         '''
+    
+#     ExpressionRate = GrowthMax * Expression
+    
+#     return ExpressionRate
+
+##################################################################
+##################################################################
+def Sequence_ReferenceDistance(SeqObj, RefSeq=None):
+    '''Returns the genetic sequence distance to a reference sequence.
+    Input:
+           SeqDF: list, the sequence in conventional letter format
     Output:
-        ExpressionRate: float, maximum production rate on biomass
-        '''
+           SequenceDistance: float, genetic distances as determined from the sum of difference in bases divided by total base number, i.e. max difference is 1, identical sequence =0
+    '''
+    import numpy as np
+
+    if RefSeq != None:
+        RefSeq = SeqObj[0]
+    else:
+        RefSeq = 'GCCCATTGACAAGGCTCTCGCGGCCAGGTATAATTGCACG'
+        
+    Num_Samp = len(SeqObj)
+    SequenceDistance = np.sum([int(seq1!=seq2) for seq1,seq2 in zip(RefSeq, SeqObj)], dtype='float')/len(SeqObj)
     
-    ExpressionRate = GrowthMax * Expression
-    
-    return ExpressionRate
+    return SequenceDistance
