@@ -5,8 +5,6 @@ class Mutant:
     
 #     from BioLabSimFun import SequenceRandomizer_Single
     from random import randint
-    # optimal growth temperature, randomly assigned
-    __OptTemp = randint(25,40) # unit: degree celsius
     # random assignment of the production phase, either during growth phase or stationary phase
     __ProdPhase = 'exponential' if randint(0,1)==0 else 'stationary'
     # resources, e.g. money, for conducting tests
@@ -18,6 +16,8 @@ class Mutant:
         self.Host = Host
         self.Promoter = []
         self.Resources = self._Mutant__Resources
+        # optimal growth temperature, randomly assigned
+        self.__OptTemp = randint(25,40) # unit: degree celsius
         # maximum biomass concentration, can be adjusted later, now randomly set
         if Host == 'Ecol':
             self.__BiomassMax = randint(10,100) # unit: in gCDW/l
