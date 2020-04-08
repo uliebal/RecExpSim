@@ -50,6 +50,24 @@ class Mutant:
         else:
             print('Not enough resources available.')
             self.ExpressionRate = None
+            
+            
+    def logistic_growth_equation(self, CultTemp, duration, n): #n: Anzahl der Proben
+        import numpy as np
+        
+        if self._Mutant__Resources > 0:
+            
+            t = np.linspace(0, duration, n) # oder besser n+1, damit auch wirklich jede Stunde eine Probe gezogen wird inklusive t=0?
+            capacity = self._Mutant__BiomassMax
+            r = Gen_GrowthConstant(self, CultTemp)
+            P0 = 0.1
+            self._Mutant__Resources -= 1
+            result = capacity / (1 + (capacity-P0) / P0 * np.exp(-r * t))
+            return result
+        else:
+            print('Not enough resources available.')
+            return
+        
         
 # def Cultivation(Mutant, Time):
 #     '''
