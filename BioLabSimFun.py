@@ -13,57 +13,62 @@ class Mutant:
     
     def __init__(self, Host):
         from random import randint
-        self.Host = Host
-        self.Promoter = []
-        self.Resources = self._Mutant__Resources
+        self.var_Host = Host
+        self.var_Promoter = []
+        self.var_Resources = self._Mutant__Resources
         # optimal growth temperature, randomly assigned
         self.__OptTemp = randint(25,40) # unit: degree celsius
         # maximum biomass concentration, can be adjusted later, now randomly set
-        if Host == 'Ecol':
+        if self.var_Host == 'Ecol':
             self.__BiomassMax = randint(10,100) # unit: in gCDW/l
-        elif Host == 'Pput':
+        elif self.var_Host == 'Pput':
             self.__BiomassMax = randint(60,150) # unit: in gCDW/l
-
     
-    def add_promoter(self, Promoter):
-        self.Promoter = Promoter
-        self.GC_content = (self.Promoter.count('C') + self.Promoter.count('G')) / len(self.Promoter)
+    def show_BiotechSetting(self):
+        '''Report of all properties defined in the biotech experiment.'''
+        MyVars = [i for i in list(vars(self).keys()) if 'var_' in i]
+        for i in range(len(MyVars)):
+            print('{}: {}'.format(MyVars[i].replace('var_',''), getattr(self, MyVars[i])))        
+    
+    def add_Promoter(self, Promoter):
+        self.var_Promoter = Promoter
+        self.GC_content = (self.var_Promoter.count('C') + self.var_Promoter.count('G')) / len(self.var_Promoter)
 
-    def __add_random_promoter(self):
-        self.Promoter = SequenceRandomizer_Single()
-        self.GC_content = (self.Promoter.count('C') + self.Promoter.count('G')) / len(self.Promoter)
+    def __add_RandomPromoter(self):
+        self.var_Promoter = SequenceRandomizer_Single()
+        self.GC_content = (self.var_Promoter.count('C') + self.var_Promoter.count('G')) / len(self.var_Promoter)
         
-    def measure_promoter_strength(self):
+    def Make_MeasurePromoterStrength(self):
         if self._Mutant__Resources > 0:
-            self.Promoter_Strength = Expression(self)
+            self.var_PromoterStrength = Help_Expression(self)
             self._Mutant__Resources -= 1
         else:
             print('Not enough resources available.')
-            self.Promoter_Strength = None
+            self.var_PromoterStrength = None
         
-    def Production_Experiment(self, CultTemp):
+    def Make_ProductionExperiment(self, CultTemp):
         if self._Mutant__Resources > 0:
-            r = Gen_GrowthConstant(self, CultTemp)
+            r = Help_GrowthConstant(self, CultTemp)
             GrowthMax = Growth_Maxrate(self, r)
             self._Mutant__Resources -= 1
-            self.ExpressionRate = round(GrowthMax * self.Promoter_Strength,2)
+            self.ExpressionRate = round(GrowthMax * self.var_PromoterStrength,2)
         else:
             print('Not enough resources available.')
             self.ExpressionRate = None
             
             
-    def logistic_growth_equation(self, CultTemp, duration, n): #n: Anzahl der Proben
+    def Make_TempGrowthExp(self, CultTemp, duration, n): #n: Anzahl der Proben
         import numpy as np
         
         if self._Mutant__Resources > 0:
             
             t = np.linspace(0, duration, n) # oder besser n+1, damit auch wirklich jede Stunde eine Probe gezogen wird inklusive t=0?
             capacity = self._Mutant__BiomassMax
-            r = Gen_GrowthConstant(self, CultTemp)
+            r = Help_GrowthConstant(self, CultTemp)
             P0 = 0.1
             self._Mutant__Resources -= 1
-            result = capacity / (1 + (capacity-P0) / P0 * np.exp(-r * t))
-            return result
+            self.exp_TempGrowthExp = capacity / (1 + (capacity-P0) / P0 * np.exp(-r * t))
+#             return result
         else:
             print('Not enough resources available.')
             return
@@ -87,7 +92,7 @@ class Mutant:
 #     Biomass_props = {'Biomass_max': Biomass_max, 'Biomass_integral': Biomass_integral}
 #     return Biomass_props
 
-def Expression(Mutant, Predict_File=None, Similarity_Thresh=.4):
+def Help_Expression(Mutant, Predict_File=None, Similarity_Thresh=.4):
     '''Expression of the recombinant protein.
         Arguments:
             Mutant: class, contains optimal growth temperature, production phase
@@ -100,18 +105,18 @@ def Expression(Mutant, Predict_File=None, Similarity_Thresh=.4):
     import joblib
     import pickle
     
-    if Sequence_ReferenceDistance(Mutant.Promoter) > Similarity_Thresh:
+    if Sequence_ReferenceDistance(Mutant.var_Promoter) > Similarity_Thresh:
         Expression = 0
     else:
         if Predict_File!=None:
             Regressor_File = Predict_File
         else:    
             Data_Folder = 'ExpressionPredictor'
-            if Mutant.Host == 'Ecol':
+            if Mutant.var_Host == 'Ecol':
                 Regressor_File = os.path.join(Data_Folder,'Ecol-Promoter-predictor.pkl')
                 Add_Params = os.path.join(Data_Folder,'Ecol-Promoter-AddParams.pkl')
                 Scaler_DictName = 'Ecol Promoter Activity_Scaler'
-            elif Mutant.Host == 'Pput':
+            elif Mutant.var_Host == 'Pput':
                 Regressor_File = os.path.join(Data_Folder,'Ptai-Promoter-predictor.pkl')
                 Add_Params = os.path.join(Data_Folder,'Ptai-Promoter-AddParams.pkl')
                 Scaler_DictName = 'Ptai Promoter Activity_Scaler'
@@ -123,7 +128,7 @@ def Expression(Mutant, Predict_File=None, Similarity_Thresh=.4):
         Positions_removed = Params['Positions_removed']
         Expr_Scaler = Params[Scaler_DictName]
 
-        X_Test = np.array(list_onehot(np.delete(list_integer(Mutant.Promoter),Positions_removed, axis=0))).reshape(1,-1)  
+        X_Test = np.array(list_onehot(np.delete(list_integer(Mutant.var_Promoter),Positions_removed, axis=0))).reshape(1,-1)  
         Y_Test_norm = Predictor.predict(X_Test)
         Expression = round(float(Expr_Scaler.inverse_transform(Y_Test_norm)),3)
 
@@ -218,7 +223,7 @@ def list_onehot(IntegerList):
         OneHotList.append(onehot_encoded)
     return OneHotList
 
-def Gen_GrowthConstant(Mutant, CultTemp, var=5):
+def Help_GrowthConstant(Mutant, CultTemp, var=5):
     '''Function that generates the growth rate constant. The growth rate constant depends on the optimal growth temperature and the cultivation temperature. It is sampled from a Gaussian distribution with the mean at the optimal temperature and variance 1.
     Arguments:
         Opt_Temp: float, optimum growth temperature, mean of the Gaussian distribution
