@@ -14,7 +14,7 @@ class Mutant:
     def __init__(self, Host):
         from random import randint
         self.var_Host = Host
-        self.var_Promoter = []
+#         self.var_Promoter = []
         self.var_Resources = self._Mutant__Resources
         # optimal growth temperature, randomly assigned
         self.__OptTemp = randint(25,40) # unit: degree celsius
@@ -26,19 +26,24 @@ class Mutant:
     
     def show_BiotechSetting(self):
         '''Report of all properties defined in the biotech experiment.'''
+        self.var_Resources = self._Mutant__Resources
         MyVars = [i for i in list(vars(self).keys()) if 'var_' in i]
         for i in range(len(MyVars)):
             print('{}: {}'.format(MyVars[i].replace('var_',''), getattr(self, MyVars[i])))        
     
+    
     def add_Promoter(self, Promoter):
         self.var_Promoter = Promoter
-        self.GC_content = (self.var_Promoter.count('C') + self.var_Promoter.count('G')) / len(self.var_Promoter)
+        self.var_GC_content = (self.var_Promoter.count('C') + self.var_Promoter.count('G')) / len(self.var_Promoter)
 
     def __add_RandomPromoter(self):
         self.var_Promoter = SequenceRandomizer_Single()
-        self.GC_content = (self.var_Promoter.count('C') + self.var_Promoter.count('G')) / len(self.var_Promoter)
+        self.var_GCcontent = (self.var_Promoter.count('C') + self.var_Promoter.count('G')) / len(self.var_Promoter)
         
     def Make_MeasurePromoterStrength(self):
+        if not hasattr(self, 'var_Promoter'):
+            print('Error, not promoter added. Add first a promoter "add_promoter(<Sequence>)".')
+            return
         if self._Mutant__Resources > 0:
             self.var_PromoterStrength = Help_Expression(self)
             self._Mutant__Resources -= 1
@@ -47,31 +52,46 @@ class Mutant:
             self.var_PromoterStrength = None
         
     def Make_ProductionExperiment(self, CultTemp):
+        if not hasattr(self, 'var_PromoterStrength'):
+            print('Error, no promoter available. Add first a promoter and measure promoter strength "Make_MeasurePromoterStrength".')
+            return
+        
         if self._Mutant__Resources > 0:
             r = Help_GrowthConstant(self, CultTemp)
             GrowthMax = Growth_Maxrate(self, r)
             self._Mutant__Resources -= 1
-            self.ExpressionRate = round(GrowthMax * self.var_PromoterStrength,2)
+            self.var_ExpressionRate = round(GrowthMax * self.var_PromoterStrength,2)
         else:
             print('Not enough resources available.')
-            self.ExpressionRate = None
+            self.var_ExpressionRate = None
             
             
-    def Make_TempGrowthExp(self, CultTemp, duration, n): #n: Anzahl der Proben
+    def Make_TempGrowthExp(self, CultTemp, n, draw_plot=False): #n: Anzahl der Proben
+        '''Experiment to determine optimal growth rate. The experiment runs until the maximum biomass is reached.'''
         import numpy as np
+        import matplotlib.pyplot as plt
+#         %matplotlib inline
         
+    
         if self._Mutant__Resources > 0:
             
-            t = np.linspace(0, duration, n) # oder besser n+1, damit auch wirklich jede Stunde eine Probe gezogen wird inklusive t=0?
             capacity = self._Mutant__BiomassMax
             r = Help_GrowthConstant(self, CultTemp)
             P0 = 0.1
+            # the time of the half maximum population (inflection point) is calculated according to here:
+            # https://opentextbc.ca/calculusv2openstax/chapter/the-logistic-equation/
+            d_mult = 2 # we multiply the inflection point with 'd_mult' to increase cultivation time
+            duration = d_mult * 1/r * np.log((capacity - P0)/P0)
+            t = np.linspace(0, duration, n) # oder besser n+1, damit auch wirklich jede Stunde eine Probe gezogen wird inklusive t=0?
             self._Mutant__Resources -= 1
-            self.exp_TempGrowthExp = capacity / (1 + (capacity-P0) / P0 * np.exp(-r * t))
+            result = capacity / (1 + (capacity-P0) / P0 * np.exp(-r * t))
 #             return result
         else:
             print('Not enough resources available.')
             return
+        
+        if draw_plot:
+            plt.scatter(t, result)
         
         
 # def Cultivation(Mutant, Time):
