@@ -70,6 +70,9 @@ class Mutant:
         '''Experiment to determine optimal growth rate. The experiment runs until the maximum biomass is reached.'''
         import numpy as np
         import matplotlib.pyplot as plt
+        import pylab as pl
+        from IPython import display
+#        import time
 #         %matplotlib inline
         
     
@@ -82,16 +85,28 @@ class Mutant:
             # https://opentextbc.ca/calculusv2openstax/chapter/the-logistic-equation/
             d_mult = 2 # we multiply the inflection point with 'd_mult' to increase cultivation time
             duration = d_mult * 1/r * np.log((capacity - P0)/P0)
-            t = np.linspace(0, duration, n) # oder besser n+1, damit auch wirklich jede Stunde eine Probe gezogen wird inklusive t=0?
+            t = np.linspace(0, duration, n)
+            
             self._Mutant__Resources -= 1
-            result = capacity / (1 + (capacity-P0) / P0 * np.exp(-r * t))
+            exp_TempGrowthExp = capacity / (1 + (capacity-P0) / P0 * np.exp(-r * t))
 #             return result
         else:
             print('Not enough resources available.')
             return
         
         if draw_plot:
-            plt.scatter(t, result)
+            for i in range (len(t)):
+                pl.clf()
+                pl.figure(figsize = (5,3), dpi = 120)
+                pl.xlim(0, np.max(t))
+                pl.ylim(0, 1.1*np.max(exp_TempGrowthExp))
+                pl.xlabel("time [h]")
+                pl.ylabel("biomass concentration [g/L]")
+                pl.plot(t[0:i], exp_TempGrowthExp[0:i], linestyle = '--') 
+                display.display(pl.gcf())
+                display.clear_output(wait=True)
+                pl.pause(1)
+               # time.sleep(1.0)  
         
         
 # def Cultivation(Mutant, Time):
