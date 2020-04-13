@@ -98,7 +98,7 @@ class Mutant:
             for i in range (len(t)):
                 pl.clf()
                 pl.figure(figsize = (5,3), dpi = 120)
-                pl.xlim(0, np.max(t))
+                pl.xlim(0, t[i])
                 pl.ylim(0, 1.1*np.max(exp_TempGrowthExp))
                 pl.xlabel("time [h]")
                 pl.ylabel("biomass concentration [g/L]")
