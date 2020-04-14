@@ -95,6 +95,7 @@ class Mutant:
             return
         
         if draw_plot:
+            WaitingTime = 20
             for i in range (len(t)):
                 pl.clf()
                 pl.figure(figsize = (5,3), dpi = 120)
@@ -106,7 +107,7 @@ class Mutant:
                 display.display(pl.gcf())
                 display.clear_output(wait=True)
                 #pl.pause(1)
-                time.sleep(20/n) # total waiting time independent of n  
+                time.sleep(WaitingTime/n) # total waiting time independent of n  
         
         
 # def Cultivation(Mutant, Time):
