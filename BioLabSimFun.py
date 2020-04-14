@@ -66,13 +66,13 @@ class Mutant:
             self.var_ExpressionRate = None
             
             
-    def Make_TempGrowthExp(self, CultTemp, n, draw_plot=False): #n: Anzahl der Proben
+    def Make_TempGrowthExp(self, CultTemp, n, draw_plot=False): #n: number of samples
         '''Experiment to determine optimal growth rate. The experiment runs until the maximum biomass is reached.'''
         import numpy as np
         import matplotlib.pyplot as plt
         import pylab as pl
         from IPython import display
-#        import time
+        import time
 #         %matplotlib inline
         
     
@@ -105,8 +105,8 @@ class Mutant:
                 pl.plot(t[0:i], exp_TempGrowthExp[0:i], linestyle = '--') 
                 display.display(pl.gcf())
                 display.clear_output(wait=True)
-                pl.pause(1)
-               # time.sleep(1.0)  
+                #pl.pause(1)
+                time.sleep(20/n) # total waiting time independent of n  
         
         
 # def Cultivation(Mutant, Time):
