@@ -95,7 +95,7 @@ class Mutant:
             return
         
         if draw_plot:
-            WaitingTime = 20
+            WaitingTime = 30/r
             for i in range (len(t)):
                 pl.clf()
                 pl.figure(figsize = (5,3), dpi = 120)
