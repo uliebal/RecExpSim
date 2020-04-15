@@ -109,6 +109,8 @@ class Mutant:
                 #pl.pause(1)
                 time.sleep(WaitingTime/n) # total waiting time independent of n  
         
+        Help_ExportToExcel(self, 'Strain_characterization', 'different Temp',
+                  t, exp_TempGrowthExp, 'time', f'biomass {CultTemp}') 
         
 # def Cultivation(Mutant, Time):
 #     '''
@@ -329,3 +331,33 @@ def Sequence_ReferenceDistance(SeqObj, RefSeq=None):
     SequenceDistance = np.sum([int(seq1!=seq2) for seq1,seq2 in zip(RefSeq, SeqObj)], dtype='float')/len(SeqObj)
     
     return SequenceDistance
+
+
+def Help_ExportToExcel(Mutant, FileName, sheet_name, x_values, y_values,
+                       x_name, y_name):
+    '''Function that exports data from an experiment to an Excel file
+    Input:
+            FileName: string, name of the file
+            sheet_name: string, name of the excel sheet
+            x_values: array, x-Werte
+            y_values: array, y-Werte
+            x_name: string, name of the column with the x-values
+            y_name: string, name of the column with the y-values
+    Output:
+            generated Excel file
+    '''
+    from pathlib import Path
+    import pandas as pd
+    
+    fname = Path(FileName + '.xlsx')
+    if fname.is_file(): # Does the file already exists?
+        df = pd.read_excel(FileName + '.xlsx', index_col = 0) # read in and add data
+        df[y_name] = y_values
+    else:
+        df = pd.DataFrame({x_name: x_values,
+                            y_name: y_values},
+                                columns = [x_name, y_name]) # otherwise create a new DataFrame
+
+    excel_writer = pd.ExcelWriter(FileName + '.xlsx') # Export DataFrame to Excel
+    df.to_excel(excel_writer, sheet_name=sheet_name)
+    excel_writer.close()
