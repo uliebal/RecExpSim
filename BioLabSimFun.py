@@ -66,30 +66,59 @@ class Mutant:
             self.var_ExpressionRate = None
             
             
-    def Make_TempGrowthExp(self, CultTemp, n, draw_plot=False): #n: number of samples
+    def Make_TempGrowthExp(self, CultTemps, draw_plot=False):
         '''Experiment to determine optimal growth rate. The experiment runs until the maximum biomass is reached.'''
         import numpy as np
+        import pandas as pd
         import matplotlib.pyplot as plt
         import pylab as pl
         from IPython import display
-        import time
+        import time 
+#        from IPython import embed
 #         %matplotlib inline
         
     
         if self._Mutant__Resources > 0:
             
             capacity = self._Mutant__BiomassMax
-            r = Help_GrowthConstant(self, CultTemp)
-            P0 = 0.1
             # the time of the half maximum population (inflection point) is calculated according to here:
             # https://opentextbc.ca/calculusv2openstax/chapter/the-logistic-equation/
             d_mult = 2 # we multiply the inflection point with 'd_mult' to increase cultivation time
-            duration = d_mult * 1/r * np.log((capacity - P0)/P0)
-            t = np.linspace(0, duration, n)
+            P0 = 0.1
             
-            self._Mutant__Resources -= 1
-            exp_TempGrowthExp = capacity / (1 + (capacity-P0) / P0 * np.exp(-r * t))
-#             return result
+            # determine time vector with maximum length:
+            OptTemp = self._Mutant__OptTemp
+            Temp_tmax = CultTemps[np.argmax(np.absolute(CultTemps-OptTemp))]
+            r_tmax = Help_GrowthConstant(self, Temp_tmax)
+            duration_tmax = d_mult * 1/r_tmax * np.log((capacity - P0)/P0)
+            t_max = np.arange(duration_tmax)
+            
+            # create an empty DataFrame with t_max as first column
+            col = []
+            col.append("time")
+            for i in range (len(CultTemps)):
+                col.append(f'biomass {CultTemps[i]}')
+
+            df = pd.DataFrame(np.empty(shape=(len(t_max), len(CultTemps)+1), dtype=float), columns = col)
+            df[:len(t_max)] = np.nan 
+            new_df = pd.DataFrame({'time': t_max})
+            df.update(new_df)
+            
+            #computing of biomass data and updating of DataFrame
+            for i in range (len(CultTemps)):
+                r = Help_GrowthConstant(self, CultTemps[i])
+                duration = d_mult * 1/r * np.log((capacity - P0)/P0)
+                t = np.arange(duration)
+                exp_TempGrowthExp = capacity / (1 + (capacity-P0) / P0 * np.exp(-r * t))
+                new_df = pd.DataFrame({f'biomass {CultTemps[i]}': exp_TempGrowthExp})
+                df.update(new_df)
+            
+                self._Mutant__Resources -= 1
+            
+            excel_writer = pd.ExcelWriter('Strain_characerization.xlsx') # Export DataFrame to Excel
+            df.to_excel(excel_writer, sheet_name='different temp')
+            excel_writer.close()
+            
         else:
             print('Not enough resources available.')
             return
@@ -109,8 +138,8 @@ class Mutant:
                 #pl.pause(1)
                 time.sleep(WaitingTime/n) # total waiting time independent of n  
         
-        Help_ExportToExcel(self, 'Strain_characterization', 'different Temp',
-                  t, exp_TempGrowthExp, 'time', f'biomass {CultTemp}') 
+        #Help_ExportToExcel(self, 'Strain_characterization', 'different Temp',
+                  #t, exp_TempGrowthExp, 'time', f'biomass {CultTemp}') 
         
 # def Cultivation(Mutant, Time):
 #     '''
