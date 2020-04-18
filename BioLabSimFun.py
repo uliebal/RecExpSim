@@ -141,6 +141,38 @@ class Mutant:
         #Help_ExportToExcel(self, 'Strain_characterization', 'different Temp',
                   #t, exp_TempGrowthExp, 'time', f'biomass {CultTemp}') 
         
+    
+    def Make_Cloning(self, Primer, Tm):
+        '''Experiment to clone selected promoter. The efficiency of the experiment is displayed.'''
+        import numpy as np
+        import random
+        
+        if self._Mutant__Resources > 0:
+            
+            NaConc = 5e-02 # 50 mM laut: https://academic.oup.com/nar/article/18/21/6409/2388653
+            Primer_Length = len(Primer)
+            Primer_nC = Primer.count('C')
+            Primer_nG = Primer.count('G')
+            Primer_GC_content = (Primer_nC + Primer_nG) / Primer_Length
+            
+            Primer_Tm = 81.5 + 16.6*np.log10(NaConc) + 0.41*Primer_GC_content - 675/Primer_Length # Quelle: https://core.ac.uk/download/pdf/35391868.pdf#page=190
+            # Product_Tm = 0.41*(Primer_GC_content) + 16.6*np.log10(NaConc) - 675/Product_Length
+            # Ta_Opt = 0.3*Primer_Tm + 0.7*Product_Tm - 14.9
+            # Quelle Product_Tm und Ta: https://academic.oup.com/nar/article/18/21/6409/2388653
+            # Product_Length wäre die Länge des Promoters (40)? zu klein -> negative Zahl kommt raus für Product_Tm
+            
+            error = random.uniform(-1,1)*0.1*Primer_Tm
+            Primer_Tm_err = error + Primer_Tm
+            
+            exp_Cloning = (1 - np.absolute(Primer_Tm_err - Tm)/Primer_Tm_err) * 100
+            print(f'The efficiency of cloning is {exp_Cloning.round(2)} %.')
+        
+        else:
+            print('Not enough resources available.')
+            
+            
+   
+        
 # def Cultivation(Mutant, Time):
 #     '''
 #     The cultivation of the host is managed here. It determines the shape of the growth curve based on the optimal growth temperature. The output is maximum of  active biomass which is used for maximum production rate and the biomass integral which is used for final product titer.
