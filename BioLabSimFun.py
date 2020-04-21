@@ -73,7 +73,8 @@ class Mutant:
         import matplotlib.pyplot as plt
         import pylab as pl
         from IPython import display
-        import time 
+        import time
+        import random
 #        from IPython import embed
 #         %matplotlib inline
         
@@ -106,10 +107,25 @@ class Mutant:
             
             #computing of biomass data and updating of DataFrame
             for i in range (len(CultTemps)):
-                r = Help_GrowthConstant(self, CultTemps[i])
-                duration = d_mult * 1/r * np.log((capacity - P0)/P0)
-                t = np.arange(duration)
-                exp_TempGrowthExp = capacity / (1 + (capacity-P0) / P0 * np.exp(-r * t))
+                if self._Mutant__Resources > 0:
+                    
+                    if random.uniform(0,1) > 0.1: # in 10% of cases the culture does not grow (failure of the experiment)
+                        r = Help_GrowthConstant(self, CultTemps[i])
+                        duration = d_mult * 1/r * np.log((capacity - P0)/P0)
+                        t = np.arange(duration)
+                    
+                        mu = capacity / (1 + (capacity-P0) / P0 * np.exp(-r * t))
+                        sigma = 0.1*mu
+                        exp_TempGrowthExp = np.random.normal(mu, sigma)
+                    else:
+                        mu = P0
+                        sigma = 0.08*mu
+                        exp_TempGrowthExp = np.random.normal(mu, sigma, 6) # if cells haven't grown, the measurement is only continued for 6h
+                
+                else:
+                    print('Not enough resources available.')
+                    return
+        
                 new_df = pd.DataFrame({f'biomass {CultTemps[i]}': exp_TempGrowthExp})
                 df.update(new_df)
             
