@@ -100,8 +100,8 @@ class Mutant:
             # create an empty DataFrame with t_max as first column
             col = []
             col.append("time")
-            for i in range (len(CultTemps)):
-                col.append(f'biomass {CultTemps[i]}')
+            for i in range(len(CultTemps)):
+                col.append('biomass {}'.format(CultTemps[i]))
 
             df = pd.DataFrame(np.empty(shape=(len(t_max), len(CultTemps)+1), dtype=float), columns = col)
             df[:len(t_max)] = np.nan 
@@ -109,18 +109,21 @@ class Mutant:
             df.update(new_df)
             
             #computing of biomass data and updating of DataFrame
-            for i in range (len(CultTemps)):
+            for i in range(len(CultTemps)):
+                random.seed()
                 if self._Mutant__Resources > 0:
                     
-                    if random.uniform(0,1) > 0.1: # in 10% of cases the culture does not grow (failure of the experiment)
+                    if random.uniform(0,1) > 0.: # in 10% of cases the culture does not grow (failure of the experiment)
+                        print('Temp Test {}:', CultTemps[i])
                         r = Help_GrowthConstant(self, CultTemps[i])
                         duration = d_mult * 1/r * np.log((capacity - P0)/P0)
                         t = np.arange(duration)
                     
                         mu = capacity / (1 + (capacity-P0) / P0 * np.exp(-r * t))
                         sigma = 0.1*mu
-#                         random.seed()
-                        exp_TempGrowthExp = random.normalvariate(mu, sigma)
+#                         print(MyRandomNorm(mu, sigma))
+                        exp_TempGrowthExp = MyRandomNorm(mu, sigma)
+                        print(exp_TempGrowthExp)
                     else:
                         mu = P0
                         sigma = 0.08*mu
@@ -444,3 +447,9 @@ def Help_ExportToExcel(Mutant, FileName, sheet_name, x_values, y_values,
     excel_writer = pd.ExcelWriter(FileName + '.xlsx') # Export DataFrame to Excel
     df.to_excel(excel_writer, sheet_name=sheet_name)
     excel_writer.close()
+    
+    
+def MyRandomNorm(mu, sigma):
+    import random
+    
+    return random.normalvariate(mu, sigma)
