@@ -455,12 +455,8 @@ def Help_ExportToExcel(Mutant, FileName, sheet_name, x_values, y_values,
     excel_writer = pd.ExcelWriter(FileName + '.xlsx') # Export DataFrame to Excel
     df.to_excel(excel_writer, sheet_name=sheet_name)
     excel_writer.close()
-<<<<<<< HEAD
-    
     
 def MyRandomNorm(mu, sigma):
     import random
     
     return random.normalvariate(mu, sigma)
-=======
->>>>>>> 5bc41d9d796c63e78a90249434cda24466389f84
