@@ -173,7 +173,7 @@ class Mutant:
                   #t, exp_TempGrowthExp, 'time', f'biomass {CultTemp}') 
         
     
-    def Make_Cloning(self, Primer, Tm):
+    def Make_Cloning(self, Primer, Tm, Promoter):
         '''Experiment to clone selected promoter. The efficiency of the experiment is displayed.'''
         import numpy as np
         import random
@@ -181,6 +181,8 @@ class Mutant:
         if self._Mutant__Resources > 0:
             
             NaConc = 5e-02 # 50 mM laut: https://academic.oup.com/nar/article/18/21/6409/2388653
+            OptLen = self._Mutant__OptPrLen
+            AllowDevi = 0.2 # allowed deviation
             Primer_Length = len(Primer)
             Primer_nC = Primer.count('C')
             Primer_nG = Primer.count('G')
@@ -195,8 +197,15 @@ class Mutant:
             error = random.uniform(-1,1)*0.1*Primer_Tm
             Primer_Tm_err = error + Primer_Tm
             
-            exp_Cloning = (1 - np.absolute(Primer_Tm_err - Tm)/Primer_Tm_err) * 100
-            print(f'The efficiency of cloning is {exp_Cloning.round(2)} %.')
+            DeviLen = np.absolute(OptLen - Primer_Length)/OptLen
+            DeviTm = np.absolute(Primer_Tm_err - Tm)/Primer_Tm_err
+            if DeviLen <= AllowDevi and DeviTm <= AllowDevi and Primer_Length <= 30:
+                print('Cloning was successfull.')
+                self.add_Promoter(Promoter)
+                #exp_Cloning = (1 - np.absolute(Primer_Tm_err - Tm)/Primer_Tm_err) * 100
+                #print(f'The efficiency of cloning is {exp_Cloning.round(2)} %.')
+            else:
+                print('Cloning failed')
         
         else:
             print('Not enough resources available.')
