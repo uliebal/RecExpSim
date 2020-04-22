@@ -18,6 +18,8 @@ class Mutant:
         self.var_Resources = self._Mutant__Resources
         # optimal growth temperature, randomly assigned
         self.__OptTemp = randint(25,40) # unit: degree celsius
+        # optimal Primer length, randomly assigned
+        self.__OptPrLen = randint(16,28) # unit: nt, source: https://link.springer.com/article/10.1007/s10529-013-1249-8
         # maximum biomass concentration, can be adjusted later, now randomly set
         if self.var_Host == 'Ecol':
             self.__BiomassMax = randint(10,100) # unit: in gCDW/l
@@ -29,7 +31,13 @@ class Mutant:
         self.var_Resources = self._Mutant__Resources
         MyVars = [i for i in list(vars(self).keys()) if 'var_' in i]
         for i in range(len(MyVars)):
-            print('{}: {}'.format(MyVars[i].replace('var_',''), getattr(self, MyVars[i])))        
+            print('{}: {}'.format(MyVars[i].replace('var_',''), getattr(self, MyVars[i])))
+
+    def show_Primer_DeviationOptimalLength(self, Prlen):
+        import numpy as np
+        optlen = self._Mutant__OptPrLen
+        abw = (np.absolute(optlen - Prlen)/optlen)*100
+        print(f'The deviation from the optimum length is {abw.round(2)} %.')
     
     
     def add_Promoter(self, Promoter):
@@ -175,10 +183,10 @@ class Mutant:
             Primer_nG = Primer.count('G')
             Primer_GC_content = (Primer_nC + Primer_nG) / Primer_Length
             
-            Primer_Tm = 81.5 + 16.6*np.log10(NaConc) + 0.41*Primer_GC_content - 675/Primer_Length # Quelle: https://core.ac.uk/download/pdf/35391868.pdf#page=190
+            Primer_Tm = 81.5 + 16.6*np.log10(NaConc) + 0.41*Primer_GC_content - 675/Primer_Length # source: https://core.ac.uk/download/pdf/35391868.pdf#page=190
             # Product_Tm = 0.41*(Primer_GC_content) + 16.6*np.log10(NaConc) - 675/Product_Length
             # Ta_Opt = 0.3*Primer_Tm + 0.7*Product_Tm - 14.9
-            # Quelle Product_Tm und Ta: https://academic.oup.com/nar/article/18/21/6409/2388653
+            # source Product_Tm und Ta: https://academic.oup.com/nar/article/18/21/6409/2388653
             # Product_Length wäre die Länge des Promoters (40)? zu klein -> negative Zahl kommt raus für Product_Tm
             
             error = random.uniform(-1,1)*0.1*Primer_Tm
