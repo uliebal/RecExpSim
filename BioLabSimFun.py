@@ -77,8 +77,8 @@ class Mutant:
         import random
 #        from IPython import embed
 #         %matplotlib inline
-        
-    
+
+
         if self._Mutant__Resources > 0:
             
             capacity = self._Mutant__BiomassMax
@@ -89,8 +89,11 @@ class Mutant:
             
             # determine time vector with maximum length:
             OptTemp = self._Mutant__OptTemp
+            # Selecting the temperature that is most distant from the optimal temperature
             Temp_tmax = CultTemps[np.argmax(np.absolute(CultTemps-OptTemp))]
+            # using the worst temperature to calculate lowest growth rate
             r_tmax = Help_GrowthConstant(self, Temp_tmax)
+            # using the worst temperature growth rate to compute longest simulation time
             duration_tmax = d_mult * 1/r_tmax * np.log((capacity - P0)/P0)
             t_max = np.arange(duration_tmax)
             
@@ -116,22 +119,23 @@ class Mutant:
                     
                         mu = capacity / (1 + (capacity-P0) / P0 * np.exp(-r * t))
                         sigma = 0.1*mu
-                        exp_TempGrowthExp = np.random.normal(mu, sigma)
+#                         random.seed()
+                        exp_TempGrowthExp = random.normalvariate(mu, sigma)
                     else:
                         mu = P0
                         sigma = 0.08*mu
-                        exp_TempGrowthExp = np.random.normal(mu, sigma, 6) # if cells haven't grown, the measurement is only continued for 6h
+                        exp_TempGrowthExp = [random.normalvariate(mu, sigma) for i in range(7)] # if cells haven't grown, the measurement is only continued for 6h
                 
                 else:
                     print('Not enough resources available.')
                     return
         
-                new_df = pd.DataFrame({f'biomass {CultTemps[i]}': exp_TempGrowthExp})
+                new_df = pd.DataFrame({'biomass {}'.format(CultTemps[i]): exp_TempGrowthExp})
                 df.update(new_df)
             
                 self._Mutant__Resources -= 1
             
-            excel_writer = pd.ExcelWriter('Strain_characerization.xlsx') # Export DataFrame to Excel
+            excel_writer = pd.ExcelWriter('Strain_characterization.xlsx') # Export DataFrame to Excel
             df.to_excel(excel_writer, sheet_name='different temp')
             excel_writer.close()
             
@@ -353,7 +357,9 @@ def Help_GrowthConstant(Mutant, CultTemp, var=5):
     
     OptTemp = Mutant._Mutant__OptTemp
     r_pdf = norm(OptTemp, var)
-    growth_rate_const = round(r_pdf.pdf(CultTemp),2) / round(r_pdf.pdf(OptTemp),var)
+    # calculation of the growth rate constant, by picking the activity from a normal distribution
+    # due to rounding the result can reach zero, which poses downstream problems, hence the lowest value is set to 0.01
+    growth_rate_const = np.max([round(r_pdf.pdf(CultTemp),2) / round(r_pdf.pdf(OptTemp),var), .05])
     
     return growth_rate_const
     
