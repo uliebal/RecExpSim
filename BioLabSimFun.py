@@ -33,12 +33,11 @@ class Mutant:
         for i in range(len(MyVars)):
             print('{}: {}'.format(MyVars[i].replace('var_',''), getattr(self, MyVars[i])))
 
-    def show_Primer_DeviationOptimalLength(self, Prlen):
+    def show_Primer_DeviationOptimalLength(self, PrLen):
         import numpy as np
-        optlen = self._Mutant__OptPrLen
-        abw = (np.absolute(optlen - Prlen)/optlen)*100
-        print(f'The deviation from the optimum length is {abw.round(2)} %.')
-    
+        OptLen = self._Mutant__OptPrLen
+        Devi = (np.absolute(OptLen - PrLen)/OptLen)*100
+        print('The deviation from the optimum length is {} %.'.format(Devi.round(2))) 
     
     def add_Promoter(self, Promoter):
         self.var_Promoter = Promoter
@@ -118,20 +117,24 @@ class Mutant:
             
             #computing of biomass data and updating of DataFrame
             for i in range(len(CultTemps)):
-                random.seed()
+                #random.seed()
                 if self._Mutant__Resources > 0:
                     
-                    if random.uniform(0,1) > 0.: # in 10% of cases the culture does not grow (failure of the experiment)
-                        print('Temp Test {}:', CultTemps[i])
+                    if random.uniform(0,1) > 0.1: # in 10% of cases the culture does not grow (failure of the experiment)
+                        #print('Temp Test {}:', CultTemps[i])
                         r = Help_GrowthConstant(self, CultTemps[i])
-                        duration = d_mult * 1/r * np.log((capacity - P0)/P0)
+                        # the result can reach very small values, which poses downstream problems, hence the lowest value is set to 0.05
+                        if r > 0.05: # to be researched (exact value)
+                            duration = d_mult * 1/r * np.log((capacity - P0)/P0)
+                        else:
+                            duration = 7
                         t = np.arange(duration)
                     
                         mu = capacity / (1 + (capacity-P0) / P0 * np.exp(-r * t))
                         sigma = 0.1*mu
-#                         print(MyRandomNorm(mu, sigma))
-                        exp_TempGrowthExp = MyRandomNorm(mu, sigma)
-                        print(exp_TempGrowthExp)
+                      
+                        exp_TempGrowthExp = random.normalvariate(mu, sigma)
+                        #print(exp_TempGrowthExp)
                     else:
                         mu = P0
                         sigma = 0.08*mu
@@ -180,7 +183,7 @@ class Mutant:
         
         if self._Mutant__Resources > 0:
             
-            NaConc = 5e-02 # 50 mM laut: https://academic.oup.com/nar/article/18/21/6409/2388653
+            NaConc = 5e-02 # 50 mM source: https://academic.oup.com/nar/article/18/21/6409/2388653
             OptLen = self._Mutant__OptPrLen
             AllowDevi = 0.2 # allowed deviation
             Primer_Length = len(Primer)
@@ -378,8 +381,8 @@ def Help_GrowthConstant(Mutant, CultTemp, var=5):
     OptTemp = Mutant._Mutant__OptTemp
     r_pdf = norm(OptTemp, var)
     # calculation of the growth rate constant, by picking the activity from a normal distribution
-    # due to rounding the result can reach zero, which poses downstream problems, hence the lowest value is set to 0.01
-    growth_rate_const = np.max([round(r_pdf.pdf(CultTemp),2) / round(r_pdf.pdf(OptTemp),var), .05])
+    
+    growth_rate_const = r_pdf.pdf(CultTemp) / r_pdf.pdf(OptTemp)
     
     return growth_rate_const
     
@@ -464,8 +467,4 @@ def Help_ExportToExcel(Mutant, FileName, sheet_name, x_values, y_values,
     excel_writer = pd.ExcelWriter(FileName + '.xlsx') # Export DataFrame to Excel
     df.to_excel(excel_writer, sheet_name=sheet_name)
     excel_writer.close()
-    
-def MyRandomNorm(mu, sigma):
-    import random
-    
-    return random.normalvariate(mu, sigma)
+
