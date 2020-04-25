@@ -8,7 +8,7 @@ class Mutant:
     # random assignment of the production phase, either during growth phase or stationary phase
     __ProdPhase = 'exponential' if randint(0,1)==0 else 'stationary'
     # resources, e.g. money, for conducting tests
-    __Resources = 10
+    __Resources = 50
     __BiomassMax = None
     
     def __init__(self, Host):
@@ -119,6 +119,7 @@ class Mutant:
             for i in range(len(CultTemps)):
                 #random.seed()
                 if self._Mutant__Resources > 0:
+                    wait = 0.01 # has to be adjusted, waiting time for loading bar
                     
                     if random.uniform(0,1) > 0.1: # in 10% of cases the culture does not grow (failure of the experiment)
                         #print('Temp Test {}:', CultTemps[i])
@@ -134,11 +135,17 @@ class Mutant:
                         sigma = 0.1*mu
                       
                         exp_TempGrowthExp = random.normalvariate(mu, sigma)
-                        #print(exp_TempGrowthExp)
+                        
+                        loading_time = wait * len(t)
+                        Help_Progressbar(45, loading_time)
+                        
                     else:
                         mu = P0
                         sigma = 0.08*mu
                         exp_TempGrowthExp = [random.normalvariate(mu, sigma) for i in range(7)] # if cells haven't grown, the measurement is only continued for 6h
+                        
+                        loading_time = wait * 7
+                        Help_Progressbar(45, loading_time)
                 
                 else:
                     print('Not enough resources available.')
@@ -468,3 +475,16 @@ def Help_ExportToExcel(Mutant, FileName, sheet_name, x_values, y_values,
     df.to_excel(excel_writer, sheet_name=sheet_name)
     excel_writer.close()
 
+
+def Help_Progressbar(n, loading_time):
+    '''function for display of a loading bar, n: width of loading bar'''
+    import sys
+    import time
+    
+    loading = '.' * n
+    for i in range(n+1):
+        # this loop replaces each dot with a hash!
+        print('\r%s progress: %3d percent' % (loading, i*100/n), end='')
+        loading = loading[:i] + '#' + loading[i+1:]
+        time.sleep(loading_time)
+    sys.stdout.write("\n")
