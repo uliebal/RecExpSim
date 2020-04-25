@@ -22,9 +22,9 @@ class Mutant:
         self.__OptPrLen = randint(16,28) # unit: nt, source: https://link.springer.com/article/10.1007/s10529-013-1249-8
         # maximum biomass concentration, can be adjusted later, now randomly set
         if self.var_Host == 'Ecol':
-            self.__BiomassMax = randint(10,100) # unit: in gCDW/l
+            self.__BiomassMax = randint(10,100) # unit: in gDCW/l
         elif self.var_Host == 'Pput':
-            self.__BiomassMax = randint(60,150) # unit: in gCDW/l
+            self.__BiomassMax = randint(60,150) # unit: in gDCW/l
     
     def show_BiotechSetting(self):
         '''Report of all properties defined in the biotech experiment.'''
@@ -100,15 +100,15 @@ class Mutant:
             Temp_tmax = CultTemps[np.argmax(np.absolute(CultTemps-OptTemp))]
             # using the worst temperature to calculate lowest growth rate
             r_tmax = Help_GrowthConstant(self, Temp_tmax)
-            # using the worst temperature growth rate to compute longest simulation time
-            duration_tmax = d_mult * 1/r_tmax * np.log((capacity - P0)/P0)
-            t_max = np.arange(duration_tmax)
+            # using the worst temperature growth rate to compute longest simulation time, maximum set to 72 h
+            duration_tmax = d_mult * 1/r_tmax * np.log((capacity - P0)/P0) + 1
+            t_max = np.arange(np.minimum(73, duration_tmax))
             
             # create an empty DataFrame with t_max as first column
             col = []
             col.append("time")
             for i in range(len(CultTemps)):
-                col.append('biomass {}'.format(CultTemps[i]))
+                col.append('exp.{} biomass conc. at {} °C'.format(i+1, (CultTemps[i])))
 
             df = pd.DataFrame(np.empty(shape=(len(t_max), len(CultTemps)+1), dtype=float), columns = col)
             df[:len(t_max)] = np.nan 
@@ -125,10 +125,10 @@ class Mutant:
                         r = Help_GrowthConstant(self, CultTemps[i])
                         # the result can reach very small values, which poses downstream problems, hence the lowest value is set to 0.05
                         if r > 0.05: # to be researched (exact value)
-                            duration = d_mult * 1/r * np.log((capacity - P0)/P0)
+                            duration = d_mult * 1/r * np.log((capacity - P0)/P0) + 1
                         else:
                             duration = 7
-                        t = np.arange(duration)
+                        t = np.arange(np.minimum(73, duration))
                     
                         mu = capacity / (1 + (capacity-P0) / P0 * np.exp(-r * t))
                         sigma = 0.1*mu
@@ -144,7 +144,7 @@ class Mutant:
                     print('Not enough resources available.')
                     return
         
-                new_df = pd.DataFrame({'biomass {}'.format(CultTemps[i]): exp_TempGrowthExp})
+                new_df = pd.DataFrame({'exp.{} biomass conc. at {} °C'.format(i+1, (CultTemps[i])): exp_TempGrowthExp})
                 df.update(new_df)
             
                 self._Mutant__Resources -= 1
