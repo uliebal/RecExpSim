@@ -37,7 +37,11 @@ class Mutant:
         import numpy as np
         OptLen = self._Mutant__OptPrLen
         Devi = (np.absolute(OptLen - PrLen)/OptLen)*100
-        print('The deviation from the optimum length is {} %.'.format(Devi.round(2))) 
+        print('The deviation from the optimum length is {} %.'.format(Devi.round(2)))
+        if PrLen <= 30:
+            print('The length of the primer does not exceed 30 nt.')
+        else:
+            print('The primer is too long (>30 nt).')
     
     def add_Promoter(self, Promoter):
         self.var_Promoter = Promoter
@@ -106,13 +110,14 @@ class Mutant:
             
             # create an empty DataFrame with t_max as first column
             col = []
-            col.append("time")
+            col.append('time [h]')
+            col.append('[g/L]:')
             for i in range(len(CultTemps)):
                 col.append('exp.{} biomass conc. at {} °C'.format(i+1, (CultTemps[i])))
 
-            df = pd.DataFrame(np.empty(shape=(len(t_max), len(CultTemps)+1), dtype=float), columns = col)
+            df = pd.DataFrame(np.empty(shape=(len(t_max), len(CultTemps)+2), dtype=float), columns = col)
             df[:len(t_max)] = np.nan 
-            new_df = pd.DataFrame({'time': t_max})
+            new_df = pd.DataFrame({'time [h]': t_max})
             df.update(new_df)
             
             #computing of biomass data and updating of DataFrame
@@ -137,7 +142,8 @@ class Mutant:
                         exp_TempGrowthExp = random.normalvariate(mu, sigma)
                         
                         loading_time = wait * len(t)
-                        Help_Progressbar(45, loading_time)
+                        exp = ' of exp.{} at {} °C'.format(i+1, (CultTemps[i]))
+                        Help_Progressbar(45, loading_time, exp)
                         
                     else:
                         mu = P0
@@ -145,7 +151,8 @@ class Mutant:
                         exp_TempGrowthExp = [random.normalvariate(mu, sigma) for i in range(7)] # if cells haven't grown, the measurement is only continued for 6h
                         
                         loading_time = wait * 7
-                        Help_Progressbar(45, loading_time)
+                        exp = ' of exp.{} at {} °C'.format(i+1, (CultTemps[i]))
+                        Help_Progressbar(45, loading_time, exp)
                 
                 else:
                     print('Not enough resources available.')
@@ -214,8 +221,11 @@ class Mutant:
                 self.add_Promoter(Promoter)
                 #exp_Cloning = (1 - np.absolute(Primer_Tm_err - Tm)/Primer_Tm_err) * 100
                 #print(f'The efficiency of cloning is {exp_Cloning.round(2)} %.')
+            
             else:
                 print('Cloning failed')
+                
+            self._Mutant__Resources -= 1
         
         else:
             print('Not enough resources available.')
@@ -476,7 +486,7 @@ def Help_ExportToExcel(Mutant, FileName, sheet_name, x_values, y_values,
     excel_writer.close()
 
 
-def Help_Progressbar(n, loading_time):
+def Help_Progressbar(n, loading_time, add):
     '''function for display of a loading bar, n: width of loading bar'''
     import sys
     import time
@@ -484,7 +494,7 @@ def Help_Progressbar(n, loading_time):
     loading = '.' * n
     for i in range(n+1):
         # this loop replaces each dot with a hash!
-        print('\r%s progress: %3d percent' % (loading, i*100/n), end='')
+        print('\r%s progress{}: %3d percent'.format(add) % (loading, i*100/n), end='')
         loading = loading[:i] + '#' + loading[i+1:]
         time.sleep(loading_time)
     sys.stdout.write("\n")
