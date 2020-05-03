@@ -191,7 +191,7 @@ class Mutant:
         
     
     def Make_Cloning(self, Primer, Tm, Promoter):
-        '''Experiment to clone selected promoter. The efficiency of the experiment is displayed.'''
+        '''Experiment to clone selected promoter. It is displayed whether the experiment was successfull.'''
         import numpy as np
         import random
         
@@ -216,7 +216,13 @@ class Mutant:
             
             DeviLen = np.absolute(OptLen - Primer_Length)/OptLen
             DeviTm = np.absolute(Primer_Tm_err - Tm)/Primer_Tm_err
-            if DeviLen <= AllowDevi and DeviTm <= AllowDevi and Primer_Length <= 30:
+            
+            #create the complementary sequence of the primer to check for mistakes:
+            PrimerComp = ""
+            for base in Primer:
+                PrimerComp = PrimerComp + Help_SwitchComplementary(base)
+            
+            if DeviLen <= AllowDevi and DeviTm <= AllowDevi and Primer_Length <= 30 and PrimerComp == Promoter[:len(Primer)]:
                 print('Cloning was successfull.')
                 self.add_Promoter(Promoter)
                 #exp_Cloning = (1 - np.absolute(Primer_Tm_err - Tm)/Primer_Tm_err) * 100
@@ -498,3 +504,13 @@ def Help_Progressbar(n, loading_time, add):
         loading = loading[:i] + '#' + loading[i+1:]
         time.sleep(loading_time)
     sys.stdout.write("\n")
+    
+    
+def Help_SwitchComplementary(argument):
+    switcher = {
+        'T': 'A',
+        'A': 'T',
+        'C': 'G',
+        'G': 'C'
+    }
+    return switcher.get(argument)
