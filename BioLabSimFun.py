@@ -17,14 +17,14 @@ class Mutant:
 #         self.var_Promoter = []
         self.var_Resources = self._Mutant__Resources
         # optimal growth temperature, randomly assigned
-        self.__OptTemp = randint(25,40) # unit: degree celsius
+        self.__OptTemp = randint(25,40) # unit: degree celsius, source 1: https://refubium.fu-berlin.de/bitstream/handle/fub188/7617/02_2_1_Literatur.pdf?sequence=3&isAllowed=y, source 2:https://www.baua.de/DE/Angebote/Rechtstexte-und-Technische-Regeln/Regelwerk/TRBA/pdf/Pseudomonas-putida.pdf?__blob=publicationFile&v=2
         # optimal Primer length, randomly assigned
         self.__OptPrLen = randint(16,28) # unit: nt, source: https://link.springer.com/article/10.1007/s10529-013-1249-8
         # maximum biomass concentration, can be adjusted later, now randomly set
         if self.var_Host == 'Ecol':
-            self.__BiomassMax = randint(10,100) # unit: in gDCW/l
+            self.__BiomassMax = randint(10,160) # unit: in gDCW/l, source: https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&cad=rja&uact=8&ved=2ahUKEwjzt_aJ9pzpAhWGiqQKHb1jC6MQFjABegQIAhAB&url=https%3A%2F%2Fwww.repo.uni-hannover.de%2Fbitstream%2Fhandle%2F123456789%2F3512%2FDissertation.pdf%3Fsequence%3D1&usg=AOvVaw2XfGH11P9gK2F2B63mY4IM
         elif self.var_Host == 'Pput':
-            self.__BiomassMax = randint(60,150) # unit: in gDCW/l
+            self.__BiomassMax = randint(30,100) # unit: in gDCW/l, source 1: https://onlinelibrary.wiley.com/doi/pdf/10.1002/bit.25474, source 2: https://link.springer.com/article/10.1385/ABAB:119:1:51
     
     def show_BiotechSetting(self):
         '''Report of all properties defined in the biotech experiment.'''
