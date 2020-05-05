@@ -62,12 +62,20 @@ class Mutant:
             print('Not enough resources available.')
             self.var_PromoterStrength = None
         
-    def Make_ProductionExperiment(self, CultTemp):
+    def Make_ProductionExperiment(self):
         if not hasattr(self, 'var_PromoterStrength'):
             print('Error, no promoter available. Add first a promoter and measure promoter strength "Make_MeasurePromoterStrength".')
             return
         
         if self._Mutant__Resources > 0:
+            # input of the temperature
+            # if no tempertaure is set, the optimal one is used
+            try:
+                CultTemp = int(input('temperature [°C] for the experiment: '))
+                CultTemp = int(CultTemp)
+            except ValueError:
+                CultTemp = self._Mutant__OptTemp
+                print('No temperature was set, therefore the optimal temperature was used.')
             r = Help_GrowthConstant(self, CultTemp)
             GrowthMax = Growth_Maxrate(self, r)
             self._Mutant__Resources -= 1
@@ -418,7 +426,20 @@ def Growth_Maxrate(Mutant, growth_rate_const):
         Output:
             growth_rate_max: float, maximum growth rate
     '''
-    capacity = Mutant._Mutant__BiomassMax
+    # input of the biomass
+    # if no biomass is set or if the maximum is exceeded, the maximum biomass is used. 
+    try:
+        capacity = int(input('biomass [g/L] for the experiment: '))
+        capacity = int(capacity)
+    except ValueError:
+        capacity = Mutant._Mutant__BiomassMax
+        print('No biomass was set, therefore the maximum biomass was used.')
+    
+    if capacity > Mutant._Mutant__BiomassMax:
+        capacity = Mutant._Mutant__BiomassMax
+        print('The maximum possible biomass was exceeded. Therefore the maximum was used for the experiment.')
+    
+    
     # Equation for calculating the maximum slope
     # https://www.tjmahr.com/anatomy-of-a-logistic-growth-curve/
     GrowthMax = capacity*growth_rate_const/4
