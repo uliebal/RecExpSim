@@ -33,15 +33,15 @@ class Mutant:
         for i in range(len(MyVars)):
             print('{}: {}'.format(MyVars[i].replace('var_',''), getattr(self, MyVars[i])))
 
-    def show_Primer_DeviationOptimalLength(self, PrLen):
-        import numpy as np
-        OptLen = self._Mutant__OptPrLen
-        Devi = (np.absolute(OptLen - PrLen)/OptLen)*100
-        print('The deviation from the optimum length is {} %.'.format(Devi.round(2)))
-        if PrLen <= 30:
-            print('The length of the primer does not exceed 30 nt.')
-        else:
-            print('The primer is too long (>30 nt).')
+    #def show_Primer_DeviationOptimalLength(self, PrLen):
+        #import numpy as np
+        #OptLen = self._Mutant__OptPrLen
+        #Devi = (np.absolute(OptLen - PrLen)/OptLen)*100
+        #print('The deviation from the optimum length is {} %.'.format(Devi.round(2)))
+        #if PrLen <= 30:
+            #print('The length of the primer does not exceed 30 nt.')
+        #else:
+            #print('The primer is too long (>30 nt).')
     
     def add_Promoter(self, Promoter):
         self.var_Promoter = Promoter
@@ -138,7 +138,7 @@ class Mutant:
                         #print('Temp Test {}:', CultTemps[i])
                         r = Help_GrowthConstant(self, CultTemps[i])
                         # the result can reach very small values, which poses downstream problems, hence the lowest value is set to 0.05
-                        if r > 0.05: # to be researched (exact value)
+                        if r > 0.05: # under process conditions it might be realistic, source : https://www.thieme-connect.de/products/ebooks/pdf/10.1055/b-0034-10021.pdf
                             duration = d_mult * 1/r * np.log((capacity - P0)/P0) + 1
                         else:
                             duration = 7
