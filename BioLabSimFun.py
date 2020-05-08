@@ -16,6 +16,8 @@ class Mutant:
         self.var_Host = Host
 #         self.var_Promoter = []
         self.var_Resources = self._Mutant__Resources
+        # factor which influences the range of the promoter strength, randomly assigned
+        self.__InflProStreng = randint(30,50) # explanation see workflow 
         # optimal growth temperature, randomly assigned
         self.__OptTemp = randint(25,40) # unit: degree celsius, source 1: https://refubium.fu-berlin.de/bitstream/handle/fub188/7617/02_2_1_Literatur.pdf?sequence=3&isAllowed=y, source 2:https://www.baua.de/DE/Angebote/Rechtstexte-und-Technische-Regeln/Regelwerk/TRBA/pdf/Pseudomonas-putida.pdf?__blob=publicationFile&v=2
         # optimal Primer length, randomly assigned
@@ -56,7 +58,8 @@ class Mutant:
             print('Error, no promoter added. Perform a cloning first.')
             return
         if self._Mutant__Resources > 0:
-            self.var_PromoterStrength = Help_Expression(self)
+            factor = self._Mutant__InflProStreng          
+            self.var_PromoterStrength = round(Help_Expression(self) * factor, 2)
             self._Mutant__Resources -= 1
         else:
             print('Not enough resources available.')
@@ -84,7 +87,7 @@ class Mutant:
             
             self.add_Promoter(Promoter)
             # first, the required promoter strength is measured again
-            self.var_PromoterStrength = Help_Expression(self)
+            self.Make_MeasurePromoterStrength()
             self._Mutant__Resources -= 1
             
             # input of the temperature
