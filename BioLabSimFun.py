@@ -53,7 +53,7 @@ class Mutant:
         
     def Make_MeasurePromoterStrength(self):
         if not hasattr(self, 'var_Promoter'):
-            print('Error, not promoter added. Add first a promoter "add_promoter(<Sequence>)".')
+            print('Error, no promoter added. Perform a cloning first.')
             return
         if self._Mutant__Resources > 0:
             self.var_PromoterStrength = Help_Expression(self)
@@ -63,19 +63,37 @@ class Mutant:
             self.var_PromoterStrength = None
         
     def Make_ProductionExperiment(self):
+        # so that the final experiment can only be performed after at least one sequence has been cloned and tested:
         if not hasattr(self, 'var_PromoterStrength'):
-            print('Error, no promoter available. Add first a promoter and measure promoter strength "Make_MeasurePromoterStrength".')
+            print('Error, no promoter sequence has been cloned and tested yet. Perform a cloning first and then test the expression with "Make_MeasurePromoterStrength()".')
             return
         
-        if self._Mutant__Resources > 0:
+        if self._Mutant__Resources > 1: # two resources will be deducted
+            # first the selected promoter sequence must be entered so that the experiment can be performed
+            
+            ReEntry = 1
+            while ReEntry:
+                ReEntry = 0
+                try:
+                    Promoter = input('Choose a promoter sequence: ')
+                    if not Promoter:
+                        raise ValueError('empty string')
+                except ValueError:
+                    print('Error, none of the produced recombinant strains with the desired promoter was selected. Choose a promoter sequence first.')
+                    ReEntry = 1
+            
+            self.add_Promoter(Promoter)
+            # first, the required promoter strength is measured again
+            self.var_PromoterStrength = Help_Expression(self)
+            self._Mutant__Resources -= 1
+            
             # input of the temperature
             # if no tempertaure is set, the optimal one is used
             try:
                 CultTemp = int(input('temperature [°C] for the experiment: '))
-                CultTemp = int(CultTemp)
             except ValueError:
                 CultTemp = self._Mutant__OptTemp
-                print('No temperature was set, therefore the optimal temperature was used.')
+                print('No temperature was set or unexpected value, therefore the optimal temperature was used.')
             r = Help_GrowthConstant(self, CultTemp)
             GrowthMax = Growth_Maxrate(self, r)
             self._Mutant__Resources -= 1
@@ -430,10 +448,9 @@ def Growth_Maxrate(Mutant, growth_rate_const):
     # if no biomass is set or if the maximum is exceeded, the maximum biomass is used. 
     try:
         capacity = int(input('biomass [g/L] for the experiment: '))
-        capacity = int(capacity)
     except ValueError:
         capacity = Mutant._Mutant__BiomassMax
-        print('No biomass was set, therefore the maximum biomass was used.')
+        print('No biomass was set or unexpected value, therefore the maximum biomass was used.')
     
     if capacity > Mutant._Mutant__BiomassMax:
         capacity = Mutant._Mutant__BiomassMax
