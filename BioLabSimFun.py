@@ -448,17 +448,18 @@ def Growth_Maxrate(Mutant, growth_rate_const):
             growth_rate_max: float, maximum growth rate
     '''
     # input of the biomass
-    # if no biomass is set or if the maximum is exceeded, the maximum biomass is used. 
-    try:
-        capacity = int(input('biomass [g/L] for the experiment: '))
-    except ValueError:
-        capacity = Mutant._Mutant__BiomassMax
-        print('No biomass was set or unexpected value, therefore the maximum biomass was used.')
-    
-    if capacity > Mutant._Mutant__BiomassMax:
-        capacity = Mutant._Mutant__BiomassMax
-        print('The maximum possible biomass was exceeded. Therefore the maximum was used for the experiment.')
-    
+    # if no biomass is set or if the maximum is exceeded, the biomass must be entered again. 
+    ReEntry = 1
+    while ReEntry:
+        ReEntry = 0
+        try:
+            capacity = int(input('biomass [g/L] for the experiment: '))
+            if capacity > Mutant._Mutant__BiomassMax or not capacity:
+                raise ValueError('wrong input')
+        except ValueError:
+            print('Error, no biomass was set or unexpected value or the maximum possible biomass was exceeded. Enter a value for the biomass again.')
+            ReEntry = 1
+        
     
     # Equation for calculating the maximum slope
     # https://www.tjmahr.com/anatomy-of-a-logistic-growth-curve/
