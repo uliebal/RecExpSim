@@ -45,26 +45,32 @@ class Mutant:
         #else:
             #print('The primer is too long (>30 nt).')
     
-    def add_Promoter(self, Promoter):
-        self.var_Promoter = Promoter
-        self.var_GC_content = (self.var_Promoter.count('C') + self.var_Promoter.count('G')) / len(self.var_Promoter)
+    def add_Promoter(self, Clone_ID, Promoter):
+        self.var_Library[Clone_ID]['Promoter_Sequence'] = Promoter
+        self.var_Library[Clone_ID]['Promoter_GC-content'] = (self.var_Promoter.count('C') + self.var_Promoter.count('G')) / len(self.var_Promoter)
+#         self.var_Promoter = Promoter
+#         self.var_GC_content = (self.var_Promoter.count('C') + self.var_Promoter.count('G')) / len(self.var_Promoter)
 
     def __add_RandomPromoter(self):
         self.var_Promoter = SequenceRandomizer_Single()
         self.var_GCcontent = (self.var_Promoter.count('C') + self.var_Promoter.count('G')) / len(self.var_Promoter)
         
-    def Make_MeasurePromoterStrength(self):
-        if not hasattr(self, 'var_Promoter'):
-            print('Error, no promoter added. Perform a cloning first.')
-            return
+    def Make_MeasurePromoterStrength(self, Clone_ID):
         if self._Mutant__Resources > 0:
-            factor = self._Mutant__InflProStreng          
-            self.var_PromoterStrength = round(Help_Expression(self) * factor, 2)
-            self._Mutant__Resources -= 1
+#             self.var_Library[Clone_ID]['Promoter_Strength'] = None
+            if hasattr(self, 'var_Libary'):
+                if Clone_ID in self.var_Library:
+                    factor = self._Mutant__InflProStreng          
+                    self.var_Library[Clone_ID]['Promoter_Strength'] = round(Help_PromoterStrength(self, Clone_ID) * factor, 2)
+                    self._Mutant__Resources -= 1
+                else:
+                    print('Error, no Clone ID does not exist. Choose existing Clone ID.')
+            else:
+                print('Error, no promoter library available. Perform a cloning first.')
         else:
-            print('Not enough resources available.')
-            self.var_PromoterStrength = None
-        
+            print('Error, No resources left for experiments.')
+
+                
     def Make_ProductionExperiment(self):
         # so that the final experiment can only be performed after at least one sequence has been cloned and tested:
         if not hasattr(self, 'var_PromoterStrength'):
@@ -78,11 +84,11 @@ class Mutant:
             while ReEntry:
                 ReEntry = 0
                 try:
-                    Promoter = input('Choose a promoter sequence: ')
-                    if not Promoter:
+                    Clone_ID = input('Choose a Clone ID: ')
+                    if not Clone_ID:
                         raise ValueError('empty string')
                 except ValueError:
-                    print('Error, none of the produced recombinant strains with the desired promoter was selected. Choose a promoter sequence first.')
+                    print('Error, none of the produced recombinant strains with the desired promoter was selected. Choose a Clone ID first.')
                     ReEntry = 1
             
             self.add_Promoter(Promoter)
@@ -219,10 +225,13 @@ class Mutant:
                   #t, exp_TempGrowthExp, 'time', f'biomass {CultTemp}') 
         
     
-    def Make_Cloning(self, Primer, Tm, Promoter):
+    def Make_Cloning(self, Clone_ID, Promoter, Primer, Tm):
         '''Experiment to clone selected promoter. It is displayed whether the experiment was successfull.'''
         import numpy as np
         import random
+        
+        if Sequence_ReferenceDistance(Promoter) > .4:
+            return print('Promoter sequence is too weird.')
         
         if self._Mutant__Resources > 0:
             
@@ -253,7 +262,7 @@ class Mutant:
             
             if DeviLen <= AllowDevi and DeviTm <= AllowDevi and Primer_Length <= 30 and PrimerComp == Promoter[:len(Primer)]:
                 print('Cloning was successfull.')
-                self.add_Promoter(Promoter)
+                self.add_Promoter(Clone_ID, Promoter)
                 #exp_Cloning = (1 - np.absolute(Primer_Tm_err - Tm)/Primer_Tm_err) * 100
                 #print(f'The efficiency of cloning is {exp_Cloning.round(2)} %.')
             
@@ -268,28 +277,11 @@ class Mutant:
             
    
         
-# def Cultivation(Mutant, Time):
-#     '''
-#     The cultivation of the host is managed here. It determines the shape of the growth curve based on the optimal growth temperature. The output is maximum of  active biomass which is used for maximum production rate and the biomass integral which is used for final product titer.
-#     Arguments:
-#         Mutant: class, contains optimal growth temperature, production phase
-#         Time:   float, represents the applied cultivation time
-#     Output:
-#         Biomass_props: dictionary, subfields
-#             Biomass_max: float, represents the maximum of active biomass for which the production rate was maximum
-#             Biomass_integral: float, represents the area of the biomass, with which the product titer can be calculated
-#     '''
-#     from random import random
-#     Biomass_max = random(1,10)
-#     Biomass_integral = random(50,100)
-    
-#     Biomass_props = {'Biomass_max': Biomass_max, 'Biomass_integral': Biomass_integral}
-#     return Biomass_props
-
-def Help_Expression(Mutant, Predict_File=None, Similarity_Thresh=.4):
+def Help_PromoterStrength(Mutant, Clone_ID, Predict_File=None, Similarity_Thresh=.4):
     '''Expression of the recombinant protein.
         Arguments:
             Mutant: class, contains optimal growth temperature, production phase
+            Clone_ID: Clone with defined promoter for which express
             Predict_File: string, address of regression file
         Output: 
             Expression: float, expression rate
@@ -299,7 +291,7 @@ def Help_Expression(Mutant, Predict_File=None, Similarity_Thresh=.4):
     import joblib
     import pickle
     
-    if Sequence_ReferenceDistance(Mutant.var_Promoter) > Similarity_Thresh:
+    if Sequence_ReferenceDistance(Mutant.var_Library[Clone_ID]['Promoter_Sequence']) > Similarity_Thresh:
         Expression = 0
     else:
         if Predict_File!=None:
@@ -322,7 +314,7 @@ def Help_Expression(Mutant, Predict_File=None, Similarity_Thresh=.4):
         Positions_removed = Params['Positions_removed']
         Expr_Scaler = Params[Scaler_DictName]
 
-        X_Test = np.array(list_onehot(np.delete(list_integer(Mutant.var_Promoter),Positions_removed, axis=0))).reshape(1,-1)  
+        X_Test = np.array(list_onehot(np.delete(list_integer(Mutant.var_Library[Clone_ID]['Promoter_Sequence']),Positions_removed, axis=0))).reshape(1,-1)  
         Y_Test_norm = Predictor.predict(X_Test)
         Expression = round(float(Expr_Scaler.inverse_transform(Y_Test_norm)),3)
 
@@ -467,19 +459,6 @@ def Growth_Maxrate(Mutant, growth_rate_const):
     return GrowthMax
     
     
-# def Meas_ProductionRate(Mutant,GrowthMax, Expression):
-#     '''The function calculates the maximum production rate. We assume growth depending production, hence maximum production happens during maximum growth rate. The maximum growth rate is calculated based on logistic growth with cultivation temperature. Measuring is a resource demanding process.
-#     Arguments:
-#         Mutant._Mutant__resources: int, available resources for measurement
-#         GrowthMax: float, maximal growth rate
-#         Expression: float, expression rate
-#     Output:
-#         ExpressionRate: float, maximum production rate on biomass
-#         '''
-    
-#     ExpressionRate = GrowthMax * Expression
-    
-#     return ExpressionRate
 
 ##################################################################
 ##################################################################
