@@ -37,6 +37,14 @@ class Mutant:
         for i in range(len(MyVars)):
             print('{}: {}'.format(MyVars[i].replace('var_',''), getattr(self, MyVars[i])))
 
+        
+    def show_Library(self):
+        '''Report of clones and their performance.'''
+        for Clone_ID, Clone_info in self.var_Library.items():
+            print("\nClone ID: {}".format(Clone_ID))
+            for key in Clone_info:
+                print('{}: {}'.format(key, Clone_info[key]))
+        
     #def show_Primer_DeviationOptimalLength(self, PrLen):
         #import numpy as np
         #OptLen = self._Mutant__OptPrLen
@@ -81,12 +89,15 @@ class Mutant:
         if self._Mutant__Resources > 1: # two resources will be deducted
             # the final experiment can only be performed after at least one sequence has been cloned and tested:
             if hasattr(self, 'var_Library'):
-                r = Help_GrowthConstant(self, CultTemp)
-                GrowthMax = Growth_Maxrate(self, r, Biomass)
-                self.var_Library[Clone_ID]['Expression_Temperature'] = CultTemp
-                self.var_Library[Clone_ID]['Expression_Biomass'] = Biomass
-                self.var_Library[Clone_ID]['Expression_Rate'] = round(GrowthMax * self.var_Library[Clone_ID]['Promoter_Strength'],2)
-                self._Mutant__Resources -= 1
+                if Clone_ID in self.var_Library:
+                    r = Help_GrowthConstant(self, CultTemp)
+                    GrowthMax = Growth_Maxrate(self, r, Biomass)
+                    self.var_Library[Clone_ID]['Expression_Temperature'] = CultTemp
+                    self.var_Library[Clone_ID]['Expression_Biomass'] = Biomass
+                    self.var_Library[Clone_ID]['Expression_Rate'] = round(GrowthMax * self.var_Library[Clone_ID]['Promoter_Strength'],2)
+                    self._Mutant__Resources -= 1
+                else:
+                    print('Error, Clone ID does not exist. Choose existing Clone ID.')
             else:
                 print('Error, no promoter sequence has been cloned and tested yet. Perform a cloning first and then test the expression with "Make_MeasurePromoterStrength(Clone_ID)".')
                 
