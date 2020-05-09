@@ -16,6 +16,8 @@ class Mutant:
         self.var_Host = Host
 #         self.var_Promoter = []
         self.var_Resources = self._Mutant__Resources
+        # Library variable containing details to the different tested mutants
+        self.var_Library = {}
         # factor which influences the range of the promoter strength, randomly assigned
         self.__InflProStreng = randint(30,50) # explanation see workflow 
         # optimal growth temperature, randomly assigned
@@ -46,70 +48,51 @@ class Mutant:
             #print('The primer is too long (>30 nt).')
     
     def add_Promoter(self, Clone_ID, Promoter):
+        self.var_Library[Clone_ID] = {}
         self.var_Library[Clone_ID]['Promoter_Sequence'] = Promoter
-        self.var_Library[Clone_ID]['Promoter_GC-content'] = (self.var_Promoter.count('C') + self.var_Promoter.count('G')) / len(self.var_Promoter)
+        self.var_Library[Clone_ID]['Promoter_GC-content'] = (Promoter.count('C') + Promoter.count('G')) / len(Promoter)
+#         [Clone_ID]['Promoter_GC-content'] = (Promoter.count('C') + Promoter.count('G')) / len(Promoter)
+#  = {Clone_ID: {'Promoter_GC-content': (Promoter.count('C') + Promoter.count('G')) / len(Promoter)}}
 #         self.var_Promoter = Promoter
 #         self.var_GC_content = (self.var_Promoter.count('C') + self.var_Promoter.count('G')) / len(self.var_Promoter)
 
-    def __add_RandomPromoter(self):
-        self.var_Promoter = SequenceRandomizer_Single()
-        self.var_GCcontent = (self.var_Promoter.count('C') + self.var_Promoter.count('G')) / len(self.var_Promoter)
+#     def __add_RandomPromoter(self):
+#         self.var_Promoter = SequenceRandomizer_Single()
+#         self.var_GCcontent = (self.var_Promoter.count('C') + self.var_Promoter.count('G')) / len(self.var_Promoter)
         
     def Make_MeasurePromoterStrength(self, Clone_ID):
         if self._Mutant__Resources > 0:
 #             self.var_Library[Clone_ID]['Promoter_Strength'] = None
-            if hasattr(self, 'var_Libary'):
+            if hasattr(self, 'var_Library'):
                 if Clone_ID in self.var_Library:
                     factor = self._Mutant__InflProStreng          
                     self.var_Library[Clone_ID]['Promoter_Strength'] = round(Help_PromoterStrength(self, Clone_ID) * factor, 2)
                     self._Mutant__Resources -= 1
                 else:
-                    print('Error, no Clone ID does not exist. Choose existing Clone ID.')
+                    print('Error, Clone ID does not exist. Choose existing Clone ID.')
             else:
                 print('Error, no promoter library available. Perform a cloning first.')
         else:
-            print('Error, No resources left for experiments.')
+            Error_Resources()
 
                 
-    def Make_ProductionExperiment(self):
-        # so that the final experiment can only be performed after at least one sequence has been cloned and tested:
-        if not hasattr(self, 'var_PromoterStrength'):
-            print('Error, no promoter sequence has been cloned and tested yet. Perform a cloning first and then test the expression with "Make_MeasurePromoterStrength()".')
-            return
-        
+    def Make_ProductionExperiment(self, Clone_ID, CultTemp, Biomass):
+
         if self._Mutant__Resources > 1: # two resources will be deducted
-            # first the selected promoter sequence must be entered so that the experiment can be performed
-            
-            ReEntry = 1
-            while ReEntry:
-                ReEntry = 0
-                try:
-                    Clone_ID = input('Choose a Clone ID: ')
-                    if not Clone_ID:
-                        raise ValueError('empty string')
-                except ValueError:
-                    print('Error, none of the produced recombinant strains with the desired promoter was selected. Choose a Clone ID first.')
-                    ReEntry = 1
-            
-            self.add_Promoter(Promoter)
-            # first, the required promoter strength is measured again
-            self.Make_MeasurePromoterStrength()
-            self._Mutant__Resources -= 1
-            
-            # input of the temperature
-            # if no tempertaure is set, the optimal one is used
-            try:
-                CultTemp = int(input('temperature [°C] for the experiment: '))
-            except ValueError:
-                CultTemp = self._Mutant__OptTemp
-                print('No temperature was set or unexpected value, therefore the optimal temperature was used.')
-            r = Help_GrowthConstant(self, CultTemp)
-            GrowthMax = Growth_Maxrate(self, r)
-            self._Mutant__Resources -= 1
-            self.var_ExpressionRate = round(GrowthMax * self.var_PromoterStrength,2)
+            # the final experiment can only be performed after at least one sequence has been cloned and tested:
+            if hasattr(self, 'var_Library'):
+                r = Help_GrowthConstant(self, CultTemp)
+                GrowthMax = Growth_Maxrate(self, r, Biomass)
+                self.var_Library[Clone_ID]['Expression_Temperature'] = CultTemp
+                self.var_Library[Clone_ID]['Expression_Biomass'] = Biomass
+                self.var_Library[Clone_ID]['Expression_Rate'] = round(GrowthMax * self.var_Library[Clone_ID]['Promoter_Strength'],2)
+                self._Mutant__Resources -= 1
+            else:
+                print('Error, no promoter sequence has been cloned and tested yet. Perform a cloning first and then test the expression with "Make_MeasurePromoterStrength(Clone_ID)".')
+                
         else:
-            print('Not enough resources available.')
-            self.var_ExpressionRate = None
+            Error_Resources()
+#             self.var_Library[Clone_ID]ExpressionRate = None
             
             
     def Make_TempGrowthExp(self, CultTemps, draw_plot=False):
@@ -190,7 +173,7 @@ class Mutant:
                         Help_Progressbar(45, loading_time, exp)
                 
                 else:
-                    print('Not enough resources available.')
+                    Error_Resources()
                     return
         
                 new_df = pd.DataFrame({'exp.{} biomass conc. at {} °C'.format(i+1, (CultTemps[i])): exp_TempGrowthExp})
@@ -203,7 +186,7 @@ class Mutant:
             excel_writer.close()
             
         else:
-            print('Not enough resources available.')
+            Error_Resources()
             return
         
         if draw_plot:
@@ -431,7 +414,7 @@ def Help_GrowthConstant(Mutant, CultTemp, var=5):
     return growth_rate_const
     
 
-def Growth_Maxrate(Mutant, growth_rate_const):
+def Growth_Maxrate(Mutant, growth_rate_const, Biomass):
     '''The function calculates the maximum slope during growth.
         Arguments:
             Mutant: class, contains maximum biomass concentration as carrying capacity
@@ -439,23 +422,13 @@ def Growth_Maxrate(Mutant, growth_rate_const):
         Output:
             growth_rate_max: float, maximum growth rate
     '''
-    # input of the biomass
-    # if no biomass is set or if the maximum is exceeded, the biomass must be entered again. 
-    ReEntry = 1
-    while ReEntry:
-        ReEntry = 0
-        try:
-            capacity = int(input('biomass [g/L] for the experiment: '))
-            if capacity > Mutant._Mutant__BiomassMax or not capacity:
-                raise ValueError('wrong input')
-        except ValueError:
-            print('Error, no biomass was set or unexpected value or the maximum possible biomass was exceeded. Enter a value for the biomass again.')
-            ReEntry = 1
-        
+    # biomass checks
+    if Biomass > Mutant._Mutant__BiomassMax or not Biomass:
+        print('Error, no biomass was set or unexpected value or the maximum possible biomass was exceeded. Enter a value for the biomass again.')        
     
     # Equation for calculating the maximum slope
     # https://www.tjmahr.com/anatomy-of-a-logistic-growth-curve/
-    GrowthMax = capacity*growth_rate_const/4
+    GrowthMax = Biomass * growth_rate_const / 4
     
     return GrowthMax
     
@@ -535,3 +508,6 @@ def Help_SwitchComplementary(argument):
         'G': 'C'
     }
     return switcher.get(argument)
+
+def Error_Resources():
+    print('Not enough resources available.')
