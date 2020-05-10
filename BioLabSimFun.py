@@ -21,12 +21,12 @@ class Mutant:
         # factor which influences the range of the promoter strength, randomly assigned
         self.__InflProStreng = randint(30,50) # explanation see workflow 
         # optimal growth temperature, randomly assigned
-        self.__OptTemp = randint(25,40) # unit: degree celsius, source 1: https://refubium.fu-berlin.de/bitstream/handle/fub188/7617/02_2_1_Literatur.pdf?sequence=3&isAllowed=y, source 2:https://www.baua.de/DE/Angebote/Rechtstexte-und-Technische-Regeln/Regelwerk/TRBA/pdf/Pseudomonas-putida.pdf?__blob=publicationFile&v=2
+        self.__OptTemp = randint(25,40) # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
         # optimal Primer length, randomly assigned
         self.__OptPrLen = randint(16,28) # unit: nt, source: https://link.springer.com/article/10.1007/s10529-013-1249-8
         # maximum biomass concentration, the limits for Ecol were set as shown below and the values for Pput were adjusted according to the ratio of the maximum promoter strengths (0.057/0.04) of the optimal sequences (see expression measurement issue).
         if self.var_Host == 'Ecol':
-            self.__BiomassMax = randint(30,100) # unit: in gDCW/l, source: https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&cad=rja&uact=8&ved=2ahUKEwjzt_aJ9pzpAhWGiqQKHb1jC6MQFjABegQIAhAB&url=https%3A%2F%2Fwww.repo.uni-hannover.de%2Fbitstream%2Fhandle%2F123456789%2F3512%2FDissertation.pdf%3Fsequence%3D1&usg=AOvVaw2XfGH11P9gK2F2B63mY4IM
+            self.__BiomassMax = randint(30,100) # unit: in gDCW/l, source (german): https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&cad=rja&uact=8&ved=2ahUKEwjzt_aJ9pzpAhWGiqQKHb1jC6MQFjABegQIAhAB&url=https%3A%2F%2Fwww.repo.uni-hannover.de%2Fbitstream%2Fhandle%2F123456789%2F3512%2FDissertation.pdf%3Fsequence%3D1&usg=AOvVaw2XfGH11P9gK2F2B63mY4IM
         elif self.var_Host == 'Pput':
             self.__BiomassMax = randint(45,145) # unit: in gDCW/l, source 1: https://onlinelibrary.wiley.com/doi/pdf/10.1002/bit.25474, source 2: https://link.springer.com/article/10.1385/ABAB:119:1:51
     
@@ -222,7 +222,7 @@ class Mutant:
             # Product_Tm = 0.41*(Primer_GC_content) + 16.6*np.log10(NaConc) - 675/Product_Length
             # Ta_Opt = 0.3*Primer_Tm + 0.7*Product_Tm - 14.9
             # source Product_Tm und Ta: https://academic.oup.com/nar/article/18/21/6409/2388653
-            # Product_Length wäre die Länge des Promoters (40)? zu klein -> negative Zahl kommt raus für Product_Tm
+            # Product_Length would be the length of the promoter (40)? too small -> negative number comes out for Product_Tm
             
             error = random.uniform(-1,1)*0.1*Primer_Tm
             Primer_Tm_err = error + Primer_Tm
