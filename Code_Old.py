@@ -30,3 +30,40 @@
 #     ExpressionRate = GrowthMax * Expression
     
 #     return ExpressionRate
+
+    #def show_Primer_DeviationOptimalLength(self, PrLen):
+        #import numpy as np
+        #OptLen = self._Mutant__OptPrLen
+        #Devi = (np.absolute(OptLen - PrLen)/OptLen)*100
+        #print('The deviation from the optimum length is {} %.'.format(Devi.round(2)))
+        #if PrLen <= 30:
+            #print('The length of the primer does not exceed 30 nt.')
+        #else:
+            #print('The primer is too long (>30 nt).')
+
+#         [Clone_ID]['Promoter_GC-content'] = (Promoter.count('C') + Promoter.count('G')) / len(Promoter)
+#  = {Clone_ID: {'Promoter_GC-content': (Promoter.count('C') + Promoter.count('G')) / len(Promoter)}}
+#         self.var_Promoter = Promoter
+#         self.var_GC_content = (self.var_Promoter.count('C') + self.var_Promoter.count('G')) / len(self.var_Promoter)
+
+#     def __add_RandomPromoter(self):
+#         self.var_Promoter = SequenceRandomizer_Single()
+#         self.var_GCcontent = (self.var_Promoter.count('C') + self.var_Promoter.count('G')) / len(self.var_Promoter)
+
+#         if draw_plot:
+#             WaitingTime = 30/r
+#             for i in range (len(t)):
+#                 pl.clf()
+#                 pl.figure(figsize = (5,3), dpi = 120)
+#                 pl.xlim(0, t[i])
+#                 pl.ylim(0, 1.1*np.max(exp_TempGrowthExp))
+#                 pl.xlabel("time [h]")
+#                 pl.ylabel("biomass concentration [g/L]")
+#                 pl.plot(t[0:i], exp_TempGrowthExp[0:i], linestyle = '--') 
+#                 display.display(pl.gcf())
+#                 display.clear_output(wait=True)
+#                 #pl.pause(1)
+#                 time.sleep(WaitingTime/n) # total waiting time independent of n  
+        
+        #Help_ExportToExcel(self, 'Strain_characterization', 'different Temp',
+                  #t, exp_TempGrowthExp, 'time', f'biomass {CultTemp}') 
