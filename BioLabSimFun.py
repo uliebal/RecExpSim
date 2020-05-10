@@ -103,6 +103,21 @@ class Mutant:
         GrowthMax = Growth_Maxrate(self, r, BiomassMax)
         achievExpRate = round(0.75*GrowthMax * MaximumPromoterStrength,2)
         print('At least an expression rate of {} should be achieved by the production experiment.'.format(achievExpRate))
+        
+        
+    def plot_ReferencePromoterStrength(self):
+        '''Function to plot the promoter strength of the optimal sequence additionally as reference.'''
+        import matplotlib.pyplot as plt
+        
+        factor = self._Mutant__InflProStreng
+        # Values see init function at the beginning
+        if self.var_Host == 'Ecol':
+            OptimalPromoterStrength = round(0.057 * factor,2)
+        elif self.var_Host == 'Pput':
+            OptimalPromoterStrength = round(0.04 * factor,2)
+        # plot of maximum Promoter strength together with GC content
+        # GC-content is the same for of both optimal sequences.
+        plt.plot(0.575, OptimalPromoterStrength, marker = '*', color = 'green', markersize = 10)
             
             
     def Make_TempGrowthExp(self, CultTemps):
