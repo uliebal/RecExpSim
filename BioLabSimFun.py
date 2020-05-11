@@ -120,7 +120,7 @@ class Mutant:
         plt.plot(0.575, OptimalPromoterStrength, marker = '*', color = 'green', markersize = 10)
             
             
-    def Make_TempGrowthExp(self, CultTemps):
+    def Make_TempGrowthExp(self, CultTemps, n):
         '''Experiment to determine optimal growth rate. The experiment runs until the maximum biomass is reached.'''
         import numpy as np
         import pandas as pd
@@ -178,11 +178,12 @@ class Mutant:
                         else:
                             duration = 7
                         t = np.arange(np.minimum(73, duration))
-                    
+                        
+                        # biomass data is calculated according to https://en.wikipedia.org/wiki/Logistic_function
                         mu = capacity / (1 + (capacity-P0) / P0 * np.exp(-r * t))
                         sigma = 0.1*mu
                       
-                        exp_TempGrowthExp = random.normalvariate(mu, sigma)
+                        exp_TempGrowthExp = [random.normalvariate(mu[k], sigma[k]) for k in range(len(mu))]
                         
                         loading_time = wait * len(t)
                         exp = ' of exp.{} at {} °C'.format(i+1, (CultTemps[i]))
@@ -206,7 +207,7 @@ class Mutant:
             
                 self._Mutant__Resources -= 1
             
-            excel_writer = pd.ExcelWriter('Strain_characterization.xlsx') # Export DataFrame to Excel
+            excel_writer = pd.ExcelWriter('Strain_characterization_{}.xlsx'.format(n)) # Export DataFrame to Excel
             df.to_excel(excel_writer, sheet_name='different temp')
             excel_writer.close()
             
