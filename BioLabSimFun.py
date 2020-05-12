@@ -67,18 +67,22 @@ class Mutant:
             Error_Resources()
 
                 
-    def Make_ProductionExperiment(self, Clone_ID, CultTemp, Biomass):
-
+    def Make_ProductionExperiment(self, Clone_ID, CultTemp, Biomass, Biomass_Test=.9):
+        import numpy as np
         if self._Mutant__Resources > 1: # two resources will be deducted
             # the final experiment can only be performed after at least one sequence has been cloned and tested:
             if hasattr(self, 'var_Library'):
                 if Clone_ID in self.var_Library:
-                    r = Help_GrowthConstant(self, CultTemp)
-                    GrowthMax = Growth_Maxrate(self, r, Biomass)
-                    self.var_Library[Clone_ID]['Expression_Temperature'] = CultTemp
-                    self.var_Library[Clone_ID]['Expression_Biomass'] = Biomass
-                    self.var_Library[Clone_ID]['Expression_Rate'] = round(GrowthMax * self.var_Library[Clone_ID]['Promoter_Strength'],2)
-                    self._Mutant__Resources -= 3
+                    # testing whether the determined maximum biomass is close to the actual one
+                    if 1 - np.abs(Biomass-self._Mutant__BiomassMax) / self._Mutant__BiomassMax > Biomass_Test:
+                        r = Help_GrowthConstant(self, CultTemp)
+                        GrowthMax = Growth_Maxrate(self, r, Biomass)
+                        self.var_Library[Clone_ID]['Expression_Temperature'] = CultTemp
+                        self.var_Library[Clone_ID]['Expression_Biomass'] = Biomass
+                        self.var_Library[Clone_ID]['Expression_Rate'] = round(GrowthMax * self.var_Library[Clone_ID]['Promoter_Strength'],2)
+                        self._Mutant__Resources -= 3
+                    else:
+                        print('Maximum biomass incorrect.')
                 else:
                     print('Error, Clone ID does not exist. Choose existing Clone ID.')
             else:
@@ -120,7 +124,7 @@ class Mutant:
         plt.plot(0.575, OptimalPromoterStrength, marker = '*', color = 'green', markersize = 10)
             
             
-    def Make_TempGrowthExp(self, CultTemps, n):
+    def Make_TempGrowthExp(self, CultTemps, n=1):
         '''Experiment to determine optimal growth rate. The experiment runs until the maximum biomass is reached.'''
         import numpy as np
         import pandas as pd
