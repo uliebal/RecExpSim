@@ -1,5 +1,6 @@
 # Biotechnology Laboratory Simulator Functions
-
+# print(vars(myhost))
+ 
 class Mutant:
     '''The 'Mutant' class stores all information about the organism and the integrated recombinant protein.''' 
     
@@ -238,7 +239,7 @@ class Mutant:
             Primer_nG = Primer.count('G')
             Primer_GC_content = (Primer_nC + Primer_nG) / Primer_Length
             
-            Primer_Tm = 81.5 + 16.6*np.log10(NaConc) + 0.41*Primer_GC_content - 675/Primer_Length # source: https://core.ac.uk/download/pdf/35391868.pdf#page=190
+            Primer_Tm = 81.5 + 16.6*np.log10(NaConc) + 0.41*Primer_GC_content - 600/Primer_Length # source: https://www.genelink.com/Literature/ps/R26-6400-MW.pdf (previous: https://core.ac.uk/download/pdf/35391868.pdf#page=190)
             # Product_Tm = 0.41*(Primer_GC_content) + 16.6*np.log10(NaConc) - 675/Product_Length
             # Ta_Opt = 0.3*Primer_Tm + 0.7*Product_Tm - 14.9
             # source Product_Tm und Ta: https://academic.oup.com/nar/article/18/21/6409/2388653
@@ -435,8 +436,8 @@ def Growth_Maxrate(Mutant, growth_rate_const, Biomass):
             growth_rate_max: float, maximum growth rate
     '''
     # biomass checks
-    if Biomass > Mutant._Mutant__BiomassMax or not Biomass:
-        print('Error, no biomass was set or unexpected value or the maximum possible biomass was exceeded. Enter a value for the biomass again.')        
+#     if Biomass > Mutant._Mutant__BiomassMax or not Biomass:
+#         print('Error, no biomass was set or unexpected value or the maximum possible biomass was exceeded. Enter a value for the biomass again.')        
     
     # Equation for calculating the maximum slope
     # https://www.tjmahr.com/anatomy-of-a-logistic-growth-curve/
