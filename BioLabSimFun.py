@@ -255,7 +255,7 @@ class Mutant:
             for base in Primer:
                 PrimerComp = PrimerComp + Help_SwitchComplementary(base)
             
-            if DeviLen <= AllowDevi and DeviTm <= AllowDevi and Primer_Length <= 30 and PrimerComp == Promoter[:len(Primer)]:
+            if DeviLen <= AllowDevi and DeviTm <= AllowDevi/2 and Primer_Length <= 30 and PrimerComp == Promoter[:len(Primer)]:
                 print('Cloning was successfull.')
                 self.add_Promoter(Clone_ID, Promoter)
                 #exp_Cloning = (1 - np.absolute(Primer_Tm_err - Tm)/Primer_Tm_err) * 100
