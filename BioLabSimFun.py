@@ -523,3 +523,43 @@ def Help_SwitchComplementary(argument):
 
 def Error_Resources():
     print('Not enough resources available.')
+    
+    
+def Plot_ExpressionRate():
+    '''function to plot the expression rate as a function of growth rate and promoter strength. The aim was to find out how both influencing variables are in the same order of magnitude.     
+    assumption: The values of the promoter strength (y) are in range from 0.001 to 0.025 in case of *P. putida* respectively in range from 0.001 to 0.05 in case of E. coli.    
+    The values of the growth rate (x) are in range from 0 to 1 on the basis of the standardisation.    
+    The factor was determined using the values for P. putida. Accordingly, for E. coli the values for promoter strength and expression rate should be twice as high at the end.'''
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
+
+    x = np.linspace(0, 1, 50)
+
+    ymin = 30*np.linspace(0.001, 0.025, 50)
+    ym = 40*np.linspace(0.001, 0.025, 50) # factor = 1:0,025, so that x and y are in the same order of magnitude
+    ymax = 50*np.linspace(0.001, 0.025, 50)
+
+    X, Ymin = np.meshgrid(x, ymin)
+    X, Ym = np.meshgrid(x, ym)
+    X, Ymax = np.meshgrid(x, ymax)
+    
+    # 3D plot to to find out the connection and visualize the influence of the factors
+    fig = plt.figure(figsize = (7,6), dpi = 120)
+    ax = plt.axes(projection='3d')
+
+    Z = np.multiply(X,Ymin)
+    ax.contour3D(X, Ymin, Z, 20, cmap='binary')
+    Z = np.multiply(X,Ym)
+    ax.contour3D(X, Ym, Z, 20)
+    Z = np.multiply(X,Ymax)
+    ax.contour3D(X, Ymax, Z, 20, cmap='inferno')
+
+    ax.set_xlabel('normalized growth rate [-]')
+    ax.set_ylabel('promoter strength [-]')
+    ax.set_zlabel('expression rate [-]');
+    
+    '''As can be seen in the plot, the factor by which the promoter strength is multiplied does not change
+        the influence of this strength.
+        The factor can be used to influence the range of the promoter strength and thus the range
+        of the final expression rate.'''
