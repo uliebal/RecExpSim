@@ -230,7 +230,7 @@ class Mutant:
         
         if self._Mutant__Resources > 0:
             
-            NaConc = 5e-02 # 50 mM source: https://academic.oup.com/nar/article/18/21/6409/2388653
+            NaConc = 50 # 50 mM source: https://academic.oup.com/nar/article/18/21/6409/2388653
             OptLen = self._Mutant__OptPrLen
             AllowDevi = 0.2 # allowed deviation
             Primer_Length = len(Primer)
