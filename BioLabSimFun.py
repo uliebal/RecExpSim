@@ -256,13 +256,14 @@ class Mutant:
             DeviLen = np.absolute(OptLen - Primer_Length)/OptLen
             DeviTm_1 = np.absolute(Primer_Tm_err_1 - Tm)/Primer_Tm_err_1
             DeviTm_2 = np.absolute(Primer_Tm_err_2 - Tm)/Primer_Tm_err_2
+            DeviTm = min(DeviTm_1, DeviTm_2)
             
             #create the complementary sequence of the primer to check for mistakes:
             PrimerComp = ""
             for base in Primer:
                 PrimerComp = PrimerComp + Help_SwitchComplementary(base)
             
-            if DeviLen <= AllowDevi and (DeviTm_1 <= AllowDevi/2 or DeviTm_2 <= AllowDevi/2) and Primer_Length <= 30 and PrimerComp == Promoter[:len(Primer)]:
+            if DeviLen <= AllowDevi and DeviTm <= AllowDevi/2 and Primer_Length <= 30 and PrimerComp == Promoter[:len(Primer)]:
                 print('Cloning was successfull.')
                 self.add_Promoter(Clone_ID, Promoter)
                 #exp_Cloning = (1 - np.absolute(Primer_Tm_err - Tm)/Primer_Tm_err) * 100
