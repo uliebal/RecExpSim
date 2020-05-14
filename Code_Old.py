@@ -1,3 +1,7 @@
+# '''You are given a publication from which you can identify positions for integration.
+# Pseudomonas GC content: [https://doi.org/10.1111/1462-2920.14130](https://doi.org/10.1111/1462-2920.14130)'''   
+# '''
+
 # def Cultivation(Mutant, Time):
 #     '''
 #     The cultivation of the host is managed here. It determines the shape of the growth curve based on the optimal growth temperature. The output is maximum of  active biomass which is used for maximum production rate and the biomass integral which is used for final product titer.
