@@ -70,7 +70,7 @@ class Mutant:
                 
     def Make_ProductionExperiment(self, Clone_ID, CultTemp, Biomass, Biomass_Test=.9):
         import numpy as np
-        if self._Mutant__Resources > 1: # two resources will be deducted
+        if self._Mutant__Resources > 2: # three resources will be deducted
             # the final experiment can only be performed after at least one sequence has been cloned and tested:
             if hasattr(self, 'var_Library'):
                 if Clone_ID in self.var_Library:
