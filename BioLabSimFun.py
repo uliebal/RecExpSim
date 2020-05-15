@@ -20,7 +20,7 @@ class Mutant:
         # Library variable containing details to the different tested mutants
         self.var_Library = {}
         # factor which influences the range of the promoter strength, randomly assigned
-        self.__InflProStreng = randint(30,50) # explanation see workflow 
+        self.__InflProStreng = randint(30,50) # explanation see Plot_ExpressionRate 
         # optimal growth temperature, randomly assigned
         self.__OptTemp = randint(25,40) # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
         # optimal Primer length, randomly assigned
@@ -134,9 +134,6 @@ class Mutant:
         from IPython import display
         import time
         import random
-#        from IPython import embed
-#         %matplotlib inline
-
 
         if self._Mutant__Resources > 0:
             
@@ -175,7 +172,6 @@ class Mutant:
                     wait = 0.01 # has to be adjusted, waiting time for loading bar
                     
                     if random.uniform(0,1) > 0.1: # in 10% of cases the culture does not grow (failure of the experiment)
-                        #print('Temp Test {}:', CultTemps[i])
                         r = Help_GrowthConstant(self, CultTemps[i])
                         # the result can reach very small values, which poses downstream problems, hence the lowest value is set to 0.05
                         if r > 0.05: # under process conditions it might be realistic, source : https://www.thieme-connect.de/products/ebooks/pdf/10.1055/b-0034-10021.pdf
@@ -266,9 +262,6 @@ class Mutant:
             if DeviLen <= AllowDevi and DeviTm <= AllowDevi/2 and Primer_Length <= 30 and PrimerComp == Promoter[:len(Primer)]:
                 print('Cloning was successfull.')
                 self.add_Promoter(Clone_ID, Promoter)
-                #exp_Cloning = (1 - np.absolute(Primer_Tm_err - Tm)/Primer_Tm_err) * 100
-                #print(f'The efficiency of cloning is {exp_Cloning.round(2)} %.')
-            
             else:
                 print('Cloning failed')
                 
