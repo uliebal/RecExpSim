@@ -9,7 +9,7 @@ class Mutant:
     # random assignment of the production phase, either during growth phase or stationary phase
     __ProdPhase = 'exponential' if randint(0,1)==0 else 'stationary'
     # resources, e.g. money, for conducting tests
-    __Resources = 50
+    __Resources = 40
     __BiomassMax = None
     
     def __init__(self, Host):
