@@ -68,14 +68,15 @@ class Mutant:
             Error_Resources()
 
                 
-    def Make_ProductionExperiment(self, Clone_ID, CultTemp, Biomass, Biomass_Test=.9):
+    def Make_ProductionExperiment(self, Clone_ID, CultTemp, GrowthRate, Biomass, accuracy_Test=.9):
         import numpy as np
         if self._Mutant__Resources > 2: # three resources will be deducted
             # the final experiment can only be performed after at least one sequence has been cloned and tested:
             if hasattr(self, 'var_Library'):
                 if Clone_ID in self.var_Library:
-                    # testing whether the determined maximum biomass is close to the actual one
-                    if 1 - np.abs(Biomass-self._Mutant__BiomassMax) / self._Mutant__BiomassMax > Biomass_Test:
+                    # testing whether the determined maximum biomass and the determined maximum growth rate are close to the actual ones
+                    if 1 - np.abs(Biomass-self._Mutant__BiomassMax) / self._Mutant__BiomassMax > accuracy_Test and 1 - np.abs(GrowthRate-Help_GrowthConstant(self, self._Mutant__OptTemp)) / Help_GrowthConstant(self, self._Mutant__OptTemp) > accuracy_Test:
+                        # Growth rate was only checked, for the calculation the rate resulting from the temperature is used
                         r = Help_GrowthConstant(self, CultTemp)
                         GrowthMax = Growth_Maxrate(self, r, Biomass)
                         self.var_Library[Clone_ID]['Expression_Temperature'] = CultTemp
@@ -83,7 +84,7 @@ class Mutant:
                         self.var_Library[Clone_ID]['Expression_Rate'] = round(GrowthMax * self.var_Library[Clone_ID]['Promoter_Strength'],2)
                         self._Mutant__Resources -= 3
                     else:
-                        print('Maximum biomass incorrect.')
+                        print('Maximum biomass and/or maximum growth rate are incorrect.')
                 else:
                     print('Error, Clone ID does not exist. Choose existing Clone ID.')
             else:
