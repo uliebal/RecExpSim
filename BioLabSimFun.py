@@ -17,6 +17,7 @@ class Mutant:
         self.var_Host = Host
 #         self.var_Promoter = []
         self.var_Resources = self._Mutant__Resources
+        self.var_Substrate = None
         # Library variable containing details to the different tested mutants
         self.var_Library = {}
         # factor which influences the range of the promoter strength, randomly assigned
@@ -35,7 +36,7 @@ class Mutant:
         '''Report of all properties defined in the biotech experiment.'''
         self.var_Resources = self._Mutant__Resources
         MyVars = [i for i in list(vars(self).keys()) if 'var_' in i]
-        for i in range(2):
+        for i in range(2): # has to be adjusted to display the Substrate
             print('{}: {}'.format(MyVars[i].replace('var_',''), getattr(self, MyVars[i])))
 
         
@@ -270,7 +271,11 @@ class Mutant:
         
         else:
             print('Not enough resources available.')
-            
+    
+    
+    def Choose_Substrate(self, Substrate):
+        '''Function to define the C-source for the experiments/predictions'''
+        self.var_Substrate = Substrate
             
    
         
