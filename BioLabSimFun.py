@@ -15,7 +15,6 @@ class Mutant:
     def __init__(self, Host):
         from random import randint
         self.var_Host = Host
-#         self.var_Promoter = []
         self.var_Resources = self._Mutant__Resources
         self.var_Substrate = None
         # Library variable containing details to the different tested mutants
@@ -93,7 +92,6 @@ class Mutant:
                 
         else:
             Error_Resources()
-#             self.var_Library[Clone_ID]ExpressionRate = None
 
 
     def show_TargetExpressionRate(self):
@@ -132,8 +130,6 @@ class Mutant:
         import numpy as np
         import pandas as pd
         import matplotlib.pyplot as plt
-        import pylab as pl
-        from IPython import display
         import time
         import random
 
@@ -169,7 +165,6 @@ class Mutant:
             
             #computing of biomass data and updating of DataFrame
             for i in range(len(CultTemps)):
-                #random.seed()
                 if self._Mutant__Resources > 0:
                     wait = 0.01 # has to be adjusted, waiting time for loading bar
                     
@@ -539,7 +534,6 @@ def Plot_ExpressionRate():
     The factor was determined using the values for P. putida. Accordingly, for E. coli the values for promoter strength and expression rate should be twice as high at the end.'''
     import numpy as np
     import matplotlib.pyplot as plt
-    from mpl_toolkits.mplot3d import Axes3D
 
     x = np.linspace(0, 1, 50)
 
