@@ -1,12 +1,19 @@
 # BioLabSim - Biotechnology Laboratory Simulator
 
 
+
 *Ulf Liebal, Iris Broderius, Lars Blank*
+
 Institute of Applied Microbiology-iAMB, Aachen Biology and Biotechnology-ABBT, RWTH Aachen University, Worringerweg 1, 52074 Aachen Germany
 
+
+
 Last update: 7 July, 2020
+
 Contact: ulf.liebal@rwth-aachen.de
+
 Licence: See LICENCE file @https://git.rwth-aachen.de/ulf.liebal/biolabsim, or @https://github.com/uliebal/BioLabSim
+
 
 Click the Jupyter icon to start BioLabSim at the Jupyter instance RWTH Aachen University:
 
