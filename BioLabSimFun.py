@@ -12,7 +12,8 @@ class Mutant:
     __Resources = 40
     __BiomassMax = None
     
-    def __init__(self, Host):
+    def __init__(self, Host, MetNet = False):
+        import os
         from random import randint
         self.var_Host = Host
         self.var_Resources = self._Mutant__Resources
@@ -26,16 +27,30 @@ class Mutant:
         # optimal Primer length, randomly assigned
         self.__OptPrLen = randint(16,28) # unit: nt, source: https://link.springer.com/article/10.1007/s10529-013-1249-8
         # maximum biomass concentration, the limits for Ecol were set as shown below and the values for Pput were adjusted according to the ratio of the maximum promoter strengths (0.057/0.04) of the optimal sequences (see expression measurement issue).
+        self.var_GenomeSize = 500
+        self.var_GCcont = .6 # as frequency between 0,..,1
         if self.var_Host == 'Ecol':
             self.__BiomassMax = randint(30,100) # unit: in gDCW/l, source (german): https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&cad=rja&uact=8&ved=2ahUKEwjzt_aJ9pzpAhWGiqQKHb1jC6MQFjABegQIAhAB&url=https%3A%2F%2Fwww.repo.uni-hannover.de%2Fbitstream%2Fhandle%2F123456789%2F3512%2FDissertation.pdf%3Fsequence%3D1&usg=AOvVaw2XfGH11P9gK2F2B63mY4IM
         elif self.var_Host == 'Pput':
             self.__BiomassMax = randint(45,145) # unit: in gDCW/l, source 1: https://onlinelibrary.wiley.com/doi/pdf/10.1002/bit.25474, source 2: https://link.springer.com/article/10.1385/ABAB:119:1:51
+        # initiating metabolic network
+        if MetNet:
+            if self.var_Host == 'Ecol' or self.var_Host == 'Pput':
+                print('Initiating metabolic network')
+                ModelPath = os.path.join('Models','e_coli_core.xml')
+                self.var_Model = Help_LoadCobra(Path = ModelPath)
+                self.__GenesDF = Help_GeneAnnotator(self)
+                self.info_Genome = Help_GenomeGenerator(self)
+                self.var_GenomeSize = len(self.info_Genome)
+                self.var_GCcont = round((self.info_Genome.count('G') + self.info_Genome.count('C'))/self.var_GenomeSize,2)
+            else:
+                print('Invalid organism for metabolic simulation.')
     
     def show_BiotechSetting(self):
         '''Report of all properties defined in the biotech experiment.'''
         self.var_Resources = self._Mutant__Resources
         MyVars = [i for i in list(vars(self).keys()) if 'var_' in i]
-        for i in range(2): # has to be adjusted to display the Substrate
+        for i in range(len(MyVars)): # has to be adjusted to display the Substrate
             print('{}: {}'.format(MyVars[i].replace('var_',''), getattr(self, MyVars[i])))
 
         
@@ -57,8 +72,9 @@ class Mutant:
         if self._Mutant__Resources > 0:
             if hasattr(self, 'var_Library'):
                 if Clone_ID in self.var_Library:
-                    factor = self._Mutant__InflProStreng          
-                    self.var_Library[Clone_ID]['Promoter_Strength'] = round(Help_PromoterStrength(self, Clone_ID) * factor, 2)
+                    factor = self._Mutant__InflProStreng 
+                    Sequence = Mutant.var_Library[Clone_ID]['Promoter_Sequence']
+                    self.var_Library[Clone_ID]['Promoter_Strength'] = round(Help_PromoterStrength(self, Sequence) * factor, 2)
                     self._Mutant__Resources -= 1
                 else:
                     print('Error, Clone ID does not exist. Choose existing Clone ID.')
@@ -274,11 +290,12 @@ class Mutant:
             
    
         
-def Help_PromoterStrength(Mutant, Clone_ID, Predict_File=None, Similarity_Thresh=.4):
+def Help_PromoterStrength(Mutant, Sequence, Scaler=100, Similarity_Thresh=.4, Predict_File=None):
     '''Expression of the recombinant protein.
         Arguments:
-            Mutant: class, contains optimal growth temperature, production phase
-            Clone_ID: Clone with defined promoter for which express
+            Mutant:       class, contains optimal growth temperature, production phase
+            Sequence:     string, Sequence for which to determine promoter strength
+            Scaler:       int, multiplied to the regression result for higher values
             Predict_File: string, address of regression file
         Output: 
             Expression: float, expression rate
@@ -288,7 +305,7 @@ def Help_PromoterStrength(Mutant, Clone_ID, Predict_File=None, Similarity_Thresh
     import joblib
     import pickle
     
-    if Sequence_ReferenceDistance(Mutant.var_Library[Clone_ID]['Promoter_Sequence']) > Similarity_Thresh:
+    if Sequence_ReferenceDistance(Sequence) > Similarity_Thresh:
         Expression = 0
     else:
         if Predict_File!=None:
@@ -298,22 +315,24 @@ def Help_PromoterStrength(Mutant, Clone_ID, Predict_File=None, Similarity_Thresh
             if Mutant.var_Host == 'Ecol':
                 Regressor_File = os.path.join(Data_Folder,'Ecol-Promoter-predictor.pkl')
                 Add_Params = os.path.join(Data_Folder,'Ecol-Promoter-AddParams.pkl')
-                Scaler_DictName = 'Ecol Promoter Activity_Scaler'
+#                 Scaler_DictName = 'Ecol Promoter Activity_Scaler'
             elif Mutant.var_Host == 'Pput':
                 Regressor_File = os.path.join(Data_Folder,'Ptai-Promoter-predictor.pkl')
                 Add_Params = os.path.join(Data_Folder,'Ptai-Promoter-AddParams.pkl')
-                Scaler_DictName = 'Ptai Promoter Activity_Scaler'
+#                 Scaler_DictName = 'Ptai Promoter Activity_Scaler'
             else:
                 print('Non-recognized host name. Rename host to either "Ecol" or "Pput."')
 
         Predictor = joblib.load(Regressor_File)
         Params = pickle.load(open(Add_Params, 'rb'))
         Positions_removed = Params['Positions_removed']
-        Expr_Scaler = Params[Scaler_DictName]
+#         Expr_Scaler = Params[Scaler_DictName]
 
-        X_Test = np.array(list_onehot(np.delete(list_integer(Mutant.var_Library[Clone_ID]['Promoter_Sequence']),Positions_removed, axis=0))).reshape(1,-1)  
-        Y_Test_norm = Predictor.predict(X_Test)
-        Expression = round(float(Expr_Scaler.inverse_transform(Y_Test_norm)),3)
+        X = np.array(list_onehot(np.delete(list_integer(Sequence),Positions_removed, axis=0))).reshape(1,-1)  
+        GC_cont = (Sequence.count('G') + Sequence.count('C'))/len(Sequence)
+        X = np.array([np.append(X,GC_cont)])
+        Y = Predictor.predict(X)
+        Expression = round(float(Y)*Scaler,3)
 
     return Expression
 
@@ -564,3 +583,203 @@ def Plot_ExpressionRate():
         the influence of this strength.
         The factor can be used to influence the range of the promoter strength and thus the range
         of the final expression rate.'''
+    
+def Help_LoadCobra(Path=False):
+    '''
+    This function loads cobra models from input path, or by default the Ecoli core model. Either from a local copy or dowloading it from the Bigg database.
+    
+    Input:
+        Path (optional): string, relative path address to local copy
+        
+    Output:
+        Model:           cobraby model, E. coli core reactions
+    '''
+    
+    import os
+    from cobra.io import read_sbml_model    
+    
+    if Path:
+        Model = read_sbml_model(Path)
+    else:
+        os.system('wget http://bigg.ucsd.edu/static/models/e_coli_core.xml')
+        # generating cobra variable from SBML/xml/mat file
+        Path = 'e_coli_core.xml'
+        Model = read_sbml_model(Path)
+        
+    return Model
+
+
+def Help_GeneAnnotator(Mutant):
+    '''
+    Function to characterize genes.
+    Output
+        Genes_df: dataframe, gene name from enzyme id in model, expression strength, promoter sequence, ORF, flux
+    '''
+    import pandas as pd
+    import multiprocessing
+    from joblib import Parallel, delayed
+    
+    num_cores = multiprocessing.cpu_count()
+#     use_core = min([num_cores, n])
+  
+    Result = Parallel(n_jobs=num_cores)(delayed(make_GeneJoiner)(Mutant, myRct.id) for myRct in Mutant.var_Model.reactions)
+    Genes_df = pd.DataFrame(Result)
+    # adding flux values
+    Fluxes = Mutant.var_Model.optimize()
+    Genes_df['Fluxes'] = Fluxes.fluxes.values
+    
+    return Genes_df
+
+def Help_GenomeGenerator(Mutant):
+    '''
+    Constructs whole genome with interspersed genes.
+    '''
+    import numpy as np
+    import random
+    # combining promoter and ORF
+    Genes = [''.join([myORF,myProm]) for myORF, myProm in zip(Mutant._Mutant__GenesDF['ORF'].values,Mutant._Mutant__GenesDF['Promoter'].values)]
+    Genes_List = [Convert(Gene) for Gene in Genes]
+    # generating background genome sequence
+    Genome_Bckgd = make_GenomeBckgd(Mutant)
+    # determining position for gene insertion
+    Gene_Positions = np.sort(random.sample(range(len(Genome_Bckgd)),len(Genes)))
+    # breaking the background genome in nested lists at gene positions
+    Genome_Tmp = make_NestedList(Genome_Bckgd, Gene_Positions)
+    # Now inserting the genes
+    Gtmp = [np.concatenate([mbg,bed]) for mbg,bed in zip(Genome_Tmp[:-1],Genes_List)]
+    Gtmp = np.concatenate([Gtmp,Genome_Tmp[-1]])
+    Genome = ''.join([''.join(elm) for elm in Gtmp])    
+    
+    return Genome
+    
+
+def make_GeneJoiner(Mutant, RctID):
+    '''
+    Determines promoter activity and combines it with enzyme id and ORF.
+    Output
+        Gene_Info:    dictionary, gene id, gene expression, promoter, ORF
+    '''
+
+    Gene_ORF = make_ORF(Mutant)
+    Gene_Promoter = make_Promoter()
+    Gene_Activity = Help_PromoterStrength(Mutant, Gene_Promoter, Similarity_Thresh=.8)
+    
+    Gene_Dict = {'RctID': RctID, 'Expression': Gene_Activity, 'Promoter': Gene_Promoter, 'ORF': Gene_ORF}
+    
+    return Gene_Dict
+    
+def make_GenomeBckgd(Mutant):
+    '''
+    Function for setup of background genome.
+    Input
+        Mutant:      class
+    Output
+        Genome_Bckgd: string
+    '''
+    import random
+
+    Genome_Size = Mutant.var_GenomeSize
+    GC_cont = Mutant.var_GCcont
+
+    SeqNestList = [random.choices([Letter for Nest in random.choices([['G','C'],['A','T']], weights=[GC_cont, 1-GC_cont]) for Letter in Nest]) for _x in range(Genome_Size)]
+    Genome_Bckgd = ''.join(Letter for Nest in SeqNestList for Letter in Nest)
+
+    return Genome_Bckgd
+
+def make_ORF(Mutant):
+    '''
+    Function to generate a single ORF. Triplet frequencies are taken from E.coli:
+    https://openwetware.org/wiki/Escherichia_coli/Codon_usage
+    ORF starts always with 'ATG'.
+    Input
+        CodonTriplets:     dataframe, automatic load, base triplets, ID (e.g. 'Stop', 'Met'), frequency in percent
+        Mutant:            class, subfield var_Model.reactions is used to count the enzyme number to derive minimum sequence length
+    Output
+        Gene_ORF:          string, open reading frame of enzyme
+    '''
+    import random
+    import numpy as np
+    import pandas as pd
+
+    Model = Mutant.var_Model
+    # coding sequence construction
+    # first we determine the minimum coding gene length of nucleotides to distinguish the enzymes in the model
+    Enzyme_Number = len(Model.reactions)
+    Gen_Minimum = np.ceil(np.log2(Enzyme_Number))
+
+    # we want to represent codon triplicates, we calculate the next highest divisor of three
+    Gene_Length = int(np.ceil(Gen_Minimum/3))
+    CodonFile = 'CodonTriplets.csv'
+    CodonTriplets = pd.read_csv(CodonFile, delimiter=';', skipinitialspace=True)
+    CodonStop = CodonTriplets[['Stop' in s for s in CodonTriplets['Name']]].reset_index()
+    CodonCoding = CodonTriplets.drop(CodonStop.index).reset_index()
+    Gene_ORF = [random.choices(CodonCoding['Triplet'], weights=CodonCoding['Percent']) for CodonId in range(Gene_Length)]
+    Gene_Stop = random.choices(CodonStop['Triplet'], weights=CodonStop['Percent'])
+    Gene_ORF.append(Gene_Stop)
+    Gene_ORF.insert(0,['ATG'])
+    Gene_ORF = ''.join([Letter for Nest in Gene_ORF for Letter in Nest])
+
+    return Gene_ORF
+
+def make_Promoter(RefFile=False, WeightFile=False):
+    '''
+    Generating a single promoter. The promoter sequences are selected from the exploration space used to train the regressor for promoter strength. The algorithm needs to know which nucleotides at each position were sampled strongly enough for predictions. Positions not sufficiently well sampled are filled with entries from a reference sequence.
+    Input
+        RefFile:               string, path to reference sequence in txt-file, used to fill positions with weak sampling
+        WeightFile:            string, path to pickle with dataframe, columns represent bases (A-C-G-T), rows represent positions, index is position relative to start codon (e.g. -40, -1)
+    Output
+        Gene_Promoter:        string, sequence of the promoter, same length as reference sequence
+    '''
+    import numpy as np
+    import pickle
+    import os
+    import random
+    # generating promoter sequence
+
+    # the reference sequence contains the most common tested nucleotides at each position
+    if not RefFile:   
+        RefFile = os.path.join('Models','RefSeq.txt')
+    with open(RefFile) as f:
+        RefSeq = f.read()
+    
+    # loading information that determines the exploratory space of the regressor
+    # weight file has boolean representations for each base on each position whether it was part of the training set or not
+    if not WeightFile:
+        WeightFile = os.path.join('Models','NucleotideWeightTable.pkl')
+    with open(WeightFile, 'rb') as handle:
+        Nucleotides_Weight = pickle.load(handle)
+    Nucleotides_Weight.index = Nucleotides_Weight.index+40
+
+    # setup of default sequence with reference
+    SeqDef = np.asarray([Letter for Letter in RefSeq])
+
+    # changing positions within the exploratory space of the regressor
+    Bases = ['A','C','G','T']
+    for idx in range(len(Nucleotides_Weight)):
+        np.put(SeqDef,Nucleotides_Weight.index[idx],random.choices(Bases,Nucleotides_Weight.iloc[idx].values))
+    Gene_Promoter = ''.join(SeqDef)
+    
+    return Gene_Promoter
+
+def make_NestedList(List,Breaks):
+    '''
+    Generates a nested list at the break points
+    '''
+    import numpy as np
+    # adding the last element of the list, otherwise elements after the last break disappear
+    Breaks = np.concatenate([Breaks,[len(List)]])
+    mystart = 0
+    List_Nested = list()
+    for myend in Breaks:
+        List_Nested.append([List[myidx2] for myidx2 in range(mystart,myend)])
+        mystart = myend
+        
+    return List_Nested
+
+def Convert(string): 
+    '''
+    https://www.geeksforgeeks.org/python-program-convert-string-list/
+    '''
+    list1=[] 
+    list1[:0]=string 
+    return list1 
