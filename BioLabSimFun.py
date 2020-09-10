@@ -20,6 +20,8 @@ class Mutant:
         self.var_Substrate = None
         # Library variable containing details to the different tested mutants
         self.var_Library = {}
+        # Strain collection containing manipulated genomes
+        self.info_Strain = {}
         # factor which influences the range of the promoter strength, randomly assigned
         self.__InflProStreng = randint(30,50) # explanation see Plot_ExpressionRate 
         # optimal growth temperature, randomly assigned
@@ -40,6 +42,7 @@ class Mutant:
                 ModelPath = os.path.join('Models','e_coli_core.xml')
                 self.var_Model = Help_LoadCobra(Path = ModelPath)
                 self.__GenesDF = Help_GeneAnnotator(self)
+                self.__GenesDF['Expr2Flux'] = Help_Expr2Flux(self)
                 self.info_Genome = Help_GenomeGenerator(self)
                 self.var_GenomeSize = len(self.info_Genome)
                 self.var_GCcont = round((self.info_Genome.count('G') + self.info_Genome.count('C'))/self.var_GenomeSize,2)
@@ -625,6 +628,9 @@ def Help_GeneAnnotator(Mutant):
     Result = Parallel(n_jobs=num_cores)(delayed(make_GeneJoiner)(Mutant, myRct.id) for myRct in Mutant.var_Model.reactions)
     Genes_df = pd.DataFrame(Result)
     # adding flux values
+    # setup of flux boundaries. For the reference boundary changes are set to 'False', 
+    # for mutant strains, ractions with altered promoter sequence will change enzyme levels and boundaries must be changed accordingly, their variable is 'True'
+#     myModel = make_AdaptModel(Model, Strain)
     Fluxes = Mutant.var_Model.optimize()
     Genes_df['Fluxes'] = Fluxes.fluxes.values
     
@@ -637,7 +643,7 @@ def Help_GenomeGenerator(Mutant):
     import numpy as np
     import random
     # combining promoter and ORF
-    Genes = [''.join([myORF,myProm]) for myORF, myProm in zip(Mutant._Mutant__GenesDF['ORF'].values,Mutant._Mutant__GenesDF['Promoter'].values)]
+    Genes = [''.join([myProm, myORF]) for myProm, myORF in zip(Mutant._Mutant__GenesDF['Promoter'].values,Mutant._Mutant__GenesDF['ORF'].values)]
     Genes_List = [Convert(Gene) for Gene in Genes]
     # generating background genome sequence
     Genome_Bckgd = make_GenomeBckgd(Mutant)
@@ -651,7 +657,39 @@ def Help_GenomeGenerator(Mutant):
     Genome = ''.join([''.join(elm) for elm in Gtmp])    
     
     return Genome
+
+def Help_StrainCharacterizer(Mutant, StrainID):
+    '''
+    Function to scan a manipulated genome for changes in gene expression of enzymes.
+    Input:
+        Mutant:         parent class
+        StrainID
+    Output:
+        RctNew_df:      dataframe, containing reactions with updated expression
+    '''
+    import pandas as pd
+    import multiprocessing
+    from joblib import Parallel, delayed
     
+    num_cores = multiprocessing.cpu_count()
+#     use_core = min([num_cores, n])
+  
+    Result = Parallel(n_jobs=num_cores)(delayed(make_UpdateExpression)(Mutant, StrainID, myRct.id) for myRct in Mutant.var_Model.reactions)
+    RctNew_df = pd.DataFrame(Result)
+
+    return RctNew_df
+    
+def Help_Expr2Flux(Mutant):
+    '''
+    Function to correlate expression strength with flux.
+    Input:
+        Mutant:         parent class
+    Output:
+        Corr_ExprFlux:  array, correlation factor
+    '''
+    Corr_ExprFlux = Mutant._Mutant__GenesDF['Fluxes'].values/Mutant._Mutant__GenesDF['Expression'].values
+    
+    return Corr_ExprFlux
 
 def make_GeneJoiner(Mutant, RctID):
     '''
@@ -783,3 +821,39 @@ def Convert(string):
     list1=[] 
     list1[:0]=string 
     return list1 
+
+def make_UpdateExpression(Mutant, StrainID, RctID):
+    '''
+    Function to evaluate if expression for the input gene is different compared to the reference strain. 
+    Input:
+        Mutant:         parent class, subfield _Mutant_GenesDF and info_Genome used.
+        StrainID:       string, identifier for expressed genome in subclass var_strains
+        RctID:          string, identifier for the reaction to be tested
+    Output:
+        OutDict:        dictionary containing 'RctFlag' boolean, if True, the expression relative to the reference has changed; 'Gene_Activity' float, expression strength; 'RctID' string, identifier for the reaction tested
+    '''
+    
+    import numpy as np
+    
+    # Extraction of ORF and reference promoter sequence of input reaction from reference annotation database
+    Rct_Idx = Mutant._Mutant__GenesDF[Mutant._Mutant__GenesDF['RctID']==RctID].index.values
+    Rct_ORF = ''.join(str(n) for n in Mutant._Mutant__GenesDF['ORF'].iloc[Rct_Idx].to_list())
+    Rct_RefProm = Mutant._Mutant__GenesDF['Promoter'].iloc[Rct_Idx].values
+
+    # Extraction of reaction association promoter sequence from input genome
+    Gene_ORF = Mutant.info_Genome.find(Rct_ORF)
+    Gene_Promoter = Mutant.info_Strain[StrainID]['Genome'][Gene_ORF-40:Gene_ORF:1]
+
+    # Comparison of current promoter with reference promoter
+    # If promoters differ, then new expression strength is calculated
+    if Gene_Promoter != Rct_RefProm:
+#         print('New promoter.')
+        RctFlag = True
+        Gene_Activity = float(Help_PromoterStrength(Mutant, Gene_Promoter, Similarity_Thresh=.8))
+    else:
+        RctFlag = False
+        Gene_Activity = float(Mutant._Mutant__GenesDF['Expression'].iloc[Rct_Idx].values)
+    print(Gene_Activity)
+    OutDict = {'RctFlag':RctFlag, 'Activity':Gene_Activity, 'RctID':RctID}
+    
+    return OutDict
