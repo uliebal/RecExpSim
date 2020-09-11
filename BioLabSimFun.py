@@ -1,8 +1,8 @@
 # Biotechnology Laboratory Simulator Functions
 # print(vars(myhost))
  
-class Mutant:
-    '''The 'Mutant' class stores all information about the organism and the integrated recombinant protein.''' 
+class Host:
+    '''The 'Host' class stores all information about the organism and the integrated recombinant protein.''' 
     
 #     from BioLabSimFun import SequenceRandomizer_Single
     from random import randint
@@ -16,7 +16,7 @@ class Mutant:
         import os
         from random import randint
         self.var_Host = Host
-        self.var_Resources = self._Mutant__Resources
+        self.var_Resources = self._Host__Resources
         self.var_Substrate = None
         # Library variable containing details to the different tested mutants
         self.var_Library = {}
@@ -29,29 +29,16 @@ class Mutant:
         # optimal Primer length, randomly assigned
         self.__OptPrLen = randint(16,28) # unit: nt, source: https://link.springer.com/article/10.1007/s10529-013-1249-8
         # maximum biomass concentration, the limits for Ecol were set as shown below and the values for Pput were adjusted according to the ratio of the maximum promoter strengths (0.057/0.04) of the optimal sequences (see expression measurement issue).
-        self.var_GenomeSize = 500
-        self.var_GCcont = .6 # as frequency between 0,..,1
         if self.var_Host == 'Ecol':
             self.__BiomassMax = randint(30,100) # unit: in gDCW/l, source (german): https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&cad=rja&uact=8&ved=2ahUKEwjzt_aJ9pzpAhWGiqQKHb1jC6MQFjABegQIAhAB&url=https%3A%2F%2Fwww.repo.uni-hannover.de%2Fbitstream%2Fhandle%2F123456789%2F3512%2FDissertation.pdf%3Fsequence%3D1&usg=AOvVaw2XfGH11P9gK2F2B63mY4IM
         elif self.var_Host == 'Pput':
             self.__BiomassMax = randint(45,145) # unit: in gDCW/l, source 1: https://onlinelibrary.wiley.com/doi/pdf/10.1002/bit.25474, source 2: https://link.springer.com/article/10.1385/ABAB:119:1:51
         # initiating metabolic network
-        if MetNet:
-            if self.var_Host == 'Ecol' or self.var_Host == 'Pput':
-                print('Initiating metabolic network')
-                ModelPath = os.path.join('Models','e_coli_core.xml')
-                self.var_Model = Help_LoadCobra(Path = ModelPath)
-                self.__GenesDF = Help_GeneAnnotator(self)
-                self.__GenesDF['Expr2Flux'] = Help_Expr2Flux(self)
-                self.info_Genome = Help_GenomeGenerator(self)
-                self.var_GenomeSize = len(self.info_Genome)
-                self.var_GCcont = round((self.info_Genome.count('G') + self.info_Genome.count('C'))/self.var_GenomeSize,2)
-            else:
-                print('Invalid organism for metabolic simulation.')
+
     
     def show_BiotechSetting(self):
         '''Report of all properties defined in the biotech experiment.'''
-        self.var_Resources = self._Mutant__Resources
+        self.var_Resources = self._Host__Resources
         MyVars = [i for i in list(vars(self).keys()) if 'var_' in i]
         for i in range(len(MyVars)): # has to be adjusted to display the Substrate
             print('{}: {}'.format(MyVars[i].replace('var_',''), getattr(self, MyVars[i])))
@@ -72,13 +59,13 @@ class Mutant:
 
         
     def Make_MeasurePromoterStrength(self, Clone_ID):
-        if self._Mutant__Resources > 0:
+        if self._Host__Resources > 0:
             if hasattr(self, 'var_Library'):
                 if Clone_ID in self.var_Library:
-                    factor = self._Mutant__InflProStreng 
-                    Sequence = Mutant.var_Library[Clone_ID]['Promoter_Sequence']
-                    self.var_Library[Clone_ID]['Promoter_Strength'] = round(Help_PromoterStrength(self, Sequence) * factor, 2)
-                    self._Mutant__Resources -= 1
+                    factor = self._Host__InflProStreng 
+                    Sequence = Host.var_Library[Clone_ID]['Promoter_Sequence']
+                    self.var_Library[Clone_ID]['Promoter_Strength'] = round(Help_PromoterStrength(self.var_Host, Sequence) * factor, 2)
+                    self._Host__Resources -= 1
                 else:
                     print('Error, Clone ID does not exist. Choose existing Clone ID.')
             else:
@@ -89,19 +76,19 @@ class Mutant:
                 
     def Make_ProductionExperiment(self, Clone_ID, CultTemp, GrowthRate, Biomass, accuracy_Test=.9):
         import numpy as np
-        if self._Mutant__Resources > 2: # three resources will be deducted
+        if self._Host__Resources > 2: # three resources will be deducted
             # the final experiment can only be performed after at least one sequence has been cloned and tested:
             if hasattr(self, 'var_Library'):
                 if Clone_ID in self.var_Library:
                     # testing whether the determined maximum biomass and the determined maximum growth rate are close to the actual ones
-                    if 1 - np.abs(Biomass-self._Mutant__BiomassMax) / self._Mutant__BiomassMax > accuracy_Test and 1 - np.abs(GrowthRate-Help_GrowthConstant(self, self._Mutant__OptTemp)) / Help_GrowthConstant(self, self._Mutant__OptTemp) > accuracy_Test:
+                    if 1 - np.abs(Biomass-self._Host__BiomassMax) / self._Host__BiomassMax > accuracy_Test and 1 - np.abs(GrowthRate-Help_GrowthConstant(self, self._Host__OptTemp)) / Help_GrowthConstant(self, self._Host__OptTemp) > accuracy_Test:
                         # Growth rate was only checked, for the calculation the rate resulting from the temperature is used
                         r = Help_GrowthConstant(self, CultTemp)
                         GrowthMax = Growth_Maxrate(self, r, Biomass)
                         self.var_Library[Clone_ID]['Expression_Temperature'] = CultTemp
                         self.var_Library[Clone_ID]['Expression_Biomass'] = Biomass
                         self.var_Library[Clone_ID]['Expression_Rate'] = round(GrowthMax * self.var_Library[Clone_ID]['Promoter_Strength'],2)
-                        self._Mutant__Resources -= 3
+                        self._Host__Resources -= 3
                     else:
                         print('Maximum biomass and/or maximum growth rate are incorrect.')
                 else:
@@ -115,9 +102,9 @@ class Mutant:
 
     def show_TargetExpressionRate(self):
         '''Function to calculate the maximum possible expression rate and to tell the students what the minimum rate should be.'''
-        BiomassMax = self._Mutant__BiomassMax
-        OptTemp = self._Mutant__OptTemp
-        factor = self._Mutant__InflProStreng
+        BiomassMax = self._Host__BiomassMax
+        OptTemp = self._Host__OptTemp
+        factor = self._Host__InflProStreng
         # Values see init function at the beginning
         if self.var_Host == 'Ecol':
             MaximumPromoterStrength = round(0.057 * factor,2)
@@ -133,7 +120,7 @@ class Mutant:
         '''Function to plot the promoter strength of the optimal sequence additionally as reference.'''
         import matplotlib.pyplot as plt
         
-        factor = self._Mutant__InflProStreng
+        factor = self._Host__InflProStreng
         # Values see init function at the beginning
         if self.var_Host == 'Ecol':
             OptimalPromoterStrength = round(0.057 * factor,2)
@@ -152,16 +139,16 @@ class Mutant:
         import time
         import random
 
-        if self._Mutant__Resources > 0:
+        if self._Host__Resources > 0:
             
-            capacity = self._Mutant__BiomassMax
+            capacity = self._Host__BiomassMax
             # the time of the half maximum population (inflection point) is calculated according to here:
             # https://opentextbc.ca/calculusv2openstax/chapter/the-logistic-equation/
             d_mult = 2 # we multiply the inflection point with 'd_mult' to increase cultivation time
             P0 = 0.1
             
             # determine time vector with maximum length:
-            OptTemp = self._Mutant__OptTemp
+            OptTemp = self._Host__OptTemp
             # Selecting the temperature that is most distant from the optimal temperature
             Temp_tmax = CultTemps[np.argmax(np.absolute(CultTemps-OptTemp))]
             # using the worst temperature to calculate lowest growth rate
@@ -184,7 +171,7 @@ class Mutant:
             
             #computing of biomass data and updating of DataFrame
             for i in range(len(CultTemps)):
-                if self._Mutant__Resources > 0:
+                if self._Host__Resources > 0:
                     wait = 0.01 # has to be adjusted, waiting time for loading bar
                     
                     if random.uniform(0,1) > 0.1: # in 10% of cases the culture does not grow (failure of the experiment)
@@ -222,7 +209,7 @@ class Mutant:
                 new_df = pd.DataFrame({'exp.{} biomass conc. at {} °C'.format(i+1, (CultTemps[i])): exp_TempGrowthExp})
                 df.update(new_df)
             
-                self._Mutant__Resources -= 1
+                self._Host__Resources -= 1
             
             excel_writer = pd.ExcelWriter('Strain_characterization_{}.xlsx'.format(n)) # Export DataFrame to Excel
             df.to_excel(excel_writer, sheet_name='different temp')
@@ -241,10 +228,10 @@ class Mutant:
         if Sequence_ReferenceDistance(Promoter) > .4:
             return print('Promoter sequence deviates too much from the given structure.')
         
-        if self._Mutant__Resources > 0:
+        if self._Host__Resources > 0:
             
             NaConc = 0.1 # 100 mM source: https://www.genelink.com/Literature/ps/R26-6400-MW.pdf (previous 50 mM: https://academic.oup.com/nar/article/18/21/6409/2388653)
-            OptLen = self._Mutant__OptPrLen
+            OptLen = self._Host__OptPrLen
             AllowDevi = 0.2 # allowed deviation
             Primer_Length = len(Primer)
             Primer_nC = Primer.count('C')
@@ -281,22 +268,37 @@ class Mutant:
             else:
                 print('Cloning failed')
                 
-            self._Mutant__Resources -= 1
+            self._Host__Resources -= 1
         
         else:
             print('Not enough resources available.')
     
     
-    def Choose_Substrate(self, Substrate):
-        '''Function to define the C-source for the experiments/predictions'''
-        self.var_Substrate = Substrate
+#     def Choose_Substrate(self, Substrate):
+#         '''Function to define the C-source for the experiments/predictions'''
+#         self.var_Substrate = Substrate
             
-   
+class Strain:
+    '''
+    The 'strain' class stores information of genome and other associated metabolic information
+    '''
+    def __init__(self, Host = 'Ecol', GenomeSize = 500, GCcont = .6):
+        import os
+        print('Initiating metabolic network')
+        ModelPath = os.path.join('Models','e_coli_core.xml')
+        self.var_Model = Help_LoadCobra(Path = ModelPath)
+        self.info_GenesDF = Help_GeneAnnotator(Host, self.var_Model) # self.__GenesDF = 
+        self.info_GenesDF['Expr2Flux'] = Help_Expr2Flux(self.info_GenesDF) # self.__GenesDF = 
+        self.info_Genome = Help_GenomeGenerator(self.info_GenesDF, GenomeSize, GCcont)
+        self.var_GenomeSize = len(self.info_Genome)
+        self.var_GCcont = round((self.info_Genome.count('G') + self.info_Genome.count('C'))/self.var_GenomeSize,2)
+#             else:
+#                 print('Invalid organism for metabolic simulation.')
         
-def Help_PromoterStrength(Mutant, Sequence, Scaler=100, Similarity_Thresh=.4, Predict_File=None):
+def Help_PromoterStrength(Host, Sequence, Scaler=100, Similarity_Thresh=.4, Predict_File=None):
     '''Expression of the recombinant protein.
         Arguments:
-            Mutant:       class, contains optimal growth temperature, production phase
+            Host:       class, contains optimal growth temperature, production phase
             Sequence:     string, Sequence for which to determine promoter strength
             Scaler:       int, multiplied to the regression result for higher values
             Predict_File: string, address of regression file
@@ -315,11 +317,11 @@ def Help_PromoterStrength(Mutant, Sequence, Scaler=100, Similarity_Thresh=.4, Pr
             Regressor_File = Predict_File
         else:    
             Data_Folder = 'ExpressionPredictor'
-            if Mutant.var_Host == 'Ecol':
+            if Host == 'Ecol':
                 Regressor_File = os.path.join(Data_Folder,'Ecol-Promoter-predictor.pkl')
                 Add_Params = os.path.join(Data_Folder,'Ecol-Promoter-AddParams.pkl')
 #                 Scaler_DictName = 'Ecol Promoter Activity_Scaler'
-            elif Mutant.var_Host == 'Pput':
+            elif Host == 'Pput':
                 Regressor_File = os.path.join(Data_Folder,'Ptai-Promoter-predictor.pkl')
                 Add_Params = os.path.join(Data_Folder,'Ptai-Promoter-AddParams.pkl')
 #                 Scaler_DictName = 'Ptai Promoter Activity_Scaler'
@@ -428,7 +430,7 @@ def list_onehot(IntegerList):
         OneHotList.append(onehot_encoded)
     return OneHotList
 
-def Help_GrowthConstant(Mutant, CultTemp, var=5):
+def Help_GrowthConstant(Host, CultTemp, var=5):
     '''Function that generates the growth rate constant. The growth rate constant depends on the optimal growth temperature and the cultivation temperature. It is sampled from a Gaussian distribution with the mean at the optimal temperature and variance 1.
     Arguments:
         Opt_Temp: float, optimum growth temperature, mean of the Gaussian distribution
@@ -441,7 +443,7 @@ def Help_GrowthConstant(Mutant, CultTemp, var=5):
     import numpy as np
     from scipy.stats import norm
     
-    OptTemp = Mutant._Mutant__OptTemp
+    OptTemp = Host._Host__OptTemp
     r_pdf = norm(OptTemp, var)
     # calculation of the growth rate constant, by picking the activity from a normal distribution
     
@@ -450,10 +452,10 @@ def Help_GrowthConstant(Mutant, CultTemp, var=5):
     return growth_rate_const
     
 
-def Growth_Maxrate(Mutant, growth_rate_const, Biomass):
+def Growth_Maxrate(Host, growth_rate_const, Biomass):
     '''The function calculates the maximum slope during growth.
         Arguments:
-            Mutant: class, contains maximum biomass concentration as carrying capacity
+            Host: class, contains maximum biomass concentration as carrying capacity
             growth_rate_const: float, maximum growth rate constant
         Output:
             growth_rate_max: float, maximum growth rate
@@ -492,7 +494,7 @@ def Sequence_ReferenceDistance(SeqObj, RefSeq=None):
     return SequenceDistance
 
 
-def Help_ExportToExcel(Mutant, FileName, sheet_name, x_values, y_values,
+def Help_ExportToExcel(Host, FileName, sheet_name, x_values, y_values,
                        x_name, y_name):
     '''Function that exports data from an experiment to an Excel file
     Input:
@@ -612,9 +614,11 @@ def Help_LoadCobra(Path=False):
     return Model
 
 
-def Help_GeneAnnotator(Mutant):
+def Help_GeneAnnotator(Host, Model):
     '''
     Function to characterize genes.
+    Input
+        Model:    cobra model
     Output
         Genes_df: dataframe, gene name from enzyme id in model, expression strength, promoter sequence, ORF, flux
     '''
@@ -625,28 +629,28 @@ def Help_GeneAnnotator(Mutant):
     num_cores = multiprocessing.cpu_count()
 #     use_core = min([num_cores, n])
   
-    Result = Parallel(n_jobs=num_cores)(delayed(make_GeneJoiner)(Mutant, myRct.id) for myRct in Mutant.var_Model.reactions)
+    Result = Parallel(n_jobs=num_cores)(delayed(make_GeneJoiner)(Host, Model, myRct.id) for myRct in Model.reactions)
     Genes_df = pd.DataFrame(Result)
     # adding flux values
     # setup of flux boundaries. For the reference boundary changes are set to 'False', 
     # for mutant strains, ractions with altered promoter sequence will change enzyme levels and boundaries must be changed accordingly, their variable is 'True'
 #     myModel = make_AdaptModel(Model, Strain)
-    Fluxes = Mutant.var_Model.optimize()
+    Fluxes = Model.optimize()
     Genes_df['Fluxes'] = Fluxes.fluxes.values
     
     return Genes_df
 
-def Help_GenomeGenerator(Mutant):
+def Help_GenomeGenerator(GenesDF, GenomeSize, GCcont):
     '''
     Constructs whole genome with interspersed genes.
     '''
     import numpy as np
     import random
     # combining promoter and ORF
-    Genes = [''.join([myProm, myORF]) for myProm, myORF in zip(Mutant._Mutant__GenesDF['Promoter'].values,Mutant._Mutant__GenesDF['ORF'].values)]
+    Genes = [''.join([myProm, myORF]) for myProm, myORF in zip(GenesDF['Promoter'].values,GenesDF['ORF'].values)]
     Genes_List = [Convert(Gene) for Gene in Genes]
     # generating background genome sequence
-    Genome_Bckgd = make_GenomeBckgd(Mutant)
+    Genome_Bckgd = make_GenomeBckgd(GenomeSize, GCcont)
     # determining position for gene insertion
     Gene_Positions = np.sort(random.sample(range(len(Genome_Bckgd)),len(Genes)))
     # breaking the background genome in nested lists at gene positions
@@ -658,7 +662,7 @@ def Help_GenomeGenerator(Mutant):
     
     return Genome
 
-def Help_StrainCharacterizer(Mutant, StrainID):
+def Help_StrainCharacterizer(Host, GenesDF, Genome_WT, Genome_MT, Model):
     '''
     Function to scan a manipulated genome for changes in gene expression of enzymes.
     Input:
@@ -674,57 +678,55 @@ def Help_StrainCharacterizer(Mutant, StrainID):
     num_cores = multiprocessing.cpu_count()
 #     use_core = min([num_cores, n])
   
-    Result = Parallel(n_jobs=num_cores)(delayed(make_UpdateExpression)(Mutant, StrainID, myRct.id) for myRct in Mutant.var_Model.reactions)
+    Result = Parallel(n_jobs=num_cores)(delayed(make_UpdateExpression)(Host, GenesDF, Genome_WT, Genome_MT, myRct.id) for myRct in Model.reactions)
     RctNew_df = pd.DataFrame(Result)
 
     return RctNew_df
     
-def Help_Expr2Flux(Mutant):
+def Help_Expr2Flux(GenesDF):
     '''
     Function to correlate expression strength with flux.
     Input:
-        Mutant:         parent class
+        GenesDF:        DataFrame, details of enzymes
     Output:
         Corr_ExprFlux:  array, correlation factor
     '''
-    Corr_ExprFlux = Mutant._Mutant__GenesDF['Fluxes'].values/Mutant._Mutant__GenesDF['Expression'].values
+    Corr_ExprFlux = GenesDF['Fluxes'].values/GenesDF['Expression'].values
     
     return Corr_ExprFlux
 
-def make_GeneJoiner(Mutant, RctID):
+def make_GeneJoiner(Host, Model, RctID):
     '''
     Determines promoter activity and combines it with enzyme id and ORF.
     Output
         Gene_Info:    dictionary, gene id, gene expression, promoter, ORF
     '''
 
-    Gene_ORF = make_ORF(Mutant)
+    Gene_ORF = make_ORF(Model)
     Gene_Promoter = make_Promoter()
-    Gene_Activity = Help_PromoterStrength(Mutant, Gene_Promoter, Similarity_Thresh=.8)
+    Gene_Activity = Help_PromoterStrength(Host, Gene_Promoter, Similarity_Thresh=.8)
     
     Gene_Dict = {'RctID': RctID, 'Expression': Gene_Activity, 'Promoter': Gene_Promoter, 'ORF': Gene_ORF}
     
     return Gene_Dict
     
-def make_GenomeBckgd(Mutant):
+def make_GenomeBckgd(GenomeSize, GCcont):
     '''
     Function for setup of background genome.
     Input
-        Mutant:      class
+        GenomeSize:      integer, genome nucleotide number
+        GCcont:     float, [0..1], GC-content approximate
     Output
         Genome_Bckgd: string
     '''
     import random
 
-    Genome_Size = Mutant.var_GenomeSize
-    GC_cont = Mutant.var_GCcont
-
-    SeqNestList = [random.choices([Letter for Nest in random.choices([['G','C'],['A','T']], weights=[GC_cont, 1-GC_cont]) for Letter in Nest]) for _x in range(Genome_Size)]
+    SeqNestList = [random.choices([Letter for Nest in random.choices([['G','C'],['A','T']], weights=[GCcont, 1-GCcont]) for Letter in Nest]) for _x in range(GenomeSize)]
     Genome_Bckgd = ''.join(Letter for Nest in SeqNestList for Letter in Nest)
 
     return Genome_Bckgd
 
-def make_ORF(Mutant):
+def make_ORF(Model):
     '''
     Function to generate a single ORF. Triplet frequencies are taken from E.coli:
     https://openwetware.org/wiki/Escherichia_coli/Codon_usage
@@ -739,7 +741,6 @@ def make_ORF(Mutant):
     import numpy as np
     import pandas as pd
 
-    Model = Mutant.var_Model
     # coding sequence construction
     # first we determine the minimum coding gene length of nucleotides to distinguish the enzymes in the model
     Enzyme_Number = len(Model.reactions)
@@ -822,7 +823,7 @@ def Convert(string):
     list1[:0]=string 
     return list1 
 
-def make_UpdateExpression(Mutant, StrainID, RctID):
+def make_UpdateExpression(Host, GenesDF, Genome_WT, Genome_Mut, RctID):
     '''
     Function to evaluate if expression for the input gene is different compared to the reference strain. 
     Input:
@@ -836,24 +837,37 @@ def make_UpdateExpression(Mutant, StrainID, RctID):
     import numpy as np
     
     # Extraction of ORF and reference promoter sequence of input reaction from reference annotation database
-    Rct_Idx = Mutant._Mutant__GenesDF[Mutant._Mutant__GenesDF['RctID']==RctID].index.values
-    Rct_ORF = ''.join(str(n) for n in Mutant._Mutant__GenesDF['ORF'].iloc[Rct_Idx].to_list())
-    Rct_RefProm = Mutant._Mutant__GenesDF['Promoter'].iloc[Rct_Idx].values
+    Rct_Idx = GenesDF[GenesDF['RctID']==RctID].index.values
+    Rct_ORF = ''.join(str(n) for n in GenesDF['ORF'].iloc[Rct_Idx].to_list())
+    Rct_RefProm = GenesDF['Promoter'].iloc[Rct_Idx].values
 
     # Extraction of reaction association promoter sequence from input genome
-    Gene_ORF = Mutant.info_Genome.find(Rct_ORF)
-    Gene_Promoter = Mutant.info_Strain[StrainID]['Genome'][Gene_ORF-40:Gene_ORF:1]
+    Gene_ORF = Genome_WT.find(Rct_ORF)
+    Gene_Promoter = Genome_Mut[Gene_ORF-40:Gene_ORF:1]
 
     # Comparison of current promoter with reference promoter
     # If promoters differ, then new expression strength is calculated
     if Gene_Promoter != Rct_RefProm:
 #         print('New promoter.')
         RctFlag = True
-        Gene_Activity = float(Help_PromoterStrength(Mutant, Gene_Promoter, Similarity_Thresh=.8))
+        Gene_Activity = float(Help_PromoterStrength(Host, Gene_Promoter, Similarity_Thresh=.8))
     else:
         RctFlag = False
-        Gene_Activity = float(Mutant._Mutant__GenesDF['Expression'].iloc[Rct_Idx].values)
-    print(Gene_Activity)
+        Gene_Activity = float(GenesDF['Expression'].iloc[Rct_Idx].values)
+#     print(Gene_Activity)
     OutDict = {'RctFlag':RctFlag, 'Activity':Gene_Activity, 'RctID':RctID}
     
     return OutDict
+
+def make_AdaptModel(StrainID):
+    '''
+    Function to adapt the Cobra-model boundaries according to the expression strength of the genome promoters.
+    Input:
+        :         parent class, subfield _Mutant_GenesDF and info_Genome used.
+        StrainID:       string, identifier for expressed genome in subclass var_strains
+    Output:
+        Model:          cobraby model, E. coli core reactions with updated boundary conditions
+    '''
+    
+    
+    return Model
