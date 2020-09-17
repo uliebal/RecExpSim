@@ -66,18 +66,19 @@ def make_UpdateExpression(Host, GenesDF, Genome_WT, Genome_Mut, RctID):
     # Extraction of reaction association promoter sequence from input genome
     Gene_ORF = Genome_WT.find(Rct_ORF)
     Gene_Promoter = Genome_Mut[Gene_ORF-40:Gene_ORF:1]
+    RefExpr = float(GenesDF['Expression'].iloc[Rct_Idx].values)
 
     # Comparison of current promoter with reference promoter
     # If promoters differ, then new expression strength is calculated
     if Gene_Promoter != Rct_RefProm:
 #         print('New promoter.')
         RctFlag = True
-        Gene_Activity = float(Help_PromoterStrength(Host, Gene_Promoter, Similarity_Thresh=.8))
+        NewExpr = float(Help_PromoterStrength(Host, Gene_Promoter, Similarity_Thresh=.8))
     else:
         RctFlag = False
-        Gene_Activity = float(GenesDF['Expression'].iloc[Rct_Idx].values)
+        NewExpr = RefExpr
 #     print(Gene_Activity)
-    OutDict = {'RctFlag':RctFlag, 'Activity':Gene_Activity, 'RctID':RctID}
+    OutDict = {'RctFlag':RctFlag, 'RctID':RctID, 'RefExpr':RefExpr, 'NewExpr':NewExpr, 'RefFlux':float(GenesDF.loc[Rct_Idx, 'Fluxes']), 'Expr2Flux':float(GenesDF.loc[Rct_Idx, 'Expr2Flux']) }
     
     return OutDict
 
