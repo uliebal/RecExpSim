@@ -34,15 +34,19 @@ class Host:
         # adding default genome-metabolism connection called WT
         if Metabolism:
             Name = 'WT'
-            setattr(self, Name, Strain(Name, self))
+            myWT = Strain(Name)
+            myWT.make_WT(self)
+            setattr(self, Name, myWT)
             self.var_StrainLibrary = [Name]
         
-    def add_Strain(self, Name, RefStrain = False, GenomeSize = 500, GCcont = .6):
+    def add_Strain(self, Name):
         '''
         Adding strains with different genome to the host.
         '''
-        setattr(self, Name, Strain(Name, self, RefStrain, GenomeSize, GCcont))
-        self.var_StrainLibrary = [Name]
+        myStrain = Strain(Name)
+        myStrain.make_Mutant(self, NumberEnzymes=3, Target='-10', NumberMutations=2)
+        setattr(self, Name, myStrain)
+        self.var_StrainLibrary.append(Name)
 
     def show_BiotechSetting(self):
         '''Report of all properties defined in the biotech experiment.'''
@@ -72,38 +76,48 @@ class Strain:
     '''
     The 'strain' class stores information of genome and other associated metabolic information
     '''
-    def __init__(self, Name, Host, RefStrain = False, GenomeSize = 500, GCcont = .6):
+    def __init__(self, Name):
         import os
-        from BioLabSim.ModuleVirtualOrganism.Metabolism import Help_LoadCobra, Help_GeneAnnotator, Help_Expr2Flux, Help_StrainCharacterizer, Help_FluxCalculator
-        from BioLabSim.ModuleVirtualOrganism.Genome import Help_GenomeGenerator
-        from BioLabSim.ModuleManipulateOrganism.GeneticChanges import Help_MutActProm
+        from BioLabSim.ModuleVirtualOrganism.Metabolism import Help_LoadCobra
         
         print('Initiating metabolic network')
 
         ModelPath = os.path.join('Models','e_coli_core.xml')
 
         self.ID = Name
-        Host_strain = getattr(Host, 'var_Host')
 
         self.var_Model = Help_LoadCobra(Path = ModelPath)
-
-        if RefStrain:
-            RefGenome = getattr(Host, RefStrain).info_Genome
-            RefGenDF = getattr(Host, RefStrain).info_GenesDF
-            GenomeMut, GenDFMut = Help_MutActProm(RefGenome, RefGenDF)
-            self.info_GenesDF = GenDFMut
-            RctNewDF = Help_StrainCharacterizer(Host_strain, RefGenDF, RefGenome, GenomeMut, self.var_Model)
-            self.info_GenesDF['Fluxes'] = Help_FluxCalculator(self.var_Model, RctNewDF)
-            self.info_GenesDF['Expr2Flux'] = Help_Expr2Flux(self.info_GenesDF)
-            self.info_Genome = GenomeMut
-        else:
-            self.info_GenesDF = Help_GeneAnnotator(Host_strain, self.var_Model) # self.__GenesDF = 
-            self.info_GenesDF['Fluxes'] = Help_FluxCalculator(self.var_Model)
-            self.info_GenesDF['Expr2Flux'] = Help_Expr2Flux(self.info_GenesDF) # self.__GenesDF = 
-            self.info_Genome = Help_GenomeGenerator(self.info_GenesDF, GenomeSize, GCcont)
-            
+        
+    def make_WT(self, Host, GenomeSize = 500, GCcont = .6):
+        from BioLabSim.ModuleVirtualOrganism.Metabolism import Help_GeneAnnotator, Help_Expr2Flux, Help_FluxCalculator
+        from BioLabSim.ModuleVirtualOrganism.Genome import Help_GenomeGenerator
+        
+        self.var_Host = getattr(Host, 'var_Host')
+        self.info_GenesDF = Help_GeneAnnotator(self.var_Host, self.var_Model) # self.__GenesDF = 
+        self.info_GenesDF['Fluxes'], self.info_Objective = Help_FluxCalculator(self, Host)
+        self.info_GenesDF['Expr2Flux'] = Help_Expr2Flux(self.info_GenesDF) # self.__GenesDF = 
+        self.info_Genome = Help_GenomeGenerator(self.info_GenesDF, GenomeSize, GCcont)
         self.var_GenomeSize = len(self.info_Genome)
         self.var_GCcont = round((self.info_Genome.count('G') + self.info_Genome.count('C'))/self.var_GenomeSize,2)
+        
+    def make_Mutant(self, Host, NumberEnzymes=3, Target='-10', NumberMutations=2):
+        from BioLabSim.ModuleVirtualOrganism.Metabolism import Help_Expr2Flux, Help_StrainCharacterizer, Help_FluxCalculator
+        from BioLabSim.ModuleManipulateOrganism.GeneticChanges import Help_MutActProm
+        
+        RefGenome = Host.WT.info_Genome
+        RefGenDF = Host.WT.info_GenesDF
+        Host_strain = Host.var_Host
+        GenomeMut, GenDFMut = Help_MutActProm(RefGenome, RefGenDF, NumberEnzymes=3, Target='-10', NumberMutations=2)
+        self.info_GenesDF = GenDFMut
+        self.info_Genome = GenomeMut
+#         RctNewDF = Help_StrainCharacterizer(Host_strain, RefGenDF, RefGenome, GenomeMut, self.var_Model)
+#         self.info_GenesDF['Fluxes'] = Help_FluxCalculator(self.var_Model, RctNewDF)
+        self.info_GenesDF['Fluxes'], self.info_Objective = Help_FluxCalculator(self, Host, True)
+        self.info_GenesDF['Expr2Flux'] = Help_Expr2Flux(self.info_GenesDF)
+        self.var_GenomeSize = len(self.info_Genome)
+        self.var_GCcont = round((self.info_Genome.count('G') + self.info_Genome.count('C'))/self.var_GenomeSize,2)
+
+
         
         
         

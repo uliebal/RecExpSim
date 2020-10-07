@@ -1,4 +1,4 @@
-def make_BaseCompare(Seq1, Seq2):
+def measure_BaseCompare(Seq1, Seq2):
     '''
     Comparison of two sequences from start to end. returns positions of base differences.
     '''

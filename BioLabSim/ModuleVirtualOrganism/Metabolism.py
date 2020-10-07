@@ -65,48 +65,33 @@ def Help_StrainCharacterizer(Host, GenesDF, Genome_WT, Genome_MT, Model):
 
     return RctNew_df
 
-def Help_FluxCalculator(Model, RctNewDF=None):
+def Help_FluxCalculator(Strain, Host, Test_Strain=False):
     '''
     Calculation of flux values.
     '''
     import numpy as np
+    from BioLabSim.ModuleMeasureOrganism.Fluxes import measure_EnzymeLevel1
     
     # adding flux values
     # setup of flux boundaries. For the reference boundary changes are set to 'False', 
     # for mutant strains, ractions with altered promoter sequence will change enzyme levels and boundaries must be changed accordingly, their variable is 'True'
-#     myModel = make_AdaptModel(Model, Strain)
 
-    if RctNewDF is not None:
+    Model = Strain.var_Model
+    
+    if Test_Strain:
         print('resetting boundaries')
         # finding reactions for which the expression has changed
-        RctNew = RctNewDF[RctNewDF['RctFlag']==True].index.values
-        # For reactions with reduced expression and positive flux: reduce the upper limit,
-        # For reactions with increased expression and positive flux: increase the lower limit
-        # for reactions with negative flux the limits are exchanged.
-        FluxPos = RctNew[tuple([RctNewDF.loc[RctNew, 'RefFlux']>0])]
-        FluxNeg = RctNew[tuple([RctNewDF.loc[RctNew, 'RefFlux']<0])]
-        # Finding increased and decreased fluxes
-        FluxInc = RctNew[RctNewDF.loc[RctNew, 'NewExpr'].values / RctNewDF.loc[RctNew, 'RefExpr'].values>1]
-        FluxDec = RctNew[RctNewDF.loc[RctNew, 'NewExpr'].values / RctNewDF.loc[RctNew, 'RefExpr'].values<1]
-        # Defining the model with the four combinations
+        RctNewDF, Set_Boundary, _ = measure_EnzymeLevel1(Host, Strain)
+        # Defining the model with the two combinations of either 
+        # increasing lower bound (increased forward, decreased reverse reaction)
+        # decreasing upper bound (decreased forward, increased reverse reaction)
         with Model as myModel:
             # Comb.1: positive flux with increased expression -> increasing lower bound
-            PosIncInd = np.intersect1d(FluxPos,FluxInc)
-            for Indx in PosIncInd:
+            for Indx in Set_Boundary['lower']:
                 myModel.reactions[Indx].lower_bound = RctNewDF.loc[Indx, 'NewExpr'] * RctNewDF.loc[Indx, 'Expr2Flux']
             # Comb.2: positive flux with decreased expression -> decreasing upper bound
-            PosDecInd = np.intersect1d(FluxPos,FluxDec)
-            for Indx in PosDecInd:
-                myModel.reactions[Indx].lower_bound = RctNewDF.loc[Indx, 'NewExpr'] * RctNewDF.loc[Indx, 'Expr2Flux']
-            # Comb.1: negaitve flux with increased expression -> decreasing lower bound
-            NegIncInd = np.intersect1d(FluxNeg,FluxInc)
-            for Indx in NegIncInd:
-                myModel.reactions[Indx].lower_bound = RctNewDF.loc[Indx, 'NewExpr'] * RctNewDF.loc[Indx, 'Expr2Flux']
-            # Comb.1: positive flux with increased expression -> increasing lower bound
-            NegDecInd = np.intersect1d(FluxNeg,FluxDec)
-            for Indx in NegDecInd:
-                myModel.reactions[Indx].lower_bound = RctNewDF.loc[Indx, 'NewExpr'] * RctNewDF.loc[Indx, 'Expr2Flux']
-                
+            for Indx in Set_Boundary['upper']:
+                myModel.reactions[Indx].upper_bound = RctNewDF.loc[Indx, 'NewExpr'] * RctNewDF.loc[Indx, 'Expr2Flux']           
                 
             Fluxes = myModel.optimize()
         
@@ -114,7 +99,7 @@ def Help_FluxCalculator(Model, RctNewDF=None):
         Fluxes = Model.optimize()
         
 
-    return Fluxes.fluxes.values
+    return Fluxes.fluxes.values, Fluxes.objective_value
     
 def Help_Expr2Flux(GenesDF):
     '''
