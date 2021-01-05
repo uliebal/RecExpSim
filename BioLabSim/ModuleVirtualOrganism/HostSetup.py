@@ -61,14 +61,42 @@ class Host:
             print("\nClone ID: {}".format(Clone_ID))
             for key in Clone_info:
                 print('{}: {}'.format(key, Clone_info[key]))
+                
+    def show_TargetExpressionRate(self):
+        '''Function to calculate the maximum possible expression rate and to tell the students what the minimum rate should be.'''
+        from BioLabSim.ModuleMeasureOrganism.Physiology import Express_Max
+        achieveExpRate = Express_Max(self)
+        print('Maximum possible expression: {}'.format(achieveExpRate))
+            
+    def make_TempGrowthExp(self, CultTemps, ExpID=1):
+        '''Experiment to determine optimal growth rate. The experiment runs until the maximum biomass is reached.'''
+        from BioLabSim.ModuleMeasureOrganism.Physiology import Help_TempGrowthExp
+        Help_TempGrowthExp(self, CultTemps, ExpID=1)
+
+    def make_Cloning(self, Clone_ID, Promoter, Primer, Tm):
+        from BioLabSim.ModuleManipulateOrganism.GeneticChanges import Help_Cloning        
+        Help_Cloning(self, Clone_ID, Promoter, Primer, Tm)
         
-    
-    def add_Promoter(self, Clone_ID, Promoter):
-        self.var_Library[Clone_ID] = {}
-        self.var_Library[Clone_ID]['Promoter_Sequence'] = Promoter
-        self.var_Library[Clone_ID]['Promoter_GC-content'] = (Promoter.count('C') + Promoter.count('G')) / len(Promoter)
-
-
+    def measure_PromoterStrength(self, Clone_ID):
+        from BioLabSim.ModuleMeasureOrganism.Physiology import Help_MeasurePromoterStrength
+        Help_MeasurePromoterStrength(self, Clone_ID)
+        
+    def measure_ProductionExperiment(self, Clone_ID, CultTemp, GrowthRate, Biomass):
+        from BioLabSim.ModuleMeasureOrganism.Physiology import Help_ProductionExperiment
+        Help_ProductionExperiment(self, Clone_ID, CultTemp, GrowthRate, Biomass)
+        
+    def Test(self):
+        from BioLabSim.AuxFun import Help_Test
+        self.var_Host = 'Ecol'
+        self.var_Resources = 40
+        self.var_Substrate = None
+        self.var_Library = {}
+        self.info_Strain = {}
+        self.__InflProStreng = 30 # explanation see Plot_ExpressionRate 
+        self.__OptTemp = 30 # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
+        self.__OptPrLen = 20 # unit: nt, source: https://link.springer.com/article/10.1007/s10529-013-1249-8
+        self.__BiomassMax = 50
+        Help_Test(self)
 
 
 
@@ -120,9 +148,6 @@ class Strain:
 
         
         
-        
-        
-
 
 
 
