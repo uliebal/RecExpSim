@@ -67,6 +67,20 @@ class Host:
         from BioLabSim.ModuleMeasureOrganism.Physiology import Express_Max
         achieveExpRate = Express_Max(self)
         print('Maximum possible expression: {}'.format(achieveExpRate))
+        
+    def plot_ReferencePromoterStrength(self):
+        '''Function to plot the promoter strength of the optimal sequence additionally as reference.'''
+        import matplotlib.pyplot as plt
+
+        factor = self._Host__InflProStreng
+        # Values see init function at the beginning
+        if self.var_Host == 'Ecol':
+            OptimalPromoterStrength = round(0.057 * factor,2)
+        elif self.var_Host == 'Pput':
+            OptimalPromoterStrength = round(0.04 * factor,2)
+        # plot of maximum Promoter strength together with GC content
+        # GC-content is the same for of both optimal sequences.
+        plt.plot(0.575, OptimalPromoterStrength, marker = '*', color = 'green', markersize = 10)
             
     def make_TempGrowthExp(self, CultTemps, ExpID=1):
         '''Experiment to determine optimal growth rate. The experiment runs until the maximum biomass is reached.'''
