@@ -1,4 +1,4 @@
-def Help_GenomeGenerator(GenesDF, GenomeSize, GCcont):
+def Help_GenomeGenerator(GenesDF, GenomeSize, GCcont) -> str :
     '''
     Constructs whole genome with interspersed genes.
     '''
@@ -16,8 +16,8 @@ def Help_GenomeGenerator(GenesDF, GenomeSize, GCcont):
     # Now inserting the genes
     Gtmp = [np.concatenate([mbg,bed]) for mbg,bed in zip(Genome_Tmp[:-1],Genes_List)]
     Gtmp = np.concatenate([Gtmp,Genome_Tmp[-1]])
-    Genome = ''.join([''.join(elm) for elm in Gtmp])    
-    
+    Genome = ''.join([''.join(elm) for elm in Gtmp])
+
     return Genome
 
 def make_GeneJoiner(Host, Model, RctID):
@@ -26,16 +26,16 @@ def make_GeneJoiner(Host, Model, RctID):
     Output
         Gene_Info:    dictionary, gene id, gene expression, promoter, ORF
     '''
-    from BioLabSim.ModuleVirtualOrganism.Expression import make_Promoter, Help_PromoterStrength
-    
+    from .expression import make_Promoter, Help_PromoterStrength
+
     Gene_ORF = make_ORF(Model)
     Gene_Promoter = make_Promoter()
     Gene_Activity = Help_PromoterStrength(Host, Gene_Promoter, Similarity_Thresh=.8)
-    
+
     Gene_Dict = {'RctID': RctID, 'Expression': Gene_Activity, 'Promoter': Gene_Promoter, 'ORF': Gene_ORF}
-    
+
     return Gene_Dict
-    
+
 def make_GenomeBckgd(GenomeSize, GCcont):
     '''
     Function for setup of background genome.
@@ -59,7 +59,7 @@ def make_ORF(Model):
     ORF starts always with 'ATG'.
     Input
         CodonTriplets:     dataframe, automatic load, base triplets, ID (e.g. 'Stop', 'Met'), frequency in percent
-        Mutant:            class, subfield var_Model.reactions is used to count the enzyme number to derive minimum sequence length
+        Mutant:            class, subfield model.reactions is used to count the enzyme number to derive minimum sequence length
     Output
         Gene_ORF:          string, open reading frame of enzyme
     '''
@@ -99,31 +99,31 @@ def make_NestedList(List,Breaks):
     for myend in Breaks:
         List_Nested.append([List[myidx2] for myidx2 in range(mystart,myend)])
         mystart = myend
-        
+
     return List_Nested
 
-def Convert(string): 
+def Convert(string):
     '''
     https://www.geeksforgeeks.org/python-program-convert-string-list/
     '''
-    list1=[] 
-    list1[:0]=string 
-    return list1 
+    list1=[]
+    list1[:0]=string
+    return list1
 
 def list_integer(SeqList):
     '''define input values'''
     alphabet = 'ACGT'
     char_to_int = dict((c,i) for i,c in enumerate(alphabet))
     IntegerList = list()
-    for mySeq in SeqList:    
+    for mySeq in SeqList:
         # integer encode input data
         integer_encoded = [char_to_int[char] for char in mySeq.upper()]
         IntegerList.append(integer_encoded)
     return IntegerList
-        
+
 def list_onehot(IntegerList):
     OneHotList = list()
-    for integer_encoded in IntegerList:    
+    for integer_encoded in IntegerList:
         onehot_encoded = list()
         for value in integer_encoded:
             letter = [0 for _ in range(4)]
@@ -131,3 +131,67 @@ def list_onehot(IntegerList):
             onehot_encoded.append(letter)
         OneHotList.append(onehot_encoded)
     return OneHotList
+
+
+def Help_MutActProm(Genome, GenesDF, NumberEnzymes=3, Target='-10', NumberMutations=2):
+    '''
+    Add mutations to the promoter of an active enzyme and returns the genome.
+    '''
+    import random
+
+    FluxActive = GenesDF[GenesDF['Fluxes']!=0].index.values
+    MutateEnzyme = random.sample(list(FluxActive),NumberEnzymes)
+#     print('Mutated Enzymes: {}'.format(MutateEnzyme))
+    Genome_Mutated = Genome
+    GenesDF_Mutated = GenesDF.copy()
+    GenesDF_Mutated.drop(columns=['Fluxes','Expr2Flux'], inplace=True)
+
+    for i1 in range(NumberEnzymes):
+        RefProm = GenesDF['Promoter'].iloc[MutateEnzyme[i1]]
+#         RefORF = GenesDF['ORF'].iloc[MutateEnzyme[i1]]
+        # mutations in -10box
+        if Target == '-10':
+            # extracting reference -10 box sequence
+            B_i, B_s = -13, -6
+            RefTar = RefProm[B_i:B_s] # @rafael.schimassek Are negative indexes doing what they need?
+        elif Target == '-35':
+            # -35 box region
+            B_i, B_s = -37, -30
+            RefTar = RefProm[B_i:B_s]
+        else:
+            # whole promoter region
+            RefTar = RefProm
+
+        MutTar = make_Mutate(RefTar, NumberMutations)
+        MutProm = RefProm.replace(RefTar, MutTar)
+        Genome_Mutated = Genome_Mutated.replace(RefProm, MutProm)
+        GenesDF_Mutated.loc[MutateEnzyme[i1], 'Promoter'] = MutProm
+
+    return Genome_Mutated, GenesDF_Mutated
+
+
+def make_Mutate(Sequence, NumberMutations=2):
+    '''
+    Insert mutations in a given sequence
+    '''
+    import random
+
+    Bases = ['A','C','G','T']
+
+    MutTar = list(Sequence)
+    # finding positions to mutate
+    Mutate_Pos = random.sample(range(len(Sequence)), NumberMutations)
+    # generating new sequence with the remaining nucleotides at each position
+    for NuclPos in Mutate_Pos:
+        MutTar[NuclPos] = random.sample([Base for Base in Bases if Base is not Sequence[NuclPos]], 1)[0]
+
+    return ''.join(MutTar)
+
+
+def measure_BaseCompare(Seq1, Seq2):
+    '''
+    Comparison of two sequences from start to end. returns positions of base differences.
+    '''
+    SeqDiff = [[count, Pos] for count, Pos in enumerate(zip(Seq1, Seq2)) if Pos[0] != Pos[1]]
+
+    return SeqDiff

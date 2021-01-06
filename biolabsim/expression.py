@@ -5,21 +5,21 @@ def Help_PromoterStrength(Host, Sequence, Scaler=100, Similarity_Thresh=.4, Pred
             Sequence:     string, Sequence for which to determine promoter strength
             Scaler:       int, multiplied to the regression result for higher values
             Predict_File: string, address of regression file
-        Output: 
+        Output:
             Expression: float, expression rate
     '''
     import os
     import numpy as np
     import joblib
     import pickle
-    from BioLabSim.ModuleVirtualOrganism.Genome import list_onehot, list_integer
-    
+    from .genome import list_onehot, list_integer
+
     if Sequence_ReferenceDistance(Sequence) > Similarity_Thresh:
         Expression = 0
     else:
         if Predict_File!=None:
             Regressor_File = Predict_File
-        else:    
+        else:
             Data_Folder = 'ExpressionPredictor'
             if Host == 'Ecol':
                 Regressor_File = os.path.join(Data_Folder,'Ecol-Promoter-predictor.pkl')
@@ -37,7 +37,7 @@ def Help_PromoterStrength(Host, Sequence, Scaler=100, Similarity_Thresh=.4, Pred
         Positions_removed = Params['Positions_removed']
 #         Expr_Scaler = Params[Scaler_DictName]
 
-        X = np.array(list_onehot(np.delete(list_integer(Sequence),Positions_removed, axis=0))).reshape(1,-1)  
+        X = np.array(list_onehot(np.delete(list_integer(Sequence),Positions_removed, axis=0))).reshape(1,-1)
         GC_cont = (Sequence.count('G') + Sequence.count('C'))/len(Sequence)
         X = np.array([np.append(X,GC_cont)])
         Y = Predictor.predict(X)
@@ -47,17 +47,17 @@ def Help_PromoterStrength(Host, Sequence, Scaler=100, Similarity_Thresh=.4, Pred
 
 def make_UpdateExpression(Host, GenesDF, Genome_WT, Genome_Mut, RctID):
     '''
-    Function to evaluate if expression for the input gene is different compared to the reference strain. 
+    Function to evaluate if expression for the input gene is different compared to the reference strain.
     Input:
-        Mutant:         parent class, subfield _Mutant_GenesDF and info_Genome used.
+        Mutant:         parent class, subfield _Mutant_GenesDF and genome used.
         StrainID:       string, identifier for expressed genome in subclass var_strains
         RctID:          string, identifier for the reaction to be tested
     Output:
         OutDict:        dictionary containing 'RctFlag' boolean, if True, the expression relative to the reference has changed; 'Gene_Activity' float, expression strength; 'RctID' string, identifier for the reaction tested
     '''
-    
+
     import numpy as np
-    
+
     # Extraction of ORF and reference promoter sequence of input reaction from reference annotation database
     Rct_Idx = GenesDF[GenesDF['RctID']==RctID].index.values
     Rct_ORF = ''.join(str(n) for n in GenesDF['ORF'].iloc[Rct_Idx].to_list())
@@ -79,7 +79,7 @@ def make_UpdateExpression(Host, GenesDF, Genome_WT, Genome_Mut, RctID):
         NewExpr = RefExpr
 #     print(Gene_Activity)
     OutDict = {'RctFlag':RctFlag, 'RctID':RctID, 'RefExpr':RefExpr, 'NewExpr':NewExpr, 'RefFlux':float(GenesDF.loc[Rct_Idx, 'Fluxes']), 'Expr2Flux':float(GenesDF.loc[Rct_Idx, 'Expr2Flux']) }
-    
+
     return OutDict
 
 
@@ -99,15 +99,15 @@ def make_Promoter(RefFile=False, WeightFile=False):
     # generating promoter sequence
 
     # the reference sequence contains the most common tested nucleotides at each position
-    if not RefFile:   
-        RefFile = os.path.join('Models','RefSeq.txt')
+    if not RefFile:
+        RefFile = os.path.join('models','RefSeq.txt')
     with open(RefFile) as f:
         RefSeq = f.read()
-    
+
     # loading information that determines the exploratory space of the regressor
     # weight file has boolean representations for each base on each position whether it was part of the training set or not
     if not WeightFile:
-        WeightFile = os.path.join('Models','NucleotideWeightTable.pkl')
+        WeightFile = os.path.join('models','NucleotideWeightTable.pkl')
     with open(WeightFile, 'rb') as handle:
         Nucleotides_Weight = pickle.load(handle)
     Nucleotides_Weight.index = Nucleotides_Weight.index+40
@@ -120,7 +120,7 @@ def make_Promoter(RefFile=False, WeightFile=False):
     for idx in range(len(Nucleotides_Weight)):
         np.put(SeqDef,Nucleotides_Weight.index[idx],random.choices(Bases,Nucleotides_Weight.iloc[idx].values))
     Gene_Promoter = ''.join(SeqDef)
-    
+
     return Gene_Promoter
 
 def Sequence_ReferenceDistance(SeqObj, RefSeq=None):
@@ -131,13 +131,13 @@ def Sequence_ReferenceDistance(SeqObj, RefSeq=None):
            SequenceDistance: float, genetic distances as determined from the sum of difference in bases divided by total base number, i.e. max difference is 1, identical sequence =0
     '''
     import numpy as np
-    
+
     if RefSeq != None:
         RefSeq = SeqObj[0]
     else:
         RefSeq = 'GCCCATTGACAAGGCTCTCGCGGCCAGGTATAATTGCACG'
-        
+
     Num_Samp = len(SeqObj)
     SequenceDistance = np.sum([int(seq1!=seq2) for seq1,seq2 in zip(RefSeq, SeqObj)], dtype='float')/len(SeqObj)
-    
+
     return SequenceDistance
