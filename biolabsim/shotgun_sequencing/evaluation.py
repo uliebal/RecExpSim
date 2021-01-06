@@ -3,8 +3,8 @@ from typing import TypedDict, List
 
 import numpy as np
 
-from .common import LocalizedSequence
-from .fake_genome import SimplifiedGenome
+from .assembly import LocalizedSequence
+from ..common import Sequence
 
 
 
@@ -13,6 +13,7 @@ class HeatPoint (TypedDict) :
     T : int = 0
     C : int = 0
     G : int = 0
+    X : int = 0
 
 
 
@@ -27,7 +28,7 @@ def numtochar ( num:int ) -> str :
 
 
 
-def print_assembly_evaluation( loc_sequences:List[LocalizedSequence], genome:SimplifiedGenome ) -> None :
+def print_assembly_evaluation( loc_sequences:List[LocalizedSequence], genome:Sequence ) -> None :
     """
     Watch that sequences can be translated in their positions.
     """
@@ -39,7 +40,7 @@ def print_assembly_evaluation( loc_sequences:List[LocalizedSequence], genome:Sim
     bundle_start = np.amin(seq_starts) # locus where the bundle of localized sequences starts
     bundle_end = np.amax(seq_ends)
     bundle_len = bundle_end - bundle_start
-    heatmap:List[HeatPoint] = [ HeatPoint(A=0,T=0,G=0,C=0) for _ in range(bundle_len) ]
+    heatmap:List[HeatPoint] = [ HeatPoint(A=0,T=0,G=0,C=0,X=0) for _ in range(bundle_len) ]
 
     # Fill the heatmap with each base that was read.
     for locseq in loc_sequences :
@@ -51,17 +52,15 @@ def print_assembly_evaluation( loc_sequences:List[LocalizedSequence], genome:Sim
     # Score is a simple addition of all ratios of the correct base.
     best_score = 0
     best_genome_start = 0
-    genome_len = len(genome.template_strand)
+    genome_len = len(genome)
     for genome_start in range( bundle_start - genome_len, bundle_end ) :
         score = 0
         for g_i in range(genome_len) : # g_i = index on genome sequence
             b_i = genome_start + g_i - bundle_start # b_i = map to an index in the bundle
             if b_i in range(bundle_len) : # only add score if it overlaps with the heatmap, 0 otherwise.
-                gen_base = genome.template_strand[g_i]
-                score += (
-                    heatmap[b_i][gen_base]
-                    / ( heatmap[b_i]['A'] + heatmap[b_i]['T'] + heatmap[b_i]['C'] + heatmap[b_i]['G'] )
-                )
+                gen_base = genome[g_i]
+                hm_total = heatmap[b_i]['A'] + heatmap[b_i]['T'] + heatmap[b_i]['C'] + heatmap[b_i]['G'] + heatmap[b_i]['X']
+                score += ( heatmap[b_i][gen_base] / hm_total ) if hm_total > 0 else 0
 
         if score > best_score :
             best_score = score
@@ -74,7 +73,7 @@ def print_assembly_evaluation( loc_sequences:List[LocalizedSequence], genome:Sim
         for s_i in range(len(locseq.sequence)) :
             g_i = locseq.locus + s_i - best_genome_start
             if g_i in range(genome_len) :
-                if locseq.sequence[s_i] == genome.template_strand[g_i] :
+                if locseq.sequence[s_i] == genome[g_i] :
                     score += 1
         seq_scores[l_i] = score
 
@@ -82,7 +81,7 @@ def print_assembly_evaluation( loc_sequences:List[LocalizedSequence], genome:Sim
     window_start = min( bundle_start, best_genome_start )
     window_end = max( bundle_end, best_genome_start + genome_len )
     print( "-" * (9 + window_end - window_start) )
-    for base in ['A','T','C','G'] :
+    for base in ['A','T','C','G','X'] :
         print("[hmap:{}] {}{}{}".format(
             base,
             numtochar(0) * (bundle_start - window_start),
@@ -91,7 +90,7 @@ def print_assembly_evaluation( loc_sequences:List[LocalizedSequence], genome:Sim
         ))
     print("[coverg] {}{}{}".format(
         numtochar(0) * (bundle_start - window_start),
-        "".join([ numtochar(hp['A']+hp['T']+hp['C']+hp['G']) for hp in heatmap ]),
+        "".join([ numtochar(hp['A']+hp['T']+hp['C']+hp['G']+hp['X']) for hp in heatmap ]),
         numtochar(0) * (window_end - bundle_end),
     ))
     print( "-" * (9 + window_end - window_start) )
@@ -106,7 +105,7 @@ def print_assembly_evaluation( loc_sequences:List[LocalizedSequence], genome:Sim
     print( "-" * (9 + window_end - window_start) )
     print("[genome] {}{}".format(
         " " * (best_genome_start - window_start),
-        "".join([ base for base in genome.template_strand ])
+        "".join([ base for base in genome ])
     ))
     print( "-" * (9 + window_end - window_start) )
     print( "Final Score: {:.3} ({:.1f}%)".format(

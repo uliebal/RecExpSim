@@ -2,10 +2,8 @@
 from typing import List, Optional
 from bisect import bisect_left
 
-from numpy.random import Generator as RandomGenerator, PCG64
-
-from .common import Base, Sequence
-
+from ..common import Base, Sequence
+from ..random import pick_float
 
 
 class SimplifiedGenome :
@@ -17,11 +15,14 @@ class SimplifiedGenome :
     def __init__ ( self ) :
         self.template_strand = []
 
+    def __len__ (self) :
+        return len(self.template_strand)
+
 
 
 class RandomGenome (SimplifiedGenome) :
 
-    def __init__ ( self, gc_content:float = 0.5, num_bp:int = 100, seed:Optional[int] = None ) :
+    def __init__ ( self, gc_content:float = 0.5, num_bp:int = 100 ) :
         """
         Arguments
             gc_content  Probability between 0 and 1 (inclusive) of having G or C on each base.
@@ -29,9 +30,6 @@ class RandomGenome (SimplifiedGenome) :
             seed        Specify a randomization seed for pseudorandom generation.
         """
         SimplifiedGenome.__init__(self)
-
-        # Initialize the seed for random generation.
-        randgen = RandomGenerator(PCG64(seed))
 
         # Calculate the chance of getting each base. Use cummulative probabilities.
         rnd_base:List[Base] = [ 'A', 'T', 'C', 'G' ]
@@ -43,7 +41,7 @@ class RandomGenome (SimplifiedGenome) :
 
         # Generate the strand following argument rules.
         self.template_strand = [
-            rnd_base[ bisect_left( rnd_ceil, randgen.random() ) ]
+            rnd_base[ bisect_left( rnd_ceil, pick_float(0,1) ) ]
             for _ in range(num_bp)
         ]
 
