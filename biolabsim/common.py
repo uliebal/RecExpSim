@@ -3,7 +3,7 @@ from typing import List, Literal, NamedTuple, Optional
 
 
 # One of the simple 4 nucleic bases, plus the unknown base. (TODO: X here but confirm)
-Base = Literal['A','T','C','G','X']
+Base = Literal['A','C','G','T','X']
 
 
 # A sequence of simple bases.

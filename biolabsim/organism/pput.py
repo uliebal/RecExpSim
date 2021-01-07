@@ -7,8 +7,6 @@ from ..config import MODEL_DIR
 class Pput (Host) :
     """
     Specified "Pseudomonas putida" host.
-
-    TODO: Is this the name?
     """
 
     def __init__ ( self ) :
@@ -23,6 +21,7 @@ class Pput (Host) :
 
             # TODO: Does it make sense for a Host to have no metabolism? Pput seems to have been
             #   added because of the BioLabSimFun script which does not care about Strains.
+            # TODO: Pput has its own model (bigger).
             metabolic_model_path= MODEL_DIR / "e_coli_core.xml"
 
         )
