@@ -21,8 +21,8 @@ class FabricatedHost (Host) :
             # Start with a known WT metabolic model.
             strain= FabricatedStrain(
                 name= "FabGen",
-                genome_gc_content=0.6,
-                genome_size=80
+                genome_gc_content=gc_content,
+                genome_size=genome_size
             )
 
         )

@@ -1,21 +1,17 @@
 
 from typing import List, NamedTuple, Dict, Any
 
-from Bio import pairwise2
 import numpy as np
+from Bio import pairwise2
+from Bio.Blast.Record import Alignment
 
-from ..common import Base, Sequence, Scaffold
+from .datatype import Scaffold, LocalizedSequence, EstimatedSequence, get_consensus_from_overlap, \
+    estimate_from_overlap
+from ..common import Base, Sequence
 
 
 
-Alignment = Any # TODO: Use biopython Alignment typing.
-
-
-
-# A sequence with a starting position.
-class LocalizedSequence (NamedTuple) :
-    sequence : Sequence
-    locus : int
+#Alignment = Any # TODO: Use biopython Alignment typing.
 
 
 
@@ -29,40 +25,6 @@ class PairwiseScore (NamedTuple) :
 def match ( sa:Sequence, sb:Sequence ) -> Alignment :
     """ Internal method for pairwise matching. """
     return pairwise2.align.localms( sa, sb, 1, 0, -100, -100, gap_char='-' )
-
-
-
-def to_consensus ( locseqs:List[LocalizedSequence] ) -> LocalizedSequence :
-    """
-    Output the consensus sequence of multiple localized sequences.
-    Returns: ( min starting locus, max ending locus, consensus sequence )
-    """
-
-    # Pay attention that indexes start at zero while locus could be negative.
-    min_start = min([ locseq.locus for locseq in locseqs ])
-    max_end = max([ locseq.locus + len(locseq.sequence) for locseq in locseqs ])
-    conseq:List[str] = [ "-" for _ in range(min_start,max_end) ]
-
-    # For each position in the consensus sequence, get the value of each localized sequence in that
-    # same position. Could be out of bounds.
-    for pos in range( min_start, max_end ) :
-        quorum:Dict[Base,int] = {}
-        for locseq in locseqs :
-            if pos >= locseq.locus and pos < locseq.locus + len(locseq.sequence) : # inside bounds
-
-                # Add this base to the possible bases in the consensus. Initialize if required.
-                cur_base = str(locseq.sequence[ pos - locseq.locus ])
-                if cur_base not in quorum :
-                    quorum[cur_base] = 0
-                quorum[cur_base] += 1
-
-        # Based on the quorum, select the best base for this position.
-        max_base = max( quorum, key=quorum.get, default='-' ) # Get Key with maximum value. Get first if equal.
-        conseq[ pos - min_start ] = max_base
-
-    return LocalizedSequence( sequence= Sequence("".join(conseq)), locus= min_start )
-
-
 
 
 
@@ -102,13 +64,13 @@ class GreedyContigAssembler :
         # Add the first sequence to start the cluster.
         available[fbest.i] = False
         cluster.append( LocalizedSequence( sequence=scaffolds[fbest.i].r1_seqrecord.seq, locus=0 ) )
-        print("First: " + "".join(scaffolds[fbest.i].r1_seqrecord.seq))
+        #print("First: " + "".join(scaffolds[fbest.i].r1_seqrecord.seq))
 
         # While sequences are still left unclustered.
         while sum(available) > 0 :
             min_start = min([ locseq.locus for locseq in cluster ])
-            consensus = to_consensus(cluster).sequence
-            print("Consensus: " + "".join(consensus))
+            consensus = get_consensus_from_overlap(cluster).sequence
+            #print("Consensus: " + "".join(consensus))
             best = PairwiseScore( 0, 0, -1 )
             best_align:Any = None # TODO: Use biopython Alignment typing.
 
@@ -116,9 +78,9 @@ class GreedyContigAssembler :
             for k in range(len(scaffolds)) :
                 if available[k] :
                     cur_align = match( consensus, scaffolds[k].r1_seqrecord.seq )[0]
-                    print("      Try: {} ({}) [{}]".format( "".join(scaffolds[k].r1_seqrecord.seq), cur_align.score, k ))
-                    print("         : {}".format("".join(cur_align.seqA)))
-                    print("         : {}".format("".join(cur_align.seqB)))
+                    #print("      Try: {} ({}) [{}]".format( "".join(scaffolds[k].r1_seqrecord.seq), cur_align.score, k ))
+                    #print("         : {}".format("".join(cur_align.seqA)))
+                    #print("         : {}".format("".join(cur_align.seqB)))
 
                     if cur_align.score > best.score :
                         best = PairwiseScore( 0, k, cur_align.score ) # 0 because i is not used.
@@ -142,10 +104,13 @@ class GreedyContigAssembler :
 
             cluster.append( LocalizedSequence( sequence=scaffolds[best.k].r1_seqrecord.seq, locus=best_locus ))
             available[best.k] = False
-            print("    Added: {} [{}] <{},{}>".format(
-                "".join(scaffolds[best.k].r1_seqrecord.seq), best.k, min_start, best_locus
-            ))
-
+            #print("    Added: {} [{}] <{},{}>".format(
+            #    "".join(scaffolds[best.k].r1_seqrecord.seq), best.k, min_start, best_locus
+            #))
 
         return cluster
 
+
+
+    def apply ( self, scaffolds:List[Scaffold] ) -> EstimatedSequence :
+        return estimate_from_overlap( self.apply_internal(scaffolds) )

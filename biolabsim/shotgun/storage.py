@@ -5,7 +5,8 @@ from pathlib import Path
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 
-from ..common import Sequence, Scaffold
+from ..common import Sequence
+from .datatype import Scaffold
 
 
 
@@ -20,7 +21,7 @@ def write_scaffolds_to_file ( scaffolds:List[Scaffold], r1_path:str, r2_path:Opt
     r1_abspath:Path = Path(r1_path).resolve()
     r2_abspath:Optional[Path] = None
     if r2_path is not None :
-        r2_path = Path(r2_path).resolve()
+        r2_abspath = Path(r2_path).resolve()
 
     # Fill both lists of SeqRecords that will be extracted from the scaffolds.
     r1_seqrecs:List[SeqRecord] = []
@@ -31,15 +32,17 @@ def write_scaffolds_to_file ( scaffolds:List[Scaffold], r1_path:str, r2_path:Opt
         if scaf.r2_seqrecord is not None :
             r2_seqrecs.append( scaf.r2_seqrecord )
 
-    # Save the files.
+    # Before writing the file, check that the file arguments are correct.
+    if len(r2_seqrecs) > 0 and r2_abspath is None :
+        raise Exception(
+            "Tried to write_scaffolds_to_file. There is at least one paired-end sequence"
+            " but no file to store it has been provided."
+        )
+
+    # Write the files to disk.
     SeqIO.write( r1_seqrecs, r1_abspath, "fastq" )
     print("R1 file stored in: " + str(r1_abspath))
     if len(r2_seqrecs) > 0 :
-        if r2_abspath is None :
-            raise Exception(
-                "Tried to write_scaffolds_to_file. There is at least one paired-end sequence"
-                " but no file to store it has been provided."
-            )
         SeqIO.write( r2_seqrecs, r2_abspath, "fastq" )
         print("R2 file stored in: " + str(r2_abspath))
 

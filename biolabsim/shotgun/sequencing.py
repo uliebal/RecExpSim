@@ -5,8 +5,9 @@ from math import floor
 
 from Bio.SeqRecord import SeqRecord
 
-from ..common import Sequence, ReadMethod, Scaffold, Base
+from ..common import Sequence, ReadMethod, Base
 from ..random import pick_normal, pick_float, pick_integer, pick_exponential
+from .datatype import Scaffold
 
 
 
@@ -82,6 +83,7 @@ class Sequencer :
 
     # Beta scale parameter for the Exponential Distribution that determines the error rate.
     # It is the inverse of the rate parameter Lambda. (Beta = 1 / Lambda)
+    # Higher values mean higher error rates.
     call_error_beta : float
 
 
@@ -105,9 +107,6 @@ class Sequencer :
 
 
     def apply ( self, genome:Sequence ) -> List[Scaffold] :
-        """
-        TODO: Decide between Host and Strain.
-        """
 
         # Go for the approach of selecting randomly a start point and length, then check if it is
         # possible. Repeat if not.
@@ -131,7 +130,7 @@ class Sequencer :
             read_size = min( library_size, self.read_length ) # Read is restricted by max read length.
             r1.seq = list(genome[ start : start + read_size ])
             if self.read_method == 'paired-end' :
-                r2.seq = list(genome[ end - read_size : end ])
+                r2.seq = list(reversed(genome[ end - read_size : end ])) # R2 read in opposite direction
 
             # Apply quality estimation and substitution errors for both.
             for r in [ r1, r2 ] : # Same code for both possible reads.
