@@ -1,12 +1,13 @@
 
 from __future__ import annotations
 
+import numpy as np
 from cobra.io import read_sbml_model
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING: # Avoid circular dependencies because of typing.
-    from .host import Host as HostClass
-    from .strain import Strain as StrainClass
+    from .host import Host
+    from .strain import Strain
 
 
 
@@ -41,11 +42,11 @@ def Help_LoadCobra(Path=False):
 
     return Model
 
-def Help_GeneAnnotator(Host, Model):
+def Help_GeneAnnotator(HostName, Model):
     '''
     Function to characterize genes.
     Input
-        Host:     name of the host
+        HostName:     name of the host
         Model:    cobra model
     Output
         Genes_df: dataframe, gene name from enzyme id in model, expression strength, promoter sequence, ORF, flux
@@ -58,12 +59,12 @@ def Help_GeneAnnotator(Host, Model):
     num_cores = multiprocessing.cpu_count()
 #     use_core = min([num_cores, n])
 
-    Result = Parallel(n_jobs=num_cores)(delayed(make_GeneJoiner)(Host, Model, myRct.id) for myRct in Model.reactions)
+    Result = Parallel(n_jobs=num_cores)(delayed(make_GeneJoiner)(HostName, Model, myRct.id) for myRct in Model.reactions)
     Genes_df = pd.DataFrame(Result)
 
     return Genes_df
 
-def Help_StrainCharacterizer(Host, GenesDF, Genome_WT, Genome_MT, Model):
+def Help_StrainCharacterizer(HostName, GenesDF, Genome_WT, Genome_MT, Model):
     '''
     Function to scan a manipulated genome for changes in gene expression of enzymes.
     Input:
@@ -80,32 +81,35 @@ def Help_StrainCharacterizer(Host, GenesDF, Genome_WT, Genome_MT, Model):
     num_cores = multiprocessing.cpu_count()
 #     use_core = min([num_cores, n])
 
-    Result = Parallel(n_jobs=num_cores)(delayed(make_UpdateExpression)(Host, GenesDF, Genome_WT, Genome_MT, myRct.id) for myRct in Model.reactions)
+    Result = Parallel(n_jobs=num_cores)(delayed(make_UpdateExpression)(HostName, GenesDF, Genome_WT, Genome_MT, myRct.id) for myRct in Model.reactions)
     RctNew_df = pd.DataFrame(Result)
 
     return RctNew_df
 
-def Help_FluxCalculator(Strain:StrainClass, Host:HostClass, Test_Strain=False):
+def Help_FluxCalculator ( HostName:str, StrainWT:Strain, StrainMut:Optional[Strain] = None ) :
     '''
     Calculation of flux values.
+
+    This method can work in 2 modes:
+      [StrainWT only] : The metabolic model of the WT strain is used for calculation.
+      [StrainWT + StrainMut] : An additional step of resetting boundaries is done on the model
+        before the fluxes are calculated.
+
+    TODO: The "reset boundary" step is mutating the `StrainMut.model`, mutation might not be intended.
     '''
-    import numpy as np
-    from .metabolism import measure_EnzymeLevel1
 
     # adding flux values
     # setup of flux boundaries. For the reference boundary changes are set to 'False',
     # for mutant strains, ractions with altered promoter sequence will change enzyme levels and boundaries must be changed accordingly, their variable is 'True'
 
-    Model = Strain.model
-
-    if Test_Strain:
+    if StrainMut is not None :
         print('resetting boundaries')
         # finding reactions for which the expression has changed
-        RctNewDF, Set_Boundary, _ = measure_EnzymeLevel1(Host, Strain)
+        RctNewDF, Set_Boundary, _ = measure_EnzymeLevel1(HostName, StrainWT, StrainMut)
         # Defining the model with the two combinations of either
         # increasing lower bound (increased forward, decreased reverse reaction)
         # decreasing upper bound (decreased forward, increased reverse reaction)
-        with Model as myModel:
+        with StrainWT.model as myModel:
             # Comb.1: positive flux with increased expression -> increasing lower bound
             for Indx in Set_Boundary['lower']:
                 myModel.reactions[Indx].lower_bound = RctNewDF.loc[Indx, 'NewExpr'] * RctNewDF.loc[Indx, 'Expr2Flux']
@@ -116,7 +120,7 @@ def Help_FluxCalculator(Strain:StrainClass, Host:HostClass, Test_Strain=False):
             Fluxes = myModel.optimize()
 
     else:
-        Fluxes = Model.optimize()
+        Fluxes = StrainWT.model.optimize()
 
 
     return Fluxes.fluxes.values, Fluxes.objective_value
@@ -148,21 +152,19 @@ def make_AdaptModel(StrainID):
     return Model
 
 
-
-def measure_EnzymeLevel1(Host:HostClass, Strain):
+def measure_EnzymeLevel1(HostName:str, StrainWT:Strain, StrainMut:Strain):
     '''
     The function differences of expression levels of enzymes between two strains.
     '''
     import numpy as np
     from .metabolism import Help_StrainCharacterizer
 
-    Host_Strain = Host.name
-    RefGenDF = Host.WT.genes_df
-    RefGenome = Host.WT.genome
-    MutGenome = Strain.genome
-    RefModel = Host.WT.model
+    RefGenDF = StrainWT.genes_df
+    RefGenome = str(StrainWT.genome)
+    MutGenome = str(StrainMut.genome)
+    RefModel = StrainWT.model
 
-    RctNewDF = Help_StrainCharacterizer(Host_Strain, RefGenDF, RefGenome, MutGenome, RefModel)
+    RctNewDF = Help_StrainCharacterizer(HostName, RefGenDF, RefGenome, MutGenome, RefModel)
 
     # finding reactions for which the expression has changed
     RctNew = RctNewDF[RctNewDF['RctFlag']==True].index.values

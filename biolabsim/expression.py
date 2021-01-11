@@ -1,7 +1,7 @@
-def Help_PromoterStrength(Host, Sequence, Scaler=100, Similarity_Thresh=.4, Predict_File=None):
+def Help_PromoterStrength(HostName, Sequence, Scaler=100, Similarity_Thresh=.4, Predict_File=None):
     '''Expression of the recombinant protein.
         Arguments:
-            Host:       class, contains optimal growth temperature, production phase
+            HostName:       class, contains optimal growth temperature, production phase
             Sequence:     string, Sequence for which to determine promoter strength
             Scaler:       int, multiplied to the regression result for higher values
             Predict_File: string, address of regression file
@@ -21,11 +21,11 @@ def Help_PromoterStrength(Host, Sequence, Scaler=100, Similarity_Thresh=.4, Pred
             Regressor_File = Predict_File
         else:
             Data_Folder = 'ExpressionPredictor'
-            if Host == 'Ecol':
+            if HostName == 'Ecol':
                 Regressor_File = os.path.join(Data_Folder,'Ecol-Promoter-predictor.pkl')
                 Add_Params = os.path.join(Data_Folder,'Ecol-Promoter-AddParams.pkl')
 #                 Scaler_DictName = 'Ecol Promoter Activity_Scaler'
-            elif Host == 'Pput':
+            elif HostName == 'Pput':
                 Regressor_File = os.path.join(Data_Folder,'Ptai-Promoter-predictor.pkl')
                 Add_Params = os.path.join(Data_Folder,'Ptai-Promoter-AddParams.pkl')
 #                 Scaler_DictName = 'Ptai Promoter Activity_Scaler'
@@ -45,7 +45,7 @@ def Help_PromoterStrength(Host, Sequence, Scaler=100, Similarity_Thresh=.4, Pred
 
     return Expression
 
-def make_UpdateExpression(Host, GenesDF, Genome_WT, Genome_Mut, RctID):
+def make_UpdateExpression(HostName, GenesDF, Genome_WT, Genome_Mut, RctID):
     '''
     Function to evaluate if expression for the input gene is different compared to the reference strain.
     Input:
@@ -73,7 +73,7 @@ def make_UpdateExpression(Host, GenesDF, Genome_WT, Genome_Mut, RctID):
     if Gene_Promoter != Rct_RefProm:
 #         print('New promoter.')
         RctFlag = True
-        NewExpr = float(Help_PromoterStrength(Host, Gene_Promoter, Similarity_Thresh=.8))
+        NewExpr = float(Help_PromoterStrength(HostName, Gene_Promoter, Similarity_Thresh=.8))
     else:
         RctFlag = False
         NewExpr = RefExpr

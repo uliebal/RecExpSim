@@ -1,5 +1,6 @@
 
 from ..host import Host
+from ..strain import WildtypeStrain
 from ..random import pick_integer
 from ..config import MODEL_DIR
 
@@ -19,12 +20,8 @@ class Pput (Host) :
             # unit: in gDCW/l, source 1: https://onlinelibrary.wiley.com/doi/pdf/10.1002/bit.25474, source 2: https://link.springer.com/article/10.1385/ABAB:119:1:51
             max_biomass= pick_integer(45,145),
 
-            # TODO: Does it make sense for a Host to have no metabolism? Pput seems to have been
-            #   added because of the BioLabSimFun script which does not care about Strains.
-            # TODO: Pput has its own model (bigger).
-            metabolic_model_path= MODEL_DIR / "e_coli_core.xml"
+            # Obtained from:  http://bigg.ucsd.edu/models/iJN746
+            # TODO: Confirm this is the correct model. There are multiple options.
+            strain= WildtypeStrain( name= "WT", host_name= "Pput", model_path= MODEL_DIR / "iJN746.xml" )
 
         )
-
-
-

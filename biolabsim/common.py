@@ -1,13 +1,16 @@
 
 from typing import List, Literal, NamedTuple, Optional
 
+from Bio.Seq import Seq as BioPythonSeq
+from Bio.SeqRecord import SeqRecord
+
 
 # One of the simple 4 nucleic bases, plus the unknown base. (TODO: X here but confirm)
 Base = Literal['A','C','G','T','X']
 
 
-# A sequence of simple bases.
-Sequence = List[Base]
+# Use the same sequence as `biopython` does.
+Sequence = BioPythonSeq
 
 
 # Well distinguished promoter sites.
@@ -32,9 +35,7 @@ class Scaffold (NamedTuple) :
 
     """
     read_method : ReadMethod
-    expected_len : float
-    r1_sequence : Sequence
-    r1_quality : List[float]
-    r2_sequence : Optional[Sequence]
-    r2_quality : Optional[List[float]]
+    expected_len : float # Just an expectation and not necessarily integer.
+    r1_seqrecord : SeqRecord
+    r2_seqrecord : Optional[SeqRecord]
 

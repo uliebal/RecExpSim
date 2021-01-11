@@ -1,23 +1,23 @@
 
-from typing import Any, Literal, List
+from typing import Any, Literal, List, Optional
 from pathlib import Path
+from copy import copy
 
 from .config import MODEL_DIR
 from .random import pick_choice, pick_integer
 from .strain import Strain, WildtypeStrain, MutatedStrain
+from .common import Sequence
+
 
 
 ProductionPhase = Literal[ 'exponential', 'stationary' ]
 
 
 
-
 class Host:
     """
-    The 'Host' class stores all information about the organism and the integrated recombinant protein.
-
-    Multiple mutations can be stacked to form a mutated Host. The Host will keep track of all
-    Strains.
+    The 'Host' class stores information about the organism are placed.
+    The specific strain of the host can be unknown.
     """
 
     # Production phase: either during growth phase or stationary phase.
@@ -42,56 +42,50 @@ class Host:
     # Optimal Primer length.
     opt_primer_len : int
 
-    # A stack of strains, where the bottom strain is the wildtype and all other strains are
-    # mutations on top of the previous strains.
-    # TODO: Does it make sense for a host to have multiple Strains ever. Or is the Host the Strain?
-    strains : List[Strain]
+    # The strain of this host. If unknown this will be set to None.
+    strain : Optional[Strain]
 
 
 
-    def __init__ ( self, name:str, max_biomass:int, metabolic_model_path:Path ) :
+    def __init__ ( self, name:str, max_biomass:int, strain:Optional[Strain] = None ) :
 
         self.name = name
+
+        self.max_biomass = max_biomass
+        self.strain = strain
 
         self.prod_phase = pick_choice(['exponential','stationary'])
         self.resources = 40
         self.substrate = None
 
-        # TODO: These variables are mostly used in BioLabSimFun
         self.opt_growth_temp = pick_integer(25,40) # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
         self.promoter_str_factor = pick_integer(30,50) # explanation see Plot_ExpressionRate
         self.opt_primer_len = pick_integer(16,28) # unit: nt, source: https://link.springer.com/article/10.1007/s10529-013-1249-8
 
-        # Initiating metabolic network by adding a default WT genome-metabolism connection.
-        self.strains = [
-            WildtypeStrain( name="WT", host=self, model_path=metabolic_model_path )
-        ]
 
 
-
-    def wt_strain ( self ) -> Strain :
+    def clone_with_mutation ( self, name:str ) -> 'Host' :
         """
-        Returns the first strain that is always the WT strain.
+        Will return a cloned host that contains one mutation.
         """
-        return self.strains[0]
+        if self.strain is None :
+            raise HostHasNoStrain()
+
+        # Copy this host and change the mutated pieces.
+        new_host = copy(self) # shallow copy because strain is re-created)
+        new_host.strain = MutatedStrain( name=name, host_name=self.name, ref_strain=self.strain )
+
+        return new_host
 
 
 
-    def last_strain ( self ) -> Strain :
+    def get_genome ( self ) -> Sequence :
         """
-        Returns the top-most strain that holds all applied mutations on the wildtype
-        Most of the times the last mutation, but sometimes also the wildtype itself.
+        Get the genome associated with this host. Easier access to the genome for end-users.
         """
-        return self.strains[-1]
-
-
-
-    def add_mutation ( self, name:str ) -> None :
-        '''
-        Adding mutation on top of the current strain stack.
-        '''
-        new_strain = MutatedStrain( name=name, host=self, ref_strain=self.last_strain() )
-        self.strains.append( new_strain )
+        if self.strain is None :
+            raise HostHasNoStrain()
+        return self.strain.genome
 
 
 
@@ -100,7 +94,7 @@ class Host:
         print("{}: {}".format( "Host", self.name ))
         print("{}: {}".format( "Resources", self.resources ))
         print("{}: {}".format( "Substrate", self.substrate ))
-        print("{}: {}".format( "StrainLibrary", [ s.name for s in self.strains ] ))
+        print("{}: {}".format( "Strain", [ self.strain.name if self.strain != None else "<no-strain>" ] ))
 
 
 

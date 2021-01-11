@@ -20,7 +20,7 @@ def Help_GenomeGenerator(GenesDF, GenomeSize, GCcont) -> str :
 
     return Genome
 
-def make_GeneJoiner(Host, Model, RctID):
+def make_GeneJoiner(HostName, Model, RctID):
     '''
     Determines promoter activity and combines it with enzyme id and ORF.
     Output
@@ -30,7 +30,7 @@ def make_GeneJoiner(Host, Model, RctID):
 
     Gene_ORF = make_ORF(Model)
     Gene_Promoter = make_Promoter()
-    Gene_Activity = Help_PromoterStrength(Host, Gene_Promoter, Similarity_Thresh=.8)
+    Gene_Activity = Help_PromoterStrength(HostName, Gene_Promoter, Similarity_Thresh=.8)
 
     Gene_Dict = {'RctID': RctID, 'Expression': Gene_Activity, 'Promoter': Gene_Promoter, 'ORF': Gene_ORF}
 
@@ -153,7 +153,7 @@ def Help_MutActProm(Genome, GenesDF, NumberEnzymes=3, Target='-10', NumberMutati
         if Target == '-10':
             # extracting reference -10 box sequence
             B_i, B_s = -13, -6
-            RefTar = RefProm[B_i:B_s] # @rafael.schimassek Are negative indexes doing what they need?
+            RefTar = RefProm[B_i:B_s]
         elif Target == '-35':
             # -35 box region
             B_i, B_s = -37, -30

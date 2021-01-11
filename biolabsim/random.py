@@ -54,3 +54,10 @@ def pick_normal ( mean:float = 0, sd:float = 0 ) -> float :
     Pick a single number from a normal distribution.
     """
     return _randgen.normal( mean, sd )
+
+
+def pick_exponential ( beta:float ) -> float :
+    """
+    Pick a single number from an exponential distribution.
+    """
+    return _randgen.exponential( beta )

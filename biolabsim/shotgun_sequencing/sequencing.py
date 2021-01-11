@@ -1,10 +1,17 @@
 
 from typing import List, Optional, NamedTuple, Literal
 from recordclass import RecordClass
+from math import floor
 
-from .fake_genome import SimplifiedGenome
-from ..common import Sequence, ReadMethod, Scaffold
-from ..random import pick_normal, pick_float, pick_integer
+from Bio.SeqRecord import SeqRecord
+
+from ..common import Sequence, ReadMethod, Scaffold, Base
+from ..random import pick_normal, pick_float, pick_integer, pick_exponential
+
+
+
+# Maximal Phred Quality a base call can possibly achieve.
+PHRED_MAX = 40
 
 
 
@@ -12,7 +19,8 @@ class RatedSequence (RecordClass) :
     """
     Internal structure to store sequences and their quality score.
     """
-    seq : Optional[Sequence]
+    name : str
+    seq : Optional[List[Base]]
     qual : Optional[List[float]]
 
 
@@ -46,6 +54,13 @@ class Sequencer :
         by using the Lander/Waterman equation.
         https://www.illumina.com/documents/products/technotes/technote_coverage_calculation.pdf
 
+      - Quality of each call is difficult to simulate as it depends on multiple factors, such as:
+        luminosity of dNTPs, signal-to-noise ratio, hardware of the sequencer and chemistry used.
+        It defined by Illumina through empirical observations. For the simulation, an
+        exponenetial distribution is used such, under default values, a Q30 score is achieved at
+        97% of the times.
+        https://www.illumina.com/Documents/products/technotes/technote_Q-Scores.pdf
+
     The sequences that are output will only contain the target region of each library.
     Adapter, index and tag regions are discarded.
     """
@@ -65,11 +80,9 @@ class Sequencer :
     # Average coverage of each base. Influences amount of frames that are returned.
     average_coverage : float
 
-    # Probability that a base read is wrong.
-    # If this occurs, the base that was read will be randomly and equally selected (could even be
-    # the correct one).
-    # TODO: See how this behaves in reality.
-    read_error_prob : float
+    # Beta scale parameter for the Exponential Distribution that determines the error rate.
+    # It is the inverse of the rate parameter Lambda. (Beta = 1 / Lambda)
+    call_error_beta : float
 
 
 
@@ -80,18 +93,18 @@ class Sequencer :
         read_method:ReadMethod = 'single-read',
         read_length:int = 150,
         average_coverage:float = 10,
-        read_error_prob:float = 0.01  # Notes say its typically around 0.5% - 2.0%
+        call_error_beta:float = 2.85 # Estimation based on MiSeq graph in the TechNotes.
     ) :
         self.library_size_mean = library_size_mean
         self.library_size_sd = library_size_sd
         self.read_method = read_method
         self.read_length = read_length
         self.average_coverage = average_coverage
-        self.read_error_prob = read_error_prob
+        self.call_error_beta = call_error_beta
 
 
 
-    def apply ( self, genome:SimplifiedGenome ) -> List[Scaffold] :
+    def apply ( self, genome:Sequence ) -> List[Scaffold] :
         """
         TODO: Decide between Host and Strain.
         """
@@ -101,41 +114,49 @@ class Sequencer :
         out_scaffolds:List[Scaffold] = []
         num_scaffolds = self.calc_num_scaffolds_obtained(genome)
         while len(out_scaffolds) < num_scaffolds :
-            start = pick_integer( low=0, high=len(genome.template_strand) ) # [low,high)
+            start = pick_integer( low=0, high=len(genome) ) # [low,high)
             library_size = int(pick_normal( self.library_size_mean, self.library_size_sd ))
             end = start + library_size
 
             # Repeat this sampling if it surpassed the possible range.
-            if not ( end <= len(genome.template_strand) ) :
+            if not ( end <= len(genome) ) :
                 continue
 
             # Define the extracted the slices. R2 is only extracted if paired-end method is used.
-            r1 = RatedSequence( seq=None, qual=None )
-            r2 = RatedSequence( seq=None, qual=None )
+            name_t = "BioLabSim.Sequencer id={} dir={}"
+            r1 = RatedSequence( name=name_t.format(len(out_scaffolds),"R1"), seq=None, qual=None )
+            r2 = RatedSequence( name=name_t.format(len(out_scaffolds),"R2"), seq=None, qual=None )
 
             # Extract the slices.
             read_size = min( library_size, self.read_length ) # Read is restricted by max read length.
-            r1.seq = genome.template_strand[ start : start + read_size ]
+            r1.seq = list(genome[ start : start + read_size ])
             if self.read_method == 'paired-end' :
-                r2.seq = genome.template_strand[ end - read_size : end ]
+                r2.seq = list(genome[ end - read_size : end ])
 
-            # Apply quality estimation and substitution errors for both
+            # Apply quality estimation and substitution errors for both.
             for r in [ r1, r2 ] : # Same code for both possible reads.
                 if r.seq != None : # Catch non-existent R2 reads.
-                    r.qual = [ 1 - self.read_error_prob for _ in range(len(r.seq)) ] # TODO: Uniform quality.
+                    r.qual = [ PHRED_MAX for _ in range(len(r.seq)) ] # Initialize quality.
                     for i in range(len(r.seq)) :
-                        if pick_float() < self.read_error_prob :
-                            err_bases = [ b for b in ['A','T','C','G'] if b != r.seq[i] ]
+
+                        # Sample the error rate for each position from the exponential distribution.
+                        q_error = pick_exponential( self.call_error_beta )
+                        q_error = min( q_error, PHRED_MAX )
+                        r.qual[i] = round(PHRED_MAX - q_error)
+
+                        # Given the Phred Score, there is a probability a substitution error occurs.
+                        if pick_float() < phred_to_prob(r.qual[i]) :
+                            err_bases = [ b for b in ['A','C','G','T'] if b != r.seq[i] ]
                                 # Always substitute for a base that is not the original.
                             sel_base = err_bases[ pick_integer(0,len(err_bases)) ]
                             r.seq[i] = sel_base
-                            r.qual[i] = 0.25 # TODO: Remove this. Debugging.
 
             # Create the scaffold and add it to the final results.
             cur_scaffold = Scaffold(
-                read_method=self.read_method, expected_len=library_size,
-                r1_sequence=r1.seq, r1_quality=r1.qual,
-                r2_sequence=r2.seq, r2_quality=r2.qual
+                read_method=self.read_method,
+                expected_len=library_size,
+                r1_seqrecord=convert_to_seqrecord(r1),
+                r2_seqrecord=convert_to_seqrecord(r2) if r2.seq is not None else None,
             )
             out_scaffolds.append(cur_scaffold)
 
@@ -143,7 +164,7 @@ class Sequencer :
 
 
 
-    def calc_num_scaffolds_obtained ( self, genome:SimplifiedGenome ) -> int :
+    def calc_num_scaffolds_obtained ( self, genome:Sequence ) -> int :
         """
         Number of frames that will be obtained. Calculated based on Lander/Waterman equation with
         regards to the current parameters and the host genome.
@@ -156,3 +177,23 @@ class Sequencer :
             /
             ( self.read_length * method_factor )
         )
+
+
+
+def phred_to_prob ( phred_score:float ) -> float :
+    """ Convert a Phred score into a probability. """
+    return 10 ** ( -phred_score / 10 )
+
+
+
+def convert_to_seqrecord ( rated_seq:RatedSequence ) -> SeqRecord :
+    """
+    Convert an internal RatedSequence to the Sequence that is commonly used throughout the library.
+    """
+    return SeqRecord(
+        Sequence( "".join(rated_seq.seq) ),
+        id=rated_seq.name,
+        name=rated_seq.name,
+        description="",
+        letter_annotations={ 'phred_quality': rated_seq.qual }
+    )

@@ -1,17 +1,13 @@
 
-from __future__ import annotations
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
 
-import pandas
+from pandas import DataFrame
 
 from .metabolism import load_local_sbml_model, Help_GeneAnnotator, Help_Expr2Flux, Help_FluxCalculator
-from .genome import Help_GenomeGenerator, Help_MutActProm
-
-if TYPE_CHECKING: # Avoid circular dependencies because of typing.
-    from .host import Host
-    from .common import PromoterSite
+from .genome import Help_GenomeGenerator, Help_MutActProm, make_GenomeBckgd
+from .common import Sequence, PromoterSite
 
 
 
@@ -31,10 +27,10 @@ class Strain (ABC) :
     model : Any
 
     # Information about the genes.
-    genes_df : pandas.DataFrame
+    genes_df : DataFrame # ['RctID','Expression','Promoter','ORF','Fluxes','Expr2Flux']
 
-    # Genome written in string using the four ACTG bases.
-    genome : str
+    # Genome written in string using the four ACGT bases.
+    genome : Sequence
 
 
     def get_genome_size (self) -> int :
@@ -42,42 +38,44 @@ class Strain (ABC) :
 
 
     def get_genome_gc_content (self) -> float :
-        return round((self.genome.count('G') + self.genome.count('C'))/self.genome_size,2)
+        return round(
+            (self.genome.count('G') + self.genome.count('C'))
+            / self.get_genome_size()
+        , 2)
 
 
 
 class WildtypeStrain (Strain) :
     """
     Strains that are considered wildtype which get their genomic information from an SBML Model.
-    TODO: Is "genomic" the correct word?
     TODO: Still needs the Host as argument. Might be strange if Strain is a subtype of Host.
     """
 
     def __init__ (
-        self, name:str, host:Host, model_path:str,
-        wanted_genome_size:int = 500, wanted_genome_gc_content:float = 0.6
+        self, name:str, host_name:str, model_path:str,
+        genome_size:int = 500, genome_gc_content:float = 0.6
     ) :
 
         self.name = name
         self.model_path = model_path
         self.model = load_local_sbml_model(self.model_path)
 
-        self.genes_df = Help_GeneAnnotator(host.name, self.model)
-        self.genes_df['Fluxes'], self.objective = Help_FluxCalculator(self, host)
+        self.genes_df = Help_GeneAnnotator(host_name, self.model)
+        self.genes_df['Fluxes'], self.objective = Help_FluxCalculator(host_name, self)
         self.genes_df['Expr2Flux'] = Help_Expr2Flux(self.genes_df)
 
-        self.genome = Help_GenomeGenerator(self.genes_df, wanted_genome_size, wanted_genome_gc_content)
+        wt_genome = Help_GenomeGenerator(self.genes_df, genome_size, genome_gc_content)
+        self.genome = Sequence(wt_genome)
 
 
 
 class MutatedStrain (Strain) :
     """
     Strains that mutated from another reference Strain.
-    TODO: Still needs the Host as argument. Might be strange if Strain is a subtype of Host.
     """
 
     def __init__ (
-        self, name:str, host:Host, ref_strain:Strain,
+        self, name:str, host_name:str, ref_strain:Strain,
         num_enzymes:int = 3, target_site:PromoterSite = '-10', num_mutations:int = 2
     ) :
 
@@ -87,13 +85,33 @@ class MutatedStrain (Strain) :
 
         # use data of the reference strain to created mutates gene sequences
         mut_genome, mut_genes_df = Help_MutActProm(
-            ref_strain.genome, ref_strain.genes_df,
+            str(ref_strain.genome), ref_strain.genes_df,
             NumberEnzymes=num_enzymes, Target=target_site, NumberMutations=num_mutations
         )
+        self.genome = Sequence(mut_genome)
 
         self.genes_df = mut_genes_df
-        self.genes_df['Fluxes'], self.objective = Help_FluxCalculator(self, host, True)
+        self.genes_df['Fluxes'], self.objective = Help_FluxCalculator(host_name, ref_strain, self)
         self.genes_df['Expr2Flux'] = Help_Expr2Flux(self.genes_df)
 
-        self.genome = mut_genome
 
+
+
+class FabricatedStrain (Strain) :
+    """
+    Strains that contain no real genes and whose genome will be randomly generated using the
+    nucleic bases and a given GC-Content. These genomes do not follow biological rules, but are
+    useful to generate very small genome sequences to test and observe the other methods.
+    """
+
+    def __init__ (
+        self, name:str, genome_size:int = 500, genome_gc_content:float = 0.6
+    ) :
+
+        self.name = name
+
+        # Generate an empty gene dataframe and a random genome sequence.
+        self.genes_df = DataFrame(
+            columns=['RctID','Expression','Promoter','ORF','Fluxes','Expr2Flux']
+        )
+        self.genome = make_GenomeBckgd( genome_size, genome_gc_content )
