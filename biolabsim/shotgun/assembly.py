@@ -1,5 +1,7 @@
 
+from abc import ABC, abstractmethod
 from typing import List, NamedTuple, Dict, Any
+from math import inf
 
 import numpy as np
 from Bio import pairwise2
@@ -8,10 +10,22 @@ from Bio.Blast.Record import Alignment
 from .datatype import Scaffold, LocalizedSequence, EstimatedSequence, get_consensus_from_overlap, \
     estimate_from_overlap
 from ..common import Base, Sequence
+from ..random import pick_integer
 
 
 
-#Alignment = Any # TODO: Use biopython Alignment typing.
+class Assembler (ABC) :
+    """
+    Abstract class that defines the interface of all assemblers.
+    """
+
+    @abstractmethod
+    def apply_internal ( self, scaffolds:List[Scaffold] ) -> List[LocalizedSequence] :
+        pass
+
+    @abstractmethod
+    def apply ( self, scaffolds:List[Scaffold] ) -> EstimatedSequence :
+        pass
 
 
 
@@ -24,18 +38,19 @@ class PairwiseScore (NamedTuple) :
 
 def match ( sa:Sequence, sb:Sequence ) -> Alignment :
     """ Internal method for pairwise matching. """
-    return pairwise2.align.localms( sa, sb, 1, 0, -100, -100, gap_char='-' )
+    return pairwise2.align.localms( sa, sb, 1, -1, -100, -100, gap_char='-' )
 
 
 
-class GreedyContigAssembler :
+class GreedyContigAssembler (Assembler) :
     """
     This assembler will try to assemble the DNA scaffolds by using greedy pairwise matching.
     It will start with the pair of sequences with highest pairwise matching and from there one
     iteratively add one of the remaining sequences by matching it with the consensus sequence of
     all already clustered sequences.
 
-    Attention: Only reads the R1 sequence. Better assembly is achieved with external programs.
+    Attention: It will extract both sequences of paired-end reads, but is not able to use their
+    pairing relationship during assembly.
     """
 
     def __init__ ( self ) :
@@ -45,11 +60,20 @@ class GreedyContigAssembler :
 
     def apply_internal ( self, scaffolds:List[Scaffold] ) -> List[LocalizedSequence] :
 
+        # Extract all sequences from the scaffolds. If its 'paired-end' then we also extract the
+        # R2 sequences but discard their paired relationship.
+        sequences:List[Sequence] = []
+        for scaf in scaffolds :
+            sequences.append( scaf.r1_seqrecord.seq )
+            if scaf.r2_seqrecord is not None :
+                sequences.append( scaf.r2_seqrecord.seq.reverse_complement().complement() )
+                    # Strange how there is no simple `Seq.reverse()` in biopython.
+
         # Calculate best pairwise matching score to decide on the first sequences to match.
-        fbest = PairwiseScore( 0, 0, -1 )
-        for i in range(len(scaffolds)) :
-            for k in range( i+1, len(scaffolds) ) :
-                cur_align = match( scaffolds[i].r1_seqrecord.seq, scaffolds[k].r1_seqrecord.seq )[0]
+        fbest = PairwiseScore( 0, 0, -inf )
+        for i in range(len(sequences)) :
+            for k in range( i+1, len(sequences) ) :
+                cur_align = match( sequences[i], sequences[k] )[0]
                 if cur_align.score > fbest.score :
                     fbest = PairwiseScore( i, 0, cur_align.score ) # 0 because k is not used.
 
@@ -58,27 +82,27 @@ class GreedyContigAssembler :
         # fbest.k again, but we avoid having to write an extra case for this first match.
 
         # Keep track of all sequences that are left to cluster.
-        available:List[bool] = [ True for _ in range(len(scaffolds)) ]
+        available:List[bool] = [ True for _ in range(len(sequences)) ]
         cluster:List[LocalizedSequence] = []
 
         # Add the first sequence to start the cluster.
         available[fbest.i] = False
-        cluster.append( LocalizedSequence( sequence=scaffolds[fbest.i].r1_seqrecord.seq, locus=0 ) )
-        #print("First: " + "".join(scaffolds[fbest.i].r1_seqrecord.seq))
+        cluster.append( LocalizedSequence( sequence=sequences[fbest.i], locus=0 ) )
+        #print("First: " + "".join(sequences[fbest.i]))
 
         # While sequences are still left unclustered.
         while sum(available) > 0 :
             min_start = min([ locseq.locus for locseq in cluster ])
             consensus = get_consensus_from_overlap(cluster).sequence
             #print("Consensus: " + "".join(consensus))
-            best = PairwiseScore( 0, 0, -1 )
-            best_align:Any = None # TODO: Use biopython Alignment typing.
+            best = PairwiseScore( 0, 0, -inf )
+            best_align:Alignment = None
 
             # Get the best matching for the cluster consensus.
-            for k in range(len(scaffolds)) :
+            for k in range(len(sequences)) :
                 if available[k] :
-                    cur_align = match( consensus, scaffolds[k].r1_seqrecord.seq )[0]
-                    #print("      Try: {} ({}) [{}]".format( "".join(scaffolds[k].r1_seqrecord.seq), cur_align.score, k ))
+                    cur_align = match( consensus, sequences[k] )[0]
+                    #print("      Try: {} ({}) [{}]".format( "".join(sequences[k]), cur_align.score, k ))
                     #print("         : {}".format("".join(cur_align.seqA)))
                     #print("         : {}".format("".join(cur_align.seqB)))
 
@@ -102,13 +126,54 @@ class GreedyContigAssembler :
             else : # new sequence start at the same position as the cluster
                 best_locus = min_start
 
-            cluster.append( LocalizedSequence( sequence=scaffolds[best.k].r1_seqrecord.seq, locus=best_locus ))
+            cluster.append( LocalizedSequence( sequence=sequences[best.k], locus=best_locus ))
             available[best.k] = False
             #print("    Added: {} [{}] <{},{}>".format(
-            #    "".join(scaffolds[best.k].r1_seqrecord.seq), best.k, min_start, best_locus
+            #    "".join(sequences[best.k]), best.k, min_start, best_locus
             #))
 
         return cluster
+
+
+
+    def apply ( self, scaffolds:List[Scaffold] ) -> EstimatedSequence :
+        return estimate_from_overlap( self.apply_internal(scaffolds) )
+
+
+
+class RandomAssembler (Assembler) :
+    """
+    The random assembler will place all contigs in the scaffolds in random locations.
+    Good assemblers should aspire to at least be better than this random assembler.
+    """
+
+    expected_genome_size : int
+
+
+
+    def __init__ ( self, expected_genome_size:int ) :
+        self.expected_genome_size = expected_genome_size
+
+
+
+    def apply_internal ( self, scaffolds:List[Scaffold] ) -> List[LocalizedSequence] :
+
+        # Extract all sequences from the scaffolds. If its 'paired-end' then we also extract the
+        # R2 sequences but discard their paired relationship.
+        sequences:List[Sequence] = []
+        for scaf in scaffolds :
+            sequences.append( scaf.r1_seqrecord.seq )
+            if scaf.r2_seqrecord is not None :
+                sequences.append( scaf.r2_seqrecord.seq.reverse_complement().complement() )
+                    # Strange how there is no simple `Seq.reverse()` in biopython.
+
+        # Randomly decide the start position of each sequence.
+        loc_sequences:List[LocalizedSequence] = []
+        for seq in sequences :
+            start_pos = pick_integer( 0, self.expected_genome_size - len(seq) )
+            loc_sequences.append( LocalizedSequence( sequence=seq, locus=start_pos ) )
+
+        return loc_sequences
 
 
 

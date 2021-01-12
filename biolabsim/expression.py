@@ -95,7 +95,7 @@ def make_Promoter(RefFile=False, WeightFile=False):
     import numpy as np
     import pickle
     import os
-    import random
+    from .random import pick_choice
     # generating promoter sequence
 
     # the reference sequence contains the most common tested nucleotides at each position
@@ -118,7 +118,7 @@ def make_Promoter(RefFile=False, WeightFile=False):
     # changing positions within the exploratory space of the regressor
     Bases = ['A','C','G','T']
     for idx in range(len(Nucleotides_Weight)):
-        np.put(SeqDef,Nucleotides_Weight.index[idx],random.choices(Bases,Nucleotides_Weight.iloc[idx].values))
+        np.put(SeqDef,Nucleotides_Weight.index[idx],pick_choice(Bases,Nucleotides_Weight.iloc[idx].values))
     Gene_Promoter = ''.join(SeqDef)
 
     return Gene_Promoter

@@ -3,14 +3,14 @@ def Help_GenomeGenerator(GenesDF, GenomeSize, GCcont) -> str :
     Constructs whole genome with interspersed genes.
     '''
     import numpy as np
-    import random
+    from .random import pick_sample
     # combining promoter and ORF
     Genes = [''.join([myProm, myORF]) for myProm, myORF in zip(GenesDF['Promoter'].values,GenesDF['ORF'].values)]
     Genes_List = [Convert(Gene) for Gene in Genes]
     # generating background genome sequence
     Genome_Bckgd = make_GenomeBckgd(GenomeSize, GCcont)
     # determining position for gene insertion
-    Gene_Positions = np.sort(random.sample(range(len(Genome_Bckgd)),len(Genes)))
+    Gene_Positions = np.sort(pick_sample(range(len(Genome_Bckgd)),len(Genes)))
     # breaking the background genome in nested lists at gene positions
     Genome_Tmp = make_NestedList(Genome_Bckgd, Gene_Positions)
     # Now inserting the genes
@@ -45,9 +45,9 @@ def make_GenomeBckgd(GenomeSize, GCcont):
     Output
         Genome_Bckgd: string
     '''
-    import random
+    from .random import pick_choice
 
-    SeqNestList = [random.choices([Letter for Nest in random.choices([['G','C'],['A','T']], weights=[GCcont, 1-GCcont]) for Letter in Nest]) for _x in range(GenomeSize)]
+    SeqNestList = [pick_choice([Letter for Nest in pick_choice([['G','C'],['A','T']], weights=[GCcont, 1-GCcont]) for Letter in Nest]) for _x in range(GenomeSize)]
     Genome_Bckgd = ''.join(Letter for Nest in SeqNestList for Letter in Nest)
 
     return Genome_Bckgd
@@ -63,7 +63,7 @@ def make_ORF(Model):
     Output
         Gene_ORF:          string, open reading frame of enzyme
     '''
-    import random
+    from .random import pick_choice
     import numpy as np
     import pandas as pd
 
@@ -78,8 +78,8 @@ def make_ORF(Model):
     CodonTriplets = pd.read_csv(CodonFile, delimiter=';', skipinitialspace=True)
     CodonStop = CodonTriplets[['Stop' in s for s in CodonTriplets['Name']]].reset_index()
     CodonCoding = CodonTriplets.drop(CodonStop.index).reset_index()
-    Gene_ORF = [random.choices(CodonCoding['Triplet'], weights=CodonCoding['Percent']) for CodonId in range(Gene_Length)]
-    Gene_Stop = random.choices(CodonStop['Triplet'], weights=CodonStop['Percent'])
+    Gene_ORF = [pick_choice(CodonCoding['Triplet'], weights=CodonCoding['Percent']) for CodonId in range(Gene_Length)]
+    Gene_Stop = pick_choice(CodonStop['Triplet'], weights=CodonStop['Percent'])
     Gene_ORF.append(Gene_Stop)
     Gene_ORF.insert(0,['ATG'])
     Gene_ORF = ''.join([Letter for Nest in Gene_ORF for Letter in Nest])
@@ -137,10 +137,10 @@ def Help_MutActProm(Genome, GenesDF, NumberEnzymes=3, Target='-10', NumberMutati
     '''
     Add mutations to the promoter of an active enzyme and returns the genome.
     '''
-    import random
+    from .random import pick_sample
 
     FluxActive = GenesDF[GenesDF['Fluxes']!=0].index.values
-    MutateEnzyme = random.sample(list(FluxActive),NumberEnzymes)
+    MutateEnzyme = pick_sample(list(FluxActive),NumberEnzymes)
 #     print('Mutated Enzymes: {}'.format(MutateEnzyme))
     Genome_Mutated = Genome
     GenesDF_Mutated = GenesDF.copy()
@@ -174,16 +174,16 @@ def make_Mutate(Sequence, NumberMutations=2):
     '''
     Insert mutations in a given sequence
     '''
-    import random
+    from .random import pick_sample
 
     Bases = ['A','C','G','T']
 
     MutTar = list(Sequence)
     # finding positions to mutate
-    Mutate_Pos = random.sample(range(len(Sequence)), NumberMutations)
+    Mutate_Pos = pick_sample(range(len(Sequence)), NumberMutations)
     # generating new sequence with the remaining nucleotides at each position
     for NuclPos in Mutate_Pos:
-        MutTar[NuclPos] = random.sample([Base for Base in Bases if Base is not Sequence[NuclPos]], 1)[0]
+        MutTar[NuclPos] = pick_sample([Base for Base in Bases if Base is not Sequence[NuclPos]], 1)[0]
 
     return ''.join(MutTar)
 

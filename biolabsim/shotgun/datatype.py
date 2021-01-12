@@ -25,7 +25,6 @@ class Scaffold (NamedTuple) :
          ---> order                                   order <---
 
     """
-    read_method : ReadMethod
     expected_len : float # Just an expectation and not necessarily integer.
     r1_seqrecord : BioSeqRecord
     r2_seqrecord : Optional[BioSeqRecord]
@@ -98,6 +97,17 @@ class EstimatedSequence :
 
         shannon_avg = shannon_sum / len(self.base_probs[first_base])
         return shannon_avg
+
+
+
+    def as_consensus_sequence ( self ) -> Sequence :
+        consensus:str = ""
+        first_base = next(iter(self.base_probs.keys()))
+        for i in range(len( self.base_probs[first_base] )) :
+            quorum = dict([ (base,self.base_probs[base][i]) for base in self.base_probs.keys() ])
+            max_base = max( quorum, key=quorum.get, default='-' ) # Get Key with maximum value. Get first if equal.
+            consensus += max_base
+        return Sequence(consensus)
 
 
 

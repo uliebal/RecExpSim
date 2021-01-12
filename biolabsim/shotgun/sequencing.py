@@ -152,7 +152,6 @@ class Sequencer :
 
             # Create the scaffold and add it to the final results.
             cur_scaffold = Scaffold(
-                read_method=self.read_method,
                 expected_len=library_size,
                 r1_seqrecord=convert_to_seqrecord(r1),
                 r2_seqrecord=convert_to_seqrecord(r2) if r2.seq is not None else None,

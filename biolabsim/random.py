@@ -28,11 +28,18 @@ def set_seed ( new_seed:int ) -> None :
 
 
 
-def pick_choice ( choices:List[Any] ) -> Any :
+def pick_choice ( choices:List[Any], weights:List[float] = None ) -> Any :
     """
     Pick a single value out of a provided list.
     """
-    return _randgen.choice(choices)
+    return _randgen.choice( choices, p=weights )
+
+
+def pick_sample ( choices:List[Any], amount:int ) -> List[Any] :
+    """
+    Pick a sample from choices.
+    """
+    return _randgen.choice( choices, size=amount, replace=False )
 
 
 def pick_integer ( low:int, high:int ) -> int :
