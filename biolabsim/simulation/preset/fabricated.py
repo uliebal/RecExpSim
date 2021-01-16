@@ -2,7 +2,7 @@
 from ..host import Host
 from ..strain import FabricatedStrain
 from ..random import pick_integer
-from ..config import MODEL_DIR
+from ..config import METABOLIC_MODEL_DIR
 
 
 class FabricatedHost (Host) :

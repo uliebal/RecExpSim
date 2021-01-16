@@ -7,4 +7,8 @@ _rootpath = Path(os.path.abspath(__file__)).parent.parent
 
 
 # Directory containing all biological models.
-MODEL_DIR: Path = _rootpath / "data" / "metabolic_model"
+METABOLIC_MODEL_DIR: Path = _rootpath / "data" / "metabolic_model"
+
+
+# Directory containing all expression predictors.
+EXPRESSION_PREDICTOR_DIR: Path = _rootpath / "data" / "expression_predictor"

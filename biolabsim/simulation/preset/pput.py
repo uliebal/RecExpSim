@@ -2,7 +2,7 @@
 from ..host import Host
 from ..strain import WildtypeStrain
 from ..random import pick_integer
-from ..config import MODEL_DIR
+from ..config import METABOLIC_MODEL_DIR
 
 
 class Pput (Host) :
@@ -22,6 +22,6 @@ class Pput (Host) :
 
             # Obtained from:  http://bigg.ucsd.edu/models/iJN746
             # TODO: Confirm this is the correct model. There are multiple options.
-            strain= WildtypeStrain( name= "WT", host_name= "Pput", model_path= MODEL_DIR / "iJN746.xml" )
+            strain= WildtypeStrain( name= "WT", host_name= "Pput", model_path= METABOLIC_MODEL_DIR / "iJN746.xml" )
 
         )

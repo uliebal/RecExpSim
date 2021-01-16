@@ -3,7 +3,7 @@ from typing import Any, Literal, List, Optional
 from pathlib import Path
 from copy import copy
 
-from .config import MODEL_DIR
+from .config import METABOLIC_MODEL_DIR
 from .random import pick_choice, pick_integer
 from .strain import Strain, WildtypeStrain, MutatedStrain
 from .common import Sequence
@@ -11,6 +11,13 @@ from .common import Sequence
 
 
 ProductionPhase = Literal[ 'exponential', 'stationary' ]
+
+
+
+class HostHasNoStrain (Exception) :
+    """Raised when a Host has no Strain but wants to use one."""
+    def __init__ ( self ) :
+        super().__init__("Host has no Strain but wants to perform an action with a Strain.")
 
 
 

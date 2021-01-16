@@ -2,7 +2,7 @@
 from ..host import Host
 from ..strain import WildtypeStrain
 from ..random import pick_integer
-from ..config import MODEL_DIR
+from ..config import METABOLIC_MODEL_DIR
 
 
 class Ecol (Host) :
@@ -20,7 +20,7 @@ class Ecol (Host) :
             max_biomass= pick_integer(30,100),
 
             # Start with a known WT metabolic model.
-            strain= WildtypeStrain( name= "WT", host_name= "Ecol", model_path= MODEL_DIR / "e_coli_core.xml" )
+            strain= WildtypeStrain( name= "WT", host_name= "Ecol", model_path= METABOLIC_MODEL_DIR / "e_coli_core.xml" )
 
         )
 
