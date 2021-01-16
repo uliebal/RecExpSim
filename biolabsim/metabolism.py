@@ -96,6 +96,7 @@ def Help_FluxCalculator ( HostName:str, StrainWT:Strain, StrainMut:Optional[Stra
         before the fluxes are calculated.
 
     TODO: The "reset boundary" step is mutating the `StrainMut.model`, mutation might not be intended.
+      Because of this, perhaps the other `StrainWT.model` gets mutated in the process.
     '''
 
     # adding flux values

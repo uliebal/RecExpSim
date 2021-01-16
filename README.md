@@ -8,8 +8,6 @@
 
 Prefer the use of [standardized code style](https://pep8.org/).
 
-*TODO: Add instructions about the automatic code style formatting tool.*
-
 Make use of [python type hints](https://docs.python.org/3/library/typing.html) whenever possible.
 When specifying types for variables and methods, your IDE will help you with organizing the inputs,
 outputs and arguments that you may use.

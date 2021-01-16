@@ -21,7 +21,6 @@ class Host:
     """
 
     # Production phase: either during growth phase or stationary phase.
-    # TODO: This is currently never used.
     prod_phase : ProductionPhase
 
     # Resource available in the host.
@@ -72,7 +71,8 @@ class Host:
             raise HostHasNoStrain()
 
         # Copy this host and change the mutated pieces.
-        new_host = copy(self) # shallow copy because strain is re-created)
+        new_host = copy(self) # Shallow copy because strain is re-created.
+            # TODO: If there are problems of Dataframes being mutated in_place, change this to deep copy.
         new_host.strain = MutatedStrain( name=name, host_name=self.name, ref_strain=self.strain )
 
         return new_host

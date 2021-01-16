@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, TYPE_CHECKING
 
 from pandas import DataFrame
+from cobra import Model
 
 from .metabolism import load_local_sbml_model, Help_GeneAnnotator, Help_Expr2Flux, Help_FluxCalculator
 from .genome import Help_GenomeGenerator, Help_MutActProm, make_GenomeBckgd
@@ -23,8 +24,7 @@ class Strain (ABC) :
     model_path : Path
 
     # CobraPy metabolic network model.
-    # TODO: Add cobra internal model typing
-    model : Any
+    model : Model
 
     # Information about the genes.
     genes_df : DataFrame # ['RctID','Expression','Promoter','ORF','Fluxes','Expr2Flux']
@@ -48,7 +48,6 @@ class Strain (ABC) :
 class WildtypeStrain (Strain) :
     """
     Strains that are considered wildtype which get their genomic information from an SBML Model.
-    TODO: Still needs the Host as argument. Might be strange if Strain is a subtype of Host.
     """
 
     def __init__ (

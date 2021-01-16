@@ -167,7 +167,6 @@ class Sequencer :
         Number of frames that will be obtained. Calculated based on Lander/Waterman equation with
         regards to the current parameters and the host genome.
         This will account for the read method used. Paired-end methods will output half of it.
-        TODO: Change between Host and Strain.
         """
         method_factor = 2 if self.read_method == 'paired-end' else 1
         return round(
