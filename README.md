@@ -116,13 +116,13 @@ class AminoAcid :
 ## Contacts
 
 
-*Ulf Liebal, Iris Broderius, Lars Blank*
+*Ulf Liebal, Rafael Schimassek, Iris Broderius, Lars Blank*
 
 Institute of Applied Microbiology-iAMB, Aachen Biology and Biotechnology-ABBT, RWTH Aachen University, Worringerweg 1, 52074 Aachen Germany
 
 
 
-Last update: 7 July, 2020
+Last update: 14 January, 2021
 
 Contact: ulf.liebal@rwth-aachen.de
 

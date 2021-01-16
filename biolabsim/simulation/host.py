@@ -105,12 +105,65 @@ class Host:
 
 
 
-    # TODO: Not tested or sure if is correct.
-    def show_Library (self) -> None :
+    # TODO: Code below is not integrated.
+
+
+
+    def show_Library(self):
         '''Report of clones and their performance.'''
-        for clone in self.strains.items():
-            Clone_ID = clone.name
+        for Clone_ID, Clone_info in self.var_Library.items():
             print("\nClone ID: {}".format(Clone_ID))
             for key in Clone_info:
                 print('{}: {}'.format(key, Clone_info[key]))
+
+    def show_TargetExpressionRate(self):
+        '''Function to calculate the maximum possible expression rate and to tell the students what the minimum rate should be.'''
+        from BioLabSim.ModuleMeasureOrganism.Physiology import Express_Max
+        achieveExpRate = Express_Max(self)
+        print('Maximum possible expression: {}'.format(achieveExpRate))
+
+    def plot_ReferencePromoterStrength(self):
+        '''Function to plot the promoter strength of the optimal sequence additionally as reference.'''
+        import matplotlib.pyplot as plt
+
+        factor = self._Host__InflProStreng
+        # Values see init function at the beginning
+        if self.var_Host == 'Ecol':
+            OptimalPromoterStrength = round(0.057 * factor,2)
+        elif self.var_Host == 'Pput':
+            OptimalPromoterStrength = round(0.04 * factor,2)
+        # plot of maximum Promoter strength together with GC content
+        # GC-content is the same for of both optimal sequences.
+        plt.plot(0.575, OptimalPromoterStrength, marker = '*', color = 'green', markersize = 10)
+
+    def make_TempGrowthExp(self, CultTemps, ExpID=1):
+        '''Experiment to determine optimal growth rate. The experiment runs until the maximum biomass is reached.'''
+        from BioLabSim.ModuleMeasureOrganism.Physiology import Help_TempGrowthExp
+        Help_TempGrowthExp(self, CultTemps, ExpID=1)
+
+    def make_Cloning(self, Clone_ID, Promoter, Primer, Tm):
+        from BioLabSim.ModuleManipulateOrganism.GeneticChanges import Help_Cloning
+        Help_Cloning(self, Clone_ID, Promoter, Primer, Tm)
+
+    def measure_PromoterStrength(self, Clone_ID):
+        from BioLabSim.ModuleMeasureOrganism.Physiology import Help_MeasurePromoterStrength
+        Help_MeasurePromoterStrength(self, Clone_ID)
+
+    def measure_ProductionExperiment(self, Clone_ID, CultTemp, GrowthRate, Biomass):
+        from BioLabSim.ModuleMeasureOrganism.Physiology import Help_ProductionExperiment
+        Help_ProductionExperiment(self, Clone_ID, CultTemp, GrowthRate, Biomass)
+
+    def Test(self):
+        from BioLabSim.AuxFun import Help_Test
+        self.var_Host = 'Ecol'
+        self.var_Resources = 40
+        self.var_Substrate = None
+        self.var_Library = {}
+        self.info_Strain = {}
+        self.__InflProStreng = 30 # explanation see Plot_ExpressionRate
+        self.__OptTemp = 30 # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
+        self.__OptPrLen = 20 # unit: nt, source: https://link.springer.com/article/10.1007/s10529-013-1249-8
+        self.__BiomassMax = 50
+        Help_Test(self)
+
 

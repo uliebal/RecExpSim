@@ -6,5 +6,6 @@ pandas==1.0.3
 scipy==1.4.1
 scikit-learn==0.22.1
 watermark==2.0.2
-openpyxl==3.0.3
 biopython==1.78
+cobra==0.20.0
+Escher==1.7.3

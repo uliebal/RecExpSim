@@ -1,0 +1,9 @@
+Substrate;Exchange;uptake rate (mmol/gCDW/h);growth rate (/h);yield (gCDW/gMeOH);source
+Methanol;Ex_meoh;2.34375;0.024;0.32;van Dijken et al. (Fig.6)(10.1007/BF00446560)
+Methanol;Ex_meoh;2.935606061;0.031;0.33;van Dijken et al. (Fig.6)(10.1007/BF00446560)
+Methanol;Ex_meoh;4.285714286;0.048;0.35;van Dijken et al. (Fig.6)(10.1007/BF00446560)
+Methanol;Ex_meoh;5.827702703;0.069;0.37;van Dijken et al. (Fig.6)(10.1007/BF00446560)
+Methanol;Ex_meoh;6.578947368;0.08;0.38;van Dijken et al. (Fig.6)(10.1007/BF00446560)
+Methanol;Ex_meoh;9.868421053;0.12;0.38;van Dijken et al. (Fig.6)(10.1007/BF00446560)
+Methanol;Ex_meoh;14.28571429;0.16;0.35;van Dijken et al. (Fig.6)(10.1007/BF00446560)
+Glycerol;Ex_glyc;7.125407166;0.42;0.64;de Koning et al. Moon et al.

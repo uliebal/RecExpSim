@@ -13,6 +13,7 @@ def Help_PromoterStrength(HostName, Sequence, Scaler=100, Similarity_Thresh=.4, 
     import joblib
     import pickle
     from .genome import list_onehot, list_integer
+    from ..config import EXPRESSION_PREDICTOR_DIR
 
     if Sequence_ReferenceDistance(Sequence) > Similarity_Thresh:
         Expression = 0
@@ -20,7 +21,7 @@ def Help_PromoterStrength(HostName, Sequence, Scaler=100, Similarity_Thresh=.4, 
         if Predict_File!=None:
             Regressor_File = Predict_File
         else:
-            Data_Folder = 'ExpressionPredictor'
+            Data_Folder = str(EXPRESSION_PREDICTOR_DIR)
             if HostName == 'Ecol':
                 Regressor_File = os.path.join(Data_Folder,'Ecol-Promoter-predictor.pkl')
                 Add_Params = os.path.join(Data_Folder,'Ecol-Promoter-AddParams.pkl')
