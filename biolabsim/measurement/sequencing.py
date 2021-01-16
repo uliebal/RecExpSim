@@ -24,7 +24,7 @@ def Help_PromoterStrength(Host, Sequence, Scaler=1, Similarity_Thresh=.4, Predic
     import joblib
     import pickle
 
-    from BioLabSim.AuxFun import Sequence_ReferenceDistance, list_onehot, list_integer
+    from ..auxfun import Sequence_ReferenceDistance, list_onehot, list_integer
 
     if Sequence_ReferenceDistance(Sequence) > Similarity_Thresh:
         Expression = 0

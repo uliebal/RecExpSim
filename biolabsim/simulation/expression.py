@@ -96,7 +96,7 @@ def make_Promoter(RefFile=False, WeightFile=False):
     import numpy as np
     import pickle
     import os
-    from .random import pick_choice
+    from ..random import pick_choice
     # generating promoter sequence
 
     # the reference sequence contains the most common tested nucleotides at each position

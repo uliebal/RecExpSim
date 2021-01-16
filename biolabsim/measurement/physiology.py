@@ -4,20 +4,20 @@ def Help_TempGrowthExp(Host, CultTemps, ExpID=1):
     import pandas as pd
     import matplotlib.pyplot as plt
     import time
-    import random
-    
-    from BioLabSim.AuxFun import Help_Progressbar, Error_Resources
-    
-    if Host._Host__Resources > 0:
 
-        capacity = Host._Host__BiomassMax
+    from ..random import pick_uniform, pick_normal
+    from ..auxfun import Help_Progressbar, Error_Resources
+
+    if Host.resources > 0:
+
+        capacity = Host.max_biomass
         # the time of the half maximum population (inflection point) is calculated according to here:
         # https://opentextbc.ca/calculusv2openstax/chapter/the-logistic-equation/
         d_mult = 2 # we multiply the inflection point with 'd_mult' to increase cultivation time
         P0 = 0.1
 
         # determine time vector with maximum length:
-        OptTemp = Host._Host__OptTemp
+        OptTemp = Host.opt_growth_temp
         # Selecting the temperature that is most distant from the optimal temperature
         Temp_tmax = CultTemps[np.argmax(np.absolute(CultTemps-OptTemp))]
         # using the worst temperature to calculate lowest growth rate
@@ -34,16 +34,16 @@ def Help_TempGrowthExp(Host, CultTemps, ExpID=1):
             col.append('exp.{} biomass conc. at {} °C'.format(i+1, (CultTemps[i])))
 
         df = pd.DataFrame(np.empty(shape=(len(t_max), len(CultTemps)+2), dtype=float), columns = col)
-        df[:len(t_max)] = np.nan 
+        df[:len(t_max)] = np.nan
         new_df = pd.DataFrame({'time [h]': t_max})
         df.update(new_df)
 
         #computing of biomass data and updating of DataFrame
         for i in range(len(CultTemps)):
-            if Host._Host__Resources > 0:
+            if Host.resources > 0:
                 wait = 0.01 # has to be adjusted, waiting time for loading bar
 
-                if random.uniform(0,1) > 0.1: # in 10% of cases the culture does not grow (failure of the experiment)
+                if pick_uniform(0,1) > 0.1: # in 10% of cases the culture does not grow (failure of the experiment)
                     r = Help_GrowthConstant(Host, CultTemps[i])
                     # the result can reach very small values, which poses downstream problems, hence the lowest value is set to 0.05
                     if r > 0.05: # under process conditions it might be realistic, source : https://www.thieme-connect.de/products/ebooks/pdf/10.1055/b-0034-10021.pdf
@@ -56,7 +56,7 @@ def Help_TempGrowthExp(Host, CultTemps, ExpID=1):
                     mu = capacity / (1 + (capacity-P0) / P0 * np.exp(-r * t))
                     sigma = 0.1*mu
 
-                    exp_TempGrowthExp = [random.normalvariate(mu[k], sigma[k]) for k in range(len(mu))]
+                    exp_TempGrowthExp = [pick_normal(mu[k], sigma[k]) for k in range(len(mu))]
 
                     loading_time = wait * len(t)
                     exp = ' of exp.{} at {} °C'.format(i+1, (CultTemps[i]))
@@ -65,7 +65,7 @@ def Help_TempGrowthExp(Host, CultTemps, ExpID=1):
                 else:
                     mu = P0
                     sigma = 0.08*mu
-                    exp_TempGrowthExp = [random.normalvariate(mu, sigma) for i in range(7)] # if cells haven't grown, the measurement is only continued for 6h
+                    exp_TempGrowthExp = [pick_normal(mu, sigma) for i in range(7)] # if cells haven't grown, the measurement is only continued for 6h
 
                     loading_time = wait * 7
                     exp = ' of exp.{} at {} °C'.format(i+1, (CultTemps[i]))
@@ -78,7 +78,7 @@ def Help_TempGrowthExp(Host, CultTemps, ExpID=1):
             new_df = pd.DataFrame({'exp.{} biomass conc. at {} °C'.format(i+1, (CultTemps[i])): exp_TempGrowthExp})
             df.update(new_df)
 
-            Host._Host__Resources -= 1
+            Host.resources -= 1
 
         # Export DataFrame to Excel
         with pd.ExcelWriter('Tst_Strain_characterization_{}.xlsx'.format(ExpID)) as writer:
@@ -88,32 +88,32 @@ def Help_TempGrowthExp(Host, CultTemps, ExpID=1):
         Error_Resources()
         return
 
-    
+
 def Help_MeasurePromoterStrength(Host, Clone_ID):
-    from BioLabSim.ModuleMeasureOrganism.Sequencing import Help_PromoterStrength
-    if Host._Host__Resources > 0:
+    from .sequencing import Help_PromoterStrength
+    if Host.resources > 0:
         if hasattr(Host, 'var_Library'):
             if Clone_ID in Host.var_Library:
-                factor = Host._Host__InflProStreng 
+                factor = Host.infl_prom_streng
                 Sequence = Host.var_Library[Clone_ID]['Promoter_Sequence']
                 Host.var_Library[Clone_ID]['Promoter_Strength'] = round(Help_PromoterStrength(Host.var_Host, Sequence) * factor, 2)
-                Host._Host__Resources -= 1
+                Host.resources -= 1
             else:
                 print('Error, Clone ID does not exist. Choose existing Clone ID.')
         else:
             print('Error, no promoter library available. Perform a cloning first.')
     else:
-        Error_Resources()   
-        
+        Error_Resources()
+
 def Help_ProductionExperiment(Host, Clone_ID, CultTemp, GrowthRate, Biomass, accuracy_Test=.9):
     import numpy as np
-    if Host._Host__Resources > 2: # three resources will be deducted
+    if Host.resources > 2: # three resources will be deducted
         # the final experiment can only be performed after at least one sequence has been cloned and tested:
         if hasattr(Host, 'var_Library'):
             if Clone_ID in Host.var_Library:
                 # testing whether the determined maximum biomass and the determined maximum growth rate are close to the actual ones
-                Tst_Biomass = 1 - np.abs(Biomass-Host._Host__BiomassMax) / Host._Host__BiomassMax
-                Tst_Temp = 1-np.abs(GrowthRate-Help_GrowthConstant(Host, Host._Host__OptTemp))/Help_GrowthConstant(Host, Host._Host__OptTemp)
+                Tst_Biomass = 1 - np.abs(Biomass-Host.max_biomass) / Host.max_biomass
+                Tst_Temp = 1-np.abs(GrowthRate-Help_GrowthConstant(Host, Host.opt_growth_temp))/Help_GrowthConstant(Host, Host.opt_growth_temp)
                 if  Tst_Biomass > accuracy_Test and Tst_Temp > accuracy_Test:
                     # Growth rate was only checked, for the calculation the rate resulting from the temperature is used
                     r = Help_GrowthConstant(Host, CultTemp)
@@ -121,7 +121,7 @@ def Help_ProductionExperiment(Host, Clone_ID, CultTemp, GrowthRate, Biomass, acc
                     Host.var_Library[Clone_ID]['Expression_Temperature'] = CultTemp
                     Host.var_Library[Clone_ID]['Expression_Biomass'] = Biomass
                     Host.var_Library[Clone_ID]['Expression_Rate'] = round(GrowthMax * Host.var_Library[Clone_ID]['Promoter_Strength'],2)
-                    Host._Host__Resources -= 3
+                    Host.resources -= 3
                 else:
                     print('Maximum biomass and/or maximum growth rate are incorrect.')
             else:
@@ -131,7 +131,7 @@ def Help_ProductionExperiment(Host, Clone_ID, CultTemp, GrowthRate, Biomass, acc
 
     else:
         Error_Resources()
-        
+
 def Help_GrowthConstant(Host, CultTemp, var=5):
     '''Function that generates the growth rate constant. The growth rate constant depends on the optimal growth temperature and the cultivation temperature. It is sampled from a Gaussian distribution with the mean at the optimal temperature and variance 1.
     Arguments:
@@ -141,19 +141,19 @@ def Help_GrowthConstant(Host, CultTemp, var=5):
     Output:
         growth_rate_const: float, constant for use in logistic growth equation
     '''
-    
+
     import numpy as np
     from scipy.stats import norm
-    
-    OptTemp = Host._Host__OptTemp
+
+    OptTemp = Host.opt_growth_temp
     r_pdf = norm(OptTemp, var)
     # calculation of the growth rate constant, by picking the activity from a normal distribution
-    
+
     growth_rate_const = r_pdf.pdf(CultTemp) / r_pdf.pdf(OptTemp)
-    
+
     return growth_rate_const
 
-        
+
 
 def Growth_Maxrate(growth_rate_const, Biomass):
     '''The function calculates the maximum slope during growth.
@@ -164,22 +164,22 @@ def Growth_Maxrate(growth_rate_const, Biomass):
             growth_rate_max:   float, maximum growth rate
     '''
     # biomass checks
-#     if Biomass > Mutant._Mutant__BiomassMax or not Biomass:
-#         print('Error, no biomass was set or unexpected value or the maximum possible biomass was exceeded. Enter a value for the biomass again.')        
-    
+#     if Biomass > Mutant._Mutantmax_biomass or not Biomass:
+#         print('Error, no biomass was set or unexpected value or the maximum possible biomass was exceeded. Enter a value for the biomass again.')
+
     # Equation for calculating the maximum slope
     # https://www.tjmahr.com/anatomy-of-a-logistic-growth-curve/
     GrowthMax = Biomass * growth_rate_const / 4
-    
+
     return GrowthMax
 
 def Express_Max(Host):
     '''
     Determines maximum possible expression values
-    '''       
-    BiomassMax = Host._Host__BiomassMax
-    OptTemp = Host._Host__OptTemp
-    factor = Host._Host__InflProStreng
+    '''
+    BiomassMax = Host.max_biomass
+    OptTemp = Host.opt_growth_temp
+    factor = Host.infl_prom_streng
     # Values see init function at the beginning
     if Host.var_Host == 'Ecol':
         MaximumPromoterStrength = round(0.057 * factor,2)

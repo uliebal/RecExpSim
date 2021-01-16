@@ -36,14 +36,14 @@ class Host:
     # TODO: Substrate seems to be always None.
     substrate : Any
 
-    # Maximum biomass concentration,
+    # Maximum biomass concentration.
     max_biomass : int
 
     # Optimal growth temperature.
     opt_growth_temp : int
 
     # Factor which influences the range of the promoter strength.
-    promoter_str_factor : int
+    infl_prom_streng : int
 
     # Optimal Primer length.
     opt_primer_len : int
@@ -65,7 +65,7 @@ class Host:
         self.substrate = None
 
         self.opt_growth_temp = pick_integer(25,40) # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
-        self.promoter_str_factor = pick_integer(30,50) # explanation see Plot_ExpressionRate
+        self.infl_prom_streng = pick_integer(30,50) # explanation see Plot_ExpressionRate
         self.opt_primer_len = pick_integer(16,28) # unit: nt, source: https://link.springer.com/article/10.1007/s10529-013-1249-8
 
 
@@ -96,18 +96,31 @@ class Host:
 
 
 
-    def print_biotech_setting ( self)  -> None:
+    # REFACTOR: Some separate but related points:
+    #   - An important concept on Object-Oriented Programming (using classes) is that
+    #     each class should have a 'single responsibility'.
+    #     For example, a Host should only be do things that are normal for hosts: hold information
+    #     about its existence, clone itself, eat, etc. This premise of single-responsibility
+    #     prevents the Host from having properties such as `var_Library` because it means that
+    #     Hosts normally keep track of their lineage. Even knowing what an Experiment ID is might
+    #     already be too much responsibility for a Host.
+    #   - Whenever possible, prefer returning values than outputting them. Ideally, the entire
+    #     `biolabsim` module should have no prints as side-effects from calculations. That way,
+    #     it is the end-user's decision if they want to use the values for further calculations
+    #     or if they want to print them on the screen/graph/file. This also applies for plotting.
+    #     End-user in this case is whoever is using `biolabsim`: either someone importing the
+    #     module or the code inside the notebook.
+    #   - Methods like `Test(self)` mention a very specific type of Host. Given the specificity,
+    #     this method should better be external to this class definition.
+
+
+
+    def print_biotech_setting (self)  -> None:
         '''Report of all properties defined in the biotech experiment.'''
         print("{}: {}".format( "Host", self.name ))
         print("{}: {}".format( "Resources", self.resources ))
         print("{}: {}".format( "Substrate", self.substrate ))
         print("{}: {}".format( "Strain", [ self.strain.name if self.strain != None else "<no-strain>" ] ))
-
-
-
-    # TODO: Code below is not integrated.
-
-
 
     def show_Library(self):
         '''Report of clones and their performance.'''
@@ -118,19 +131,27 @@ class Host:
 
     def show_TargetExpressionRate(self):
         '''Function to calculate the maximum possible expression rate and to tell the students what the minimum rate should be.'''
-        from BioLabSim.ModuleMeasureOrganism.Physiology import Express_Max
+        from ..measurement.physiology import Express_Max
         achieveExpRate = Express_Max(self)
         print('Maximum possible expression: {}'.format(achieveExpRate))
+
+    # REFACTOR: The best place to make decisions depending on the Host's identity is when
+    # initializing the host, such as the case with the preset Ecol and Pput. That initialization
+    # should contain all necessary info such that in the future no more 'if's have to be done to
+    # decide what to do.
+    # Suggestion for this case: Set the OptimalPromoterStrength on initialization and remove the
+    # 'if's on all helper functions that check for the name. The Host class might need to have more
+    # properties such as optimal promoter strength and expression predictor paths.
 
     def plot_ReferencePromoterStrength(self):
         '''Function to plot the promoter strength of the optimal sequence additionally as reference.'''
         import matplotlib.pyplot as plt
 
-        factor = self._Host__InflProStreng
+        factor = self.infl_prom_streng
         # Values see init function at the beginning
-        if self.var_Host == 'Ecol':
+        if self.name == 'Ecol':
             OptimalPromoterStrength = round(0.057 * factor,2)
-        elif self.var_Host == 'Pput':
+        elif self.name == 'Pput':
             OptimalPromoterStrength = round(0.04 * factor,2)
         # plot of maximum Promoter strength together with GC content
         # GC-content is the same for of both optimal sequences.
@@ -138,32 +159,32 @@ class Host:
 
     def make_TempGrowthExp(self, CultTemps, ExpID=1):
         '''Experiment to determine optimal growth rate. The experiment runs until the maximum biomass is reached.'''
-        from BioLabSim.ModuleMeasureOrganism.Physiology import Help_TempGrowthExp
+        from ..measurement.physiology import Help_TempGrowthExp
         Help_TempGrowthExp(self, CultTemps, ExpID=1)
 
     def make_Cloning(self, Clone_ID, Promoter, Primer, Tm):
-        from BioLabSim.ModuleManipulateOrganism.GeneticChanges import Help_Cloning
+        from ..manipulation.genetic import Help_Cloning
         Help_Cloning(self, Clone_ID, Promoter, Primer, Tm)
 
     def measure_PromoterStrength(self, Clone_ID):
-        from BioLabSim.ModuleMeasureOrganism.Physiology import Help_MeasurePromoterStrength
+        from ..measurement.physiology import Help_MeasurePromoterStrength
         Help_MeasurePromoterStrength(self, Clone_ID)
 
     def measure_ProductionExperiment(self, Clone_ID, CultTemp, GrowthRate, Biomass):
-        from BioLabSim.ModuleMeasureOrganism.Physiology import Help_ProductionExperiment
+        from ..measurement.physiology import Help_ProductionExperiment
         Help_ProductionExperiment(self, Clone_ID, CultTemp, GrowthRate, Biomass)
 
     def Test(self):
-        from BioLabSim.AuxFun import Help_Test
-        self.var_Host = 'Ecol'
-        self.var_Resources = 40
-        self.var_Substrate = None
+        from ..auxfun import Help_Test
+        self.name = 'Ecol'
+        self.resources = 40
+        self.substrate = None
         self.var_Library = {}
-        self.info_Strain = {}
-        self.__InflProStreng = 30 # explanation see Plot_ExpressionRate
-        self.__OptTemp = 30 # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
-        self.__OptPrLen = 20 # unit: nt, source: https://link.springer.com/article/10.1007/s10529-013-1249-8
-        self.__BiomassMax = 50
+        self.strain = None
+        self.infl_prom_streng = 30 # explanation see Plot_ExpressionRate
+        self.opt_growth_temp = 30 # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
+        self.opt_primer_len = 20 # unit: nt, source: https://link.springer.com/article/10.1007/s10529-013-1249-8
+        self.max_biomass = 50
         Help_Test(self)
 
 

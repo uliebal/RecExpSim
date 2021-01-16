@@ -3,7 +3,7 @@ def Help_MutActProm(Genome, GenesDF, NumberEnzymes=3, Target='-10', NumberMutati
     '''
     Add mutations to the promoter of an active enzyme and returns the genome.
     '''
-    from .random import pick_sample
+    from ..random import pick_sample
 
     FluxActive = GenesDF[GenesDF['Fluxes']!=0].index.values
     MutateEnzyme = pick_sample(list(FluxActive),NumberEnzymes)
@@ -40,7 +40,7 @@ def make_Mutate(Sequence, NumberMutations=2):
     '''
     Insert mutations in a given sequence
     '''
-    from .random import pick_sample
+    from ..random import pick_sample
 
     Bases = ['A','C','G','T']
 
@@ -53,20 +53,20 @@ def make_Mutate(Sequence, NumberMutations=2):
 
     return ''.join(MutTar)
 
-def Help_Cloning(Host, Clone_ID, Promoter, Primer, Tm):
+def Help_Cloning(Host:'Host', Clone_ID, Promoter, Primer, Tm):
     '''Experiment to clone selected promoter. It is displayed whether the experiment was successfull.'''
     import numpy as np
-    import random
-    from BioLabSim.AuxFun import Help_SwitchComplementary, Sequence_ReferenceDistance
+    from ..random import pick_uniform
+    from ..auxfun import Help_SwitchComplementary, Sequence_ReferenceDistance
 
 
     if Sequence_ReferenceDistance(Promoter) > .4:
         return print('Promoter sequence deviates too much from the given structure.')
 
-    if Host._Host__Resources > 0:
+    if Host.resources > 0:
 
         NaConc = 0.1 # 100 mM source: https://www.genelink.com/Literature/ps/R26-6400-MW.pdf (previous 50 mM: https://academic.oup.com/nar/article/18/21/6409/2388653)
-        OptLen = Host._Host__OptPrLen
+        OptLen = Host.opt_primer_len
         AllowDevi = 0.2 # allowed deviation
         Primer_Length = len(Primer)
         Primer_nC = Primer.count('C')
@@ -82,8 +82,8 @@ def Help_Cloning(Host, Clone_ID, Promoter, Primer, Tm):
         # source Product_Tm und Ta: https://academic.oup.com/nar/article/18/21/6409/2388653
         # Product_Length would be the length of the promoter (40)? too small -> negative number comes out for Product_Tm
 
-        error_1 = random.uniform(-1,1)*0.1*Primer_Tm_1
-        error_2 = random.uniform(-1,1)*0.1*Primer_Tm_2
+        error_1 = pick_uniform(-1,1)*0.1*Primer_Tm_1
+        error_2 = pick_uniform(-1,1)*0.1*Primer_Tm_2
         Primer_Tm_err_1 = error_1 + Primer_Tm_1
         Primer_Tm_err_2 = error_2 + Primer_Tm_2
 
@@ -106,7 +106,7 @@ def Help_Cloning(Host, Clone_ID, Promoter, Primer, Tm):
         else:
             print('Cloning failed')
 
-        Host._Host__Resources -= 1
+        Host.resources -= 1
 
     else:
         print('Not enough resources available.')

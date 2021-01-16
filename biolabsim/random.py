@@ -49,11 +49,11 @@ def pick_integer ( low:int, high:int ) -> int :
     return _randgen.integers( low, high, endpoint=False )
 
 
-def pick_float ( low:float = 0, high:float = 1 ) -> float :
+def pick_uniform ( low:float = 0, high:float = 1 ) -> float :
     """
-    Pick a single float between low (inclusive) and high (exclusive).
+    Pick a single float from an uniform distribution between low (inclusive) and high (exclusive).
     """
-    return _randgen.random() * ( high - low ) + low
+    return _randgen.uniform( low, high )
 
 
 def pick_normal ( mean:float = 0, sd:float = 0 ) -> float :

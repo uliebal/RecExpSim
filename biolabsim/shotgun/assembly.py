@@ -7,8 +7,10 @@ import numpy as np
 from Bio import pairwise2
 from Bio.Blast.Record import Alignment
 
-from .datatype import Scaffold, LocalizedSequence, EstimatedSequence, get_consensus_from_overlap, \
-    estimate_from_overlap
+from .datatype import (
+    Scaffold, LocalizedSequence, EstimatedSequence,
+    get_consensus_from_overlap, estimate_from_overlap
+)
 from ..common import Base, Sequence
 from ..random import pick_integer
 

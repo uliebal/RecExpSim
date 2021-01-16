@@ -13,7 +13,6 @@ from .evaluation import calc_total_score, calc_sequence_score
 
 
 
-
 def print_scaffold_as_fastq ( scaffold:Scaffold ) -> None :
     """
     Print the scaffold content as FASTQ.
@@ -26,7 +25,7 @@ def print_scaffold_as_fastq ( scaffold:Scaffold ) -> None :
 
 def print_scaffold ( scaffold:Scaffold ) -> None :
     """
-    Visually print a scaffold.
+    Visually print a scaffold as text.
     """
     r2_exists = scaffold.r2_seqrecord is not None
 
@@ -65,6 +64,9 @@ def print_evaluation_alignment (
     score:float, genome_start:int, genome:Sequence,
     estseq:EstimatedSequence, locseqs:List[LocalizedSequence] = None
 ) -> None :
+    """
+    Print a visual representation of how alignment was evaluated.
+    """
 
     # Calculate some parameters for nice formatting.
     bundle_start = 0
@@ -134,12 +136,10 @@ def print_evaluation_alignment (
 
 
 
-
-
-
-
-
 def print_assembly_evaluation( loc_sequences:List[LocalizedSequence], genome:Sequence ) -> None :
+    """
+    Given a list of localized sequences, print a visual representation of the evaluation.
+    """
     est_sequence = estimate_from_overlap(loc_sequences)
     ( best_score, best_genome_start ) = calc_total_score( est_sequence, genome )
     print_evaluation_alignment(
@@ -150,6 +150,9 @@ def print_assembly_evaluation( loc_sequences:List[LocalizedSequence], genome:Seq
 
 
 def print_estimation_evaluation ( est_sequence:EstimatedSequence, genome:Sequence ) -> None :
+    """
+    Given only an estimated sequence, print a visual representation of the evaluation.
+    """
     ( best_score, best_genome_start ) = calc_total_score( est_sequence, genome )
     print_evaluation_alignment(
         score=best_score, genome_start=best_genome_start, genome=genome,

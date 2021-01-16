@@ -6,7 +6,7 @@ from math import floor
 from Bio.SeqRecord import SeqRecord
 
 from ..common import Sequence, ReadMethod, Base
-from ..random import pick_normal, pick_float, pick_integer, pick_exponential
+from ..random import pick_normal, pick_uniform, pick_integer, pick_exponential
 from .datatype import Scaffold
 
 
@@ -144,7 +144,7 @@ class Sequencer :
                         r.qual[i] = round(PHRED_MAX - q_error)
 
                         # Given the Phred Score, there is a probability a substitution error occurs.
-                        if pick_float() < phred_to_prob(r.qual[i]) :
+                        if pick_uniform(0,1) < phred_to_prob(r.qual[i]) :
                             err_bases = [ b for b in ['A','C','G','T'] if b != r.seq[i] ]
                                 # Always substitute for a base that is not the original.
                             sel_base = err_bases[ pick_integer(0,len(err_bases)) ]

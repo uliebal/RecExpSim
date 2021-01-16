@@ -16,14 +16,14 @@ class Host:
         import os
         from random import randint
         self.name = Host
-        self.var_Resources = self._Host__Resources
-        self.var_Substrate = None
+        self.resources = self.resources
+        self.substrate = None
         # Library variable containing details to the different tested mutants
         self.var_Library = {}
         # Strain collection containing manipulated genomes
         self.info_Strain = {}
         # factor which influences the range of the promoter strength, randomly assigned
-        self.promoter_str_factor = randint(30,50) # explanation see Plot_ExpressionRate
+        self.infl_prom_streng = randint(30,50) # explanation see Plot_ExpressionRate
         # optimal growth temperature, randomly assigned
         self.opt_growth_temp = randint(25,40) # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
         # optimal Primer length, randomly assigned
@@ -38,7 +38,7 @@ class Host:
 
     def print_biotech_setting(self):
         '''Report of all properties defined in the biotech experiment.'''
-        self.var_Resources = self._Host__Resources
+        self.resources = self.resources
         MyVars = [i for i in list(vars(self).keys()) if 'var_' in i]
         for i in range(len(MyVars)): # has to be adjusted to display the Substrate
             print('{}: {}'.format(MyVars[i].replace('var_',''), getattr(self, MyVars[i])))
@@ -59,13 +59,13 @@ class Host:
 
 
     def Make_MeasurePromoterStrength(self, Clone_ID):
-        if self._Host__Resources > 0:
+        if self.resources > 0:
             if hasattr(self, 'var_Library'):
                 if Clone_ID in self.var_Library:
-                    factor = self._Hostpromoter_str_factor
+                    factor = self._Hostinfl_prom_streng
                     Sequence = Host.var_Library[Clone_ID]['Promoter_Sequence']
                     self.var_Library[Clone_ID]['Promoter_Strength'] = round(Help_PromoterStrength(self.name, Sequence) * factor, 2)
-                    self._Host__Resources -= 1
+                    self.resources -= 1
                 else:
                     print('Error, Clone ID does not exist. Choose existing Clone ID.')
             else:
@@ -76,7 +76,7 @@ class Host:
 
     def Make_ProductionExperiment(self, Clone_ID, CultTemp, GrowthRate, Biomass, accuracy_Test=.9):
         import numpy as np
-        if self._Host__Resources > 2: # three resources will be deducted
+        if self.resources > 2: # three resources will be deducted
             # the final experiment can only be performed after at least one sequence has been cloned and tested:
             if hasattr(self, 'var_Library'):
                 if Clone_ID in self.var_Library:
@@ -88,7 +88,7 @@ class Host:
                         self.var_Library[Clone_ID]['Expression_Temperature'] = CultTemp
                         self.var_Library[Clone_ID]['Expression_Biomass'] = Biomass
                         self.var_Library[Clone_ID]['Expression_Rate'] = round(GrowthMax * self.var_Library[Clone_ID]['Promoter_Strength'],2)
-                        self._Host__Resources -= 3
+                        self.resources -= 3
                     else:
                         print('Maximum biomass and/or maximum growth rate are incorrect.')
                 else:
@@ -104,7 +104,7 @@ class Host:
         '''Function to calculate the maximum possible expression rate and to tell the students what the minimum rate should be.'''
         BiomassMax = self._Hostmax_biomass
         OptTemp = self._Hostopt_growth_temp
-        factor = self._Hostpromoter_str_factor
+        factor = self._Hostinfl_prom_streng
         # Values see init function at the beginning
         if self.name == 'Ecol':
             MaximumPromoterStrength = round(0.057 * factor,2)
@@ -120,7 +120,7 @@ class Host:
         '''Function to plot the promoter strength of the optimal sequence additionally as reference.'''
         import matplotlib.pyplot as plt
 
-        factor = self._Hostpromoter_str_factor
+        factor = self._Hostinfl_prom_streng
         # Values see init function at the beginning
         if self.name == 'Ecol':
             OptimalPromoterStrength = round(0.057 * factor,2)
@@ -139,7 +139,7 @@ class Host:
         import time
         import random
 
-        if self._Host__Resources > 0:
+        if self.resources > 0:
 
             capacity = self._Hostmax_biomass
             # the time of the half maximum population (inflection point) is calculated according to here:
@@ -171,7 +171,7 @@ class Host:
 
             #computing of biomass data and updating of DataFrame
             for i in range(len(CultTemps)):
-                if self._Host__Resources > 0:
+                if self.resources > 0:
                     wait = 0.01 # has to be adjusted, waiting time for loading bar
 
                     if random.uniform(0,1) > 0.1: # in 10% of cases the culture does not grow (failure of the experiment)
@@ -209,7 +209,7 @@ class Host:
                 new_df = pd.DataFrame({'exp.{} biomass conc. at {} °C'.format(i+1, (CultTemps[i])): exp_TempGrowthExp})
                 df.update(new_df)
 
-                self._Host__Resources -= 1
+                self.resources -= 1
 
             excel_writer = pd.ExcelWriter('Strain_characterization_{}.xlsx'.format(n)) # Export DataFrame to Excel
             df.to_excel(excel_writer, sheet_name='different temp')
@@ -228,7 +228,7 @@ class Host:
         if Sequence_ReferenceDistance(Promoter) > .4:
             return print('Promoter sequence deviates too much from the given structure.')
 
-        if self._Host__Resources > 0:
+        if self.resources > 0:
 
             NaConc = 0.1 # 100 mM source: https://www.genelink.com/Literature/ps/R26-6400-MW.pdf (previous 50 mM: https://academic.oup.com/nar/article/18/21/6409/2388653)
             OptLen = self._Hostopt_primer_len
@@ -268,7 +268,7 @@ class Host:
             else:
                 print('Cloning failed')
 
-            self._Host__Resources -= 1
+            self.resources -= 1
 
         else:
             print('Not enough resources available.')
@@ -276,7 +276,7 @@ class Host:
 
 #     def Choose_Substrate(self, Substrate):
 #         '''Function to define the C-source for the experiments/predictions'''
-#         self.var_Substrate = Substrate
+#         self.substrate = Substrate
 
 class Strain:
     '''

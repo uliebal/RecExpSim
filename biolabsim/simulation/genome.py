@@ -3,7 +3,7 @@ def Help_GenomeGenerator(GenesDF, GenomeSize, GCcont) -> str :
     Constructs whole genome with interspersed genes.
     '''
     import numpy as np
-    from .random import pick_sample
+    from ..random import pick_sample
     # combining promoter and ORF
     Genes = [''.join([myProm, myORF]) for myProm, myORF in zip(GenesDF['Promoter'].values,GenesDF['ORF'].values)]
     Genes_List = [Convert(Gene) for Gene in Genes]
@@ -45,7 +45,7 @@ def make_GenomeBckgd(GenomeSize, GCcont):
     Output
         Genome_Bckgd: string
     '''
-    from .random import pick_choice
+    from ..random import pick_choice
 
     SeqNestList = [pick_choice([Letter for Nest in pick_choice([['G','C'],['A','T']], weights=[GCcont, 1-GCcont]) for Letter in Nest]) for _x in range(GenomeSize)]
     Genome_Bckgd = ''.join(Letter for Nest in SeqNestList for Letter in Nest)
@@ -63,7 +63,7 @@ def make_ORF(Model):
     Output
         Gene_ORF:          string, open reading frame of enzyme
     '''
-    from .random import pick_choice
+    from ..random import pick_choice
     import numpy as np
     import pandas as pd
 

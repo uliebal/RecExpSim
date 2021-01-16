@@ -3,7 +3,7 @@ def measure_EnzymeLevel1(HostName:str, StrainWT:Strain, StrainMut:Strain):
     The function differences of expression levels of enzymes between two strains.
     '''
     import numpy as np
-    from .metabolism import Help_StrainCharacterizer
+    from ..simulation.metabolism import Help_StrainCharacterizer
 
     RefGenDF = StrainWT.genes_df
     RefGenome = str(StrainWT.genome)

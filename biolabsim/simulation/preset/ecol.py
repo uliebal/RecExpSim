@@ -1,8 +1,8 @@
 
 from ..host import Host
 from ..strain import WildtypeStrain
-from ..random import pick_integer
-from ..config import METABOLIC_MODEL_DIR
+from ...random import pick_integer
+from ...config import METABOLIC_MODEL_DIR
 
 
 class Ecol (Host) :
