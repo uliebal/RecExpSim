@@ -1,3 +1,7 @@
+
+from ..simulation.strain import Strain
+
+
 def measure_EnzymeLevel1(HostName:str, StrainWT:Strain, StrainMut:Strain):
     '''
     The function differences of expression levels of enzymes between two strains.

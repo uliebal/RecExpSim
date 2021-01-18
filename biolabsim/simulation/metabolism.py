@@ -98,6 +98,7 @@ def Help_FluxCalculator ( HostName:str, StrainWT:Strain, StrainMut:Optional[Stra
     TODO: The "reset boundary" step is mutating the `StrainMut.model`, mutation might not be intended.
       Because of this, perhaps the other `StrainWT.model` gets mutated in the process.
     '''
+    from ..measurement.fluxes import measure_EnzymeLevel1
 
     # adding flux values
     # setup of flux boundaries. For the reference boundary changes are set to 'False',

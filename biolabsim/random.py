@@ -30,9 +30,13 @@ def set_seed ( new_seed:int ) -> None :
 
 def pick_choice ( choices:List[Any], weights:List[float] = None ) -> Any :
     """
-    Pick a single value out of a provided list.
+    Pick a single value out of a provided list. Can receive a non-normalized weights.
     """
-    return _randgen.choice( choices, p=weights )
+    probs = None
+    if weights is not None :
+        sum_w = sum(list(weights))
+        probs = [ w / sum_w for w in list(weights) ]
+    return _randgen.choice( choices, p=probs )
 
 
 def pick_sample ( choices:List[Any], amount:int ) -> List[Any] :

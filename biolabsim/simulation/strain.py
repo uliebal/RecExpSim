@@ -7,8 +7,9 @@ from pandas import DataFrame
 from cobra import Model
 
 from .metabolism import load_local_sbml_model, Help_GeneAnnotator, Help_Expr2Flux, Help_FluxCalculator
-from .genome import Help_GenomeGenerator, Help_MutActProm, make_GenomeBckgd
-from .common import Sequence, PromoterSite
+from .genome import Help_GenomeGenerator, make_GenomeBckgd
+from ..manipulation.genetic import Help_MutActProm
+from ..common import Sequence, PromoterSite
 
 
 
@@ -28,6 +29,9 @@ class Strain (ABC) :
 
     # Information about the genes.
     genes_df : DataFrame # ['RctID','Expression','Promoter','ORF','Fluxes','Expr2Flux']
+
+    # Metabolic model objective score (TODO: improve this description)
+    objective : float
 
     # Genome written in string using the four ACGT bases.
     genome : Sequence

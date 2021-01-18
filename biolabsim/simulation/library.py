@@ -53,11 +53,11 @@ class Entry (RecordClass) :
     """
     clone_id : str
     promoter_sequence : str # or biolabsim.common.Sequence
-    promoter_gc_content
-    promoter_strength
-    expression_temperature
-    expression_biomass
-    expression_rate
+    promoter_gc_content : float
+    promoter_strength : float
+    expression_temperature : float
+    expression_biomass : float
+    expression_rate : float
 
 
 

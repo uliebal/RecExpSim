@@ -136,7 +136,7 @@ def print_evaluation_alignment (
 
 
 
-def print_assembly_evaluation( loc_sequences:List[LocalizedSequence], genome:Sequence ) -> None :
+def print_assembly_evaluation ( loc_sequences:List[LocalizedSequence], genome:Sequence ) -> None :
     """
     Given a list of localized sequences, print a visual representation of the evaluation.
     """

@@ -3,10 +3,10 @@ from typing import Any, Literal, List, Optional
 from pathlib import Path
 from copy import copy
 
-from .config import METABOLIC_MODEL_DIR
-from .random import pick_choice, pick_integer
+from ..config import METABOLIC_MODEL_DIR
+from ..random import pick_choice, pick_integer
+from ..common import Sequence
 from .strain import Strain, WildtypeStrain, MutatedStrain
-from .common import Sequence
 
 
 
@@ -112,15 +112,17 @@ class Host:
     #     module or the code inside the notebook.
     #   - Methods like `Test(self)` mention a very specific type of Host. Given the specificity,
     #     this method should better be external to this class definition.
+    #   - Having some accessor methods to the strain are possible to make the Host API easier to use.
+    #     Like `host.get_genome()` just returning `host.strain.genome`.
 
 
 
-    def print_biotech_setting (self)  -> None:
+    def show_BiotechSetting (self)  -> None:
         '''Report of all properties defined in the biotech experiment.'''
         print("{}: {}".format( "Host", self.name ))
         print("{}: {}".format( "Resources", self.resources ))
         print("{}: {}".format( "Substrate", self.substrate ))
-        print("{}: {}".format( "Strain", [ self.strain.name if self.strain != None else "<no-strain>" ] ))
+        print("{}: {}".format( "Strain", self.strain.name if self.strain != None else "<no-strain>" ))
 
     def show_Library(self):
         '''Report of clones and their performance.'''
