@@ -10,3 +10,4 @@ biopython
 cobra
 Escher
 Sphinx==3.4.1
+sphinx-rtd-theme==0.5.1
