@@ -1,7 +1,7 @@
 
 from typing import Any, Literal, List, Optional
 from pathlib import Path
-from copy import copy
+from copy import deepcopy
 
 from ..config import METABOLIC_MODEL_DIR
 from ..random import pick_choice, pick_integer
@@ -78,7 +78,7 @@ class Host:
             raise HostHasNoStrain()
 
         # Copy this host and change the mutated pieces.
-        new_host = copy(self) # Shallow copy because strain is re-created.
+        new_host = deepcopy(self) # Shallow copy because strain is re-created.
             # TODO: If there are problems of Dataframes being mutated in_place, change this to deep copy.
         new_host.strain = MutatedStrain( name=name, host_name=self.name, ref_strain=self.strain )
 

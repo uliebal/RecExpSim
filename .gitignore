@@ -7,3 +7,7 @@ PromoterStrength-Versus-GCcontent.png
 *.gz
 .vscode
 output/
+bin/
+lib/
+lib64
+pyvenv.cfg
