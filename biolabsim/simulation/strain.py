@@ -88,14 +88,15 @@ class MutatedStrain (Strain) :
 
         # use data of the reference strain to created mutates gene sequences
         mut_genome, mut_genes_df = Help_MutActProm(
-            str(ref_strain.genome), ref_strain.genes_df,
-            NumberEnzymes=num_enzymes, Target=target_site, NumberMutations=num_mutations
+            host_name, str(ref_strain.genome), 
+            ref_strain.genes_df, NumberEnzymes=num_enzymes, 
+            Target=target_site, NumberMutations=num_mutations
         )
         self.genome = Sequence(mut_genome)
 
         self.genes_df = mut_genes_df
         self.genes_df['Fluxes'], self.objective = Help_FluxCalculator(host_name, ref_strain, self)
-        self.genes_df['Expr2Flux'] = Help_Expr2Flux(self.genes_df)
+        self.genes_df['Expr2Flux'] = ref_strain.genes_df['Expr2Flux'] # Help_Expr2Flux(self.genes_df)
 
 
 

@@ -1,9 +1,10 @@
 
-def Help_MutActProm(Genome, GenesDF, NumberEnzymes=3, Target='-10', NumberMutations=2):
+def Help_MutActProm(HostName, Genome, GenesDF, NumberEnzymes=3, Target='-10', NumberMutations=2):
     '''
     Add mutations to the promoter of an active enzyme and returns the genome.
     '''
     from ..random import pick_sample
+    from ..simulation.expression import Help_PromoterStrength
 
     FluxActive = GenesDF[GenesDF['Fluxes']!=0].index.values
     MutateEnzyme = pick_sample(list(FluxActive),NumberEnzymes)
@@ -30,7 +31,9 @@ def Help_MutActProm(Genome, GenesDF, NumberEnzymes=3, Target='-10', NumberMutati
 
         MutTar = make_Mutate(RefTar, NumberMutations)
         MutProm = RefProm.replace(RefTar, MutTar)
+        Gene_Activity = Help_PromoterStrength(HostName, MutProm, Similarity_Thresh=.8)
         Genome_Mutated = Genome_Mutated.replace(RefProm, MutProm)
+        GenesDF_Mutated.loc[MutateEnzyme[i1], 'Expression'] = Gene_Activity
         GenesDF_Mutated.loc[MutateEnzyme[i1], 'Promoter'] = MutProm
 
     return Genome_Mutated, GenesDF_Mutated
