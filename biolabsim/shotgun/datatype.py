@@ -101,6 +101,9 @@ class EstimatedSequence :
 
 
     def as_consensus_sequence ( self ) -> Sequence :
+        """
+        Outputs the consensus sequence by choosing the base with highest probability for each location.
+        """
         consensus:str = ""
         first_base = next(iter(self.base_probs.keys()))
         for i in range(len( self.base_probs[first_base] )) :

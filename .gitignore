@@ -11,3 +11,7 @@ bin/
 lib/
 lib64
 pyvenv.cfg
+
+# Ignore the generated API files and build output of sphinx documentation.
+docs/_build
+docs/api/*

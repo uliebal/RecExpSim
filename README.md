@@ -4,6 +4,56 @@
 
 ## Developer Notes
 
+### Setup project for local development
+
+```bash
+
+# Setup the python virtual environment next to it. (use Python 3.8)
+python3.8 -m venv py38-env
+
+# Activate your environment. (Broad topic that depends on what software and OS is used)
+source py38-env/bin/activate
+
+# Clone the repository to a nearby folder.
+git clone https://git.rwth-aachen.de/ulf.liebal/biolabsim.git repo-biolabsim
+
+# Enter the newly cloned repository.
+cd repo-biolabsim
+
+# Install all required python libraries.
+pip install -r requirements.txt
+
+# See the Notebook for examples on how to use the library.
+
+```
+
+
+### Generate Sphinx documentation.
+
+Sphinx is not very automatic on how documentation is extracted from the code. We use
+[sphinx-apidoc](https://www.sphinx-doc.org/en/master/man/sphinx-apidoc.html) to periodically
+generate the documentation `.rst` files.
+
+```bash
+
+# Assuming you start at the project root directory.
+
+# Enter the documentation directory.
+cd docs
+
+# Remove the old API documentation.
+rm -ri ./api
+
+# Generate the new reStructuredText files for the API documentation.
+sphinx-apidoc --module-first -d 4 -o api ../biolabsim
+
+# Generate the HTML from all documentation files.
+make html
+
+```
+
+
+
 ### Writing a Module
 
 Prefer the use of [standardized code style](https://pep8.org/).

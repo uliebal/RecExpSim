@@ -9,3 +9,4 @@ watermark
 biopython
 cobra
 Escher
+Sphinx==3.4.1
