@@ -84,6 +84,7 @@ def Help_TempGrowthExp(Host, CultTemps, ExpID=1):
         with pd.ExcelWriter('Tst_Strain_characterization_{}.xlsx'.format(ExpID)) as writer:
             df.to_excel(writer, sheet_name='different temp')
 
+    print('Tst_Strain_characterization_{}.xlsx'.format(ExpID))
     else:
         Error_Resources()
         return
