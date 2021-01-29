@@ -14,9 +14,9 @@ from ..common import Sequence, PromoterSite
 
 
 class Strain (ABC) :
-    """
+    '''
     Abstract class that stores information of genome and other associated metabolic information.
-    """
+    '''
 
     # Strain ID or name.
     name : str
@@ -50,9 +50,9 @@ class Strain (ABC) :
 
 
 class WildtypeStrain (Strain) :
-    """
+    '''
     Strains that are considered wildtype which get their genomic information from an SBML Model.
-    """
+    '''
 
     def __init__ (
         self, name:str, host_name:str, model_path:str,
@@ -73,9 +73,9 @@ class WildtypeStrain (Strain) :
 
 
 class MutatedStrain (Strain) :
-    """
+    '''
     Strains that mutated from another reference Strain.
-    """
+    '''
 
     def __init__ (
         self, name:str, host_name:str, ref_strain:Strain,
@@ -99,14 +99,17 @@ class MutatedStrain (Strain) :
         self.genes_df['Expr2Flux'] = ref_strain.genes_df['Expr2Flux'] # Help_Expr2Flux(self.genes_df)
 
 
-
+class ClonedStrain (Strain) :
+    '''
+    Strains cloned from a reference strain. A new sequences are integrated into the genome at a position defined by the primer.
+    '''
 
 class FabricatedStrain (Strain) :
-    """
+    '''
     Strains that contain no real genes and whose genome will be randomly generated using the
     nucleic bases and a given GC-Content. These genomes do not follow biological rules, but are
     useful to generate very small genome sequences to test and observe the other methods.
-    """
+    '''
 
     def __init__ (
         self, name:str, genome_size:int = 500, genome_gc_content:float = 0.6

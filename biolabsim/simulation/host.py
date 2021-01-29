@@ -7,6 +7,9 @@ from ..config import METABOLIC_MODEL_DIR
 from ..random import pick_choice, pick_integer
 from ..common import Sequence
 from .strain import Strain, WildtypeStrain, MutatedStrain
+from Bio import SeqIO
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 
 
 
@@ -190,3 +193,29 @@ class Host:
         Help_Test(self)
 
 
+    def Export_Genome(self):
+        '''
+        Exports the whole genome sequence as fasta file.
+        '''
+        Genome_File = '{}_{}_Genome-Sequence.fasta'.format(self.name, self.strain.name)
+        with open(Genome_File, 'w') as file:
+            file.write('>FullSeq\n{}'.format(self.get_genome()))
+        print('Exported genome sequence data as: {}'.format(Genome_File))
+
+    def Export_ORFAnnotation(self):
+        '''
+        Saves the ORFs in fasta file.
+        '''
+        # Using biopython as here:
+        # http://biopython.org/DIST/docs/tutorial/Tutorial.html#sec33
+        # http://python.omics.wiki/biopython/examples/read-fasta
+        ORF_File = '{}_{}_ORF-Sequence.fasta'.format(self.name, self.strain.name)
+        with open(ORF_File, 'w') as file:
+            for Idx, Row in self.strain.genes_df.iterrows():
+                mySeq = SeqRecord(Seq(Row['ORF']), id=Row['RctID'])
+                # write new fasta file
+                r=SeqIO.write(mySeq, file, 'fasta')
+                if r!=1: print('Error while writing sequence:  ' + mySeq.id)
+        print('Exported ORF sequence data as: {}'.format(ORF_File))
+
+        

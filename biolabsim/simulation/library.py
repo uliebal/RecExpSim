@@ -48,9 +48,9 @@ from recordclass import RecordClass
 
 
 class Entry (RecordClass) :
-    """
+    '''
     A Library Entry holds historical information about Host properties that has been analyzed.
-    """
+    '''
     clone_id : str
     promoter_sequence : str # or biolabsim.common.Sequence
     promoter_gc_content : float
@@ -62,9 +62,9 @@ class Entry (RecordClass) :
 
 
 class Library :
-    """
+    '''
     Library is helpful data structure to keep track of information from multiple strains.
-    """
+    '''
 
     entries : List[Entry]
 
