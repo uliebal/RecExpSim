@@ -257,8 +257,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.98994949"
-     inkscape:cx="362.64149"
-     inkscape:cy="228.48555"
+     inkscape:cx="766.70251"
+     inkscape:cy="349.70385"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -17892,7 +17892,7 @@ QZie/w9ci5SBhUboqgAAAABJRU5ErkJggg==
            y="12.347812"
            style="line-height:18.89763832px;text-align:center;text-anchor:middle" /></flowRegion><flowPara
          id="flowPara9762"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start">aufnehmen und somit unzählige Daten für Medium Optimierung, Clone Screening und Bioprozesse liefern<flowSpan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start">aufnehmen und somit unzählige Daten für Medium Optimierung, Klon-Auswahl  und Bioprozesse liefern<flowSpan
    id="flowSpan9760"
    style="font-size:64.99999762%;baseline-shift:super">1</flowSpan>.</flowPara></flowRoot>    <g
        id="g10197"
@@ -19616,9 +19616,9 @@ QmCC
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start"
          id="flowPara10575"> mit experiment-ähnlichen Funktionen.</flowPara><flowPara
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start"
-         id="flowPara10295"> 2555 'Lines of Code'</flowPara><flowPara
+         id="flowPara10295"> 1458 'Lines of Code'</flowPara><flowPara
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start"
-         id="flowPara10309"> 333 'Lines of comments'</flowPara><flowPara
+         id="flowPara10309"> 824 'Lines of comments'</flowPara><flowPara
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start"
          id="flowPara10313"> Detailierte Doku (readthedocs)</flowPara></flowRoot>    <flowRoot
        transform="matrix(0.26458333,0,0,0.26458333,99.483183,237.8123)"
@@ -19721,8 +19721,8 @@ QmCC
          id="flowPara10463">Exp2Ipynb<flowSpan
    style="font-size:64.99999762%;baseline-shift:super"
    id="flowSpan10469">6</flowSpan>: Vorhersage der Promoteraktivität</flowPara></flowRoot>    <image
-       y="102.72017"
-       x="191.55745"
+       y="116.35091"
+       x="199.041"
        id="image10497"
        xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAABHNCSVQICAgIfAhkiAAAEtlJREFU
 eJztnXu0XVV1h7+b5CZIEl4JGKRqeEWgSRCFKkOhiqhUKY+2KuUtMFoqpVKqlqe5iIhIrYoig1If
@@ -19812,8 +19812,8 @@ DhB9yTaExXFWsuiE6ALuIlscFyaMS4iuYEesvEy7OC5Di3iEACwr91xsEvA6tPRTCCGEEEIIIYQQ
 QgghhBBCCCGEEEIIIYQQQgghhBBCCCGEEEIIIYQQBfg/EioWueZQsSYAAAAASUVORK5CYII=
 "
        preserveAspectRatio="none"
-       height="52.916668"
-       width="52.916668" />
+       height="32.604183"
+       width="32.604183" />
     <image
        y="219.89285"
        x="187.85417"
@@ -22299,7 +22299,7 @@ RO7sjhf7AAAAAElFTkSuQmCC
        height="171.97917"
        width="280.45834"
        style="filter:url(#filter10555)"
-       transform="matrix(0.28205134,0,0,0.28205134,273.75941,177.55731)"
+       transform="matrix(0.15942244,0,0,0.15942244,167.68322,183.28966)"
        clip-path="url(#clipPath10559)" />
     <circle
        r="0.87406993"
@@ -22372,6 +22372,180 @@ RO7sjhf7AAAAAElFTkSuQmCC
        id="circle10587"
        cx="104.4679"
        cy="264.89349"
+       r="0.87406993" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot10629"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:26.66666603px;line-height:18.89763832px;font-family:szmbol;-inkscape-font-specification:szmbol;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+       transform="matrix(0.26458333,0,0,0.26458333,196.84992,105.52031)"><flowRegion
+         id="flowRegion10623"
+         style="line-height:18.89763832px;text-align:center;text-anchor:middle"><rect
+           id="rect10621"
+           width="242.43823"
+           height="38.408588"
+           x="18.182745"
+           y="12.347812"
+           style="line-height:18.89763832px;text-align:center;text-anchor:middle" /></flowRegion><flowPara
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start"
+         id="flowPara10627">Rekombinante Expression</flowPara></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot10647"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:26.66666603px;line-height:18.89763832px;font-family:szmbol;-inkscape-font-specification:szmbol;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+       transform="matrix(0.26458333,0,0,0.26458333,225.4251,112.39952)"><flowRegion
+         id="flowRegion10633"
+         style="line-height:18.89763832px;text-align:center;text-anchor:middle"><rect
+           id="rect10631"
+           width="244.43964"
+           height="121.38844"
+           x="18.182745"
+           y="12.347812"
+           style="line-height:18.89763832px;text-align:center;text-anchor:middle" /></flowRegion><flowPara
+         id="flowPara10645"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start">Versuch #1: Messung des temperatur-spezifischen Zell-Wachstums.</flowPara><flowPara
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start"
+         id="flowPara10664">Analyse #1: Regression zur Raten-Bestimmung, max.  Biomasse-Konzentration</flowPara><flowPara
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start"
+         id="flowPara10662" /></flowRoot>    <circle
+       style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="circle10649"
+       cx="228.82211"
+       cy="118.57127"
+       r="0.87406993" />
+    <circle
+       r="0.87406993"
+       cy="134.18423"
+       cx="228.82211"
+       id="circle10651"
+       style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    <circle
+       style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="circle10653"
+       cx="201.30544"
+       cy="150.58827"
+       r="0.87406993" />
+    <flowRoot
+       transform="matrix(0.26458333,0,0,0.26458333,197.37909,144.67889)"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:26.66666603px;line-height:18.89763832px;font-family:szmbol;-inkscape-font-specification:szmbol;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+       id="flowRoot10678"
+       xml:space="preserve"><flowRegion
+         style="line-height:18.89763832px;text-align:center;text-anchor:middle"
+         id="flowRegion10668"><rect
+           style="line-height:18.89763832px;text-align:center;text-anchor:middle"
+           y="12.347812"
+           x="18.182745"
+           height="180.98743"
+           width="352.52594"
+           id="rect10666" /></flowRegion><flowPara
+         id="flowPara10676"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start">Versuch #2: Klonierung eines Promoters, dazu Promotor-Literaturstudie</flowPara><flowPara
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start"
+         id="flowPara10691">Analyse #2: Berechnung der Annealing Temperatur.</flowPara><flowPara
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start"
+         id="flowPara10693">Versuch #3: Integration von optimaler Temperatur, Biomasse und Promotor</flowPara><flowPara
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start"
+         id="flowPara10695">Analyse #3: Verhältnis von GC-Verhältnis auf Expressionsstärke</flowPara></flowRoot>    <circle
+       r="0.87406993"
+       cy="161.17162"
+       cx="201.30544"
+       id="circle10697"
+       style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    <circle
+       style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="circle10699"
+       cx="201.30544"
+       cy="171.75496"
+       r="0.87406993" />
+    <circle
+       r="0.87406993"
+       cy="182.3383"
+       cx="201.30544"
+       id="circle10701"
+       style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    <flowRoot
+       transform="matrix(0.26458333,0,0,0.26458333,196.84992,195.4787)"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:26.66666603px;line-height:18.89763832px;font-family:szmbol;-inkscape-font-specification:szmbol;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+       id="flowRoot10711"
+       xml:space="preserve"><flowRegion
+         style="line-height:18.89763832px;text-align:center;text-anchor:middle"
+         id="flowRegion10707"><rect
+           style="line-height:18.89763832px;text-align:center;text-anchor:middle"
+           y="12.347812"
+           x="18.182745"
+           height="40.428894"
+           width="341.43317"
+           id="rect10705" /></flowRegion><flowPara
+         id="flowPara10709"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start">Metabolic Engineering (geplant)</flowPara></flowRoot>    <flowRoot
+       transform="matrix(0.26458333,0,0,0.26458333,225.4251,202.35791)"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:26.66666603px;line-height:18.89763832px;font-family:szmbol;-inkscape-font-specification:szmbol;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+       id="flowRoot10723"
+       xml:space="preserve"><flowRegion
+         style="line-height:18.89763832px;text-align:center;text-anchor:middle"
+         id="flowRegion10715"><rect
+           style="line-height:18.89763832px;text-align:center;text-anchor:middle"
+           y="12.347812"
+           x="18.182745"
+           height="121.38844"
+           width="244.43964"
+           id="rect10713" /></flowRegion><flowPara
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start"
+         id="flowPara10717">Versuch #1: Sequenzierung und Assembly eines Genoms</flowPara><flowPara
+         id="flowPara10721"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start">Analyse #1: Fastq Analyse mit Greedy Algorithmus</flowPara></flowRoot>    <circle
+       r="0.87406993"
+       cy="208.52968"
+       cx="228.82211"
+       id="circle10725"
+       style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    <circle
+       r="0.87406993"
+       cy="236.31342"
+       cx="201.30544"
+       id="circle10729"
+       style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot10743"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:26.66666603px;line-height:18.89763832px;font-family:szmbol;-inkscape-font-specification:szmbol;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
+       transform="matrix(0.26458333,0,0,0.26458333,197.37909,230.40392)"><flowRegion
+         id="flowRegion10733"
+         style="line-height:18.89763832px;text-align:center;text-anchor:middle"><rect
+           id="rect10731"
+           width="352.52594"
+           height="180.98743"
+           x="18.182745"
+           y="12.347812"
+           style="line-height:18.89763832px;text-align:center;text-anchor:middle" /></flowRegion><flowPara
+         id="flowPara10741"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start">Versuch #2: Promoter Identifikation</flowPara><flowPara
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start"
+         id="flowPara10762">Analyse #2: Korrelation Promotor zu Sequenz</flowPara><flowPara
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start"
+         id="flowPara10764">Versuch #3: Promotor Mutationen zur Anpassung des Metabolismus</flowPara><flowPara
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.66666603px;line-height:18.89763832px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:start;text-anchor:start"
+         id="flowPara10766">Analyse #3: Veränderung der Flussraten durch gezielte Promotor-Anpassung</flowPara></flowRoot>    <circle
+       style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="circle10745"
+       cx="201.30544"
+       cy="241.60516"
+       r="0.87406993" />
+    <circle
+       style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="circle10768"
+       cx="228.82211"
+       cy="219.11302"
+       r="0.87406993" />
+    <circle
+       r="0.87406993"
+       cy="252.18835"
+       cx="201.30544"
+       id="circle10770"
+       style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    <circle
+       style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+       id="circle10772"
+       cx="201.30544"
+       cy="262.77176"
        r="0.87406993" />
   </g>
 </svg>
