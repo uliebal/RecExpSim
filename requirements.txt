@@ -8,4 +8,3 @@ watermark==2.0.2
 openpyxl==3.0.3
 cobra==0.20.0
 Escher==1.7.3
-pydna==4.0.0
