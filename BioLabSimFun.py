@@ -9,8 +9,9 @@ class Mutant:
     # random assignment of the production phase, either during growth phase or stationary phase
     __ProdPhase = 'exponential' if randint(0,1)==0 else 'stationary'
     # resources, e.g. money, for conducting tests
-    __Resources = 40
+    __Resources = 4500
     __BiomassMax = None
+    __ExpSucRate = None
     
     def __init__(self, Host):
         from random import randint
@@ -30,7 +31,14 @@ class Mutant:
             self.__BiomassMax = randint(30,100) # unit: in gDCW/l, source (german): https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&cad=rja&uact=8&ved=2ahUKEwjzt_aJ9pzpAhWGiqQKHb1jC6MQFjABegQIAhAB&url=https%3A%2F%2Fwww.repo.uni-hannover.de%2Fbitstream%2Fhandle%2F123456789%2F3512%2FDissertation.pdf%3Fsequence%3D1&usg=AOvVaw2XfGH11P9gK2F2B63mY4IM
         elif self.var_Host == 'Pput':
             self.__BiomassMax = randint(45,145) # unit: in gDCW/l, source 1: https://onlinelibrary.wiley.com/doi/pdf/10.1002/bit.25474, source 2: https://link.springer.com/article/10.1385/ABAB:119:1:51
-    
+
+    def BuyEquipment(self, EquipInvest=None):
+        if EquipInvest is None:
+            EquipInvest = self._Mutant__Resources*.2
+        self.__ExpSucRate = ErrorRate(EquipInvest, self._Mutant__Resources)
+        self._Mutant__Resources -= EquipInvest
+
+            
     def show_BiotechSetting(self):
         '''Report of all properties defined in the biotech experiment.'''
         self.var_Resources = self._Mutant__Resources
@@ -54,12 +62,17 @@ class Mutant:
 
         
     def Make_MeasurePromoterStrength(self, Clone_ID):
-        if self._Mutant__Resources > 0:
+        import random
+        ResCost = 100
+        if self._Mutant__Resources > ResCost:
             if hasattr(self, 'var_Library'):
                 if Clone_ID in self.var_Library:
-                    factor = self._Mutant__InflProStreng          
-                    self.var_Library[Clone_ID]['Promoter_Strength'] = round(Help_PromoterStrength(self, Clone_ID) * factor, 2)
-                    self._Mutant__Resources -= 1
+                    self._Mutant__Resources -= ResCost
+                    if random.uniform(0,1) > self._Mutant__ExpSucRate:
+                        factor = self._Mutant__InflProStreng          
+                        self.var_Library[Clone_ID]['Promoter_Strength'] = round(Help_PromoterStrength(self, Clone_ID) * factor, 2)
+                    else:
+                        print('Experiment failed, bad equipment.')
                 else:
                     print('Error, Clone ID does not exist. Choose existing Clone ID.')
             else:
@@ -70,21 +83,26 @@ class Mutant:
                 
     def Make_ProductionExperiment(self, Clone_ID, CultTemp, GrowthRate, Biomass, accuracy_Test=.9):
         import numpy as np
-        if self._Mutant__Resources > 2: # three resources will be deducted
+        import random
+        ResCost = 500
+        if self._Mutant__Resources > ResCost: # three resources will be deducted
             # the final experiment can only be performed after at least one sequence has been cloned and tested:
             if hasattr(self, 'var_Library'):
                 if Clone_ID in self.var_Library:
-                    # testing whether the determined maximum biomass and the determined maximum growth rate are close to the actual ones
-                    if 1 - np.abs(Biomass-self._Mutant__BiomassMax) / self._Mutant__BiomassMax > accuracy_Test and 1 - np.abs(GrowthRate-Help_GrowthConstant(self, self._Mutant__OptTemp)) / Help_GrowthConstant(self, self._Mutant__OptTemp) > accuracy_Test:
-                        # Growth rate was only checked, for the calculation the rate resulting from the temperature is used
-                        r = Help_GrowthConstant(self, CultTemp)
-                        GrowthMax = Growth_Maxrate(self, r, Biomass)
-                        self.var_Library[Clone_ID]['Expression_Temperature'] = CultTemp
-                        self.var_Library[Clone_ID]['Expression_Biomass'] = Biomass
-                        self.var_Library[Clone_ID]['Expression_Rate'] = round(GrowthMax * self.var_Library[Clone_ID]['Promoter_Strength'],2)
-                        self._Mutant__Resources -= 3
+                    self._Mutant__Resources -= ResCost
+                    if random.uniform(0,1) < self._Mutant__ExpSucRate:
+                        # testing whether the determined maximum biomass and the determined maximum growth rate are close to the actual ones
+                        if 1 - np.abs(Biomass-self._Mutant__BiomassMax) / self._Mutant__BiomassMax > accuracy_Test and 1 - np.abs(GrowthRate-Help_GrowthConstant(self, self._Mutant__OptTemp)) / Help_GrowthConstant(self, self._Mutant__OptTemp) > accuracy_Test:
+                            # Growth rate was only checked, for the calculation the rate resulting from the temperature is used
+                            r = Help_GrowthConstant(self, CultTemp)
+                            GrowthMax = Growth_Maxrate(self, r, Biomass)
+                            self.var_Library[Clone_ID]['Expression_Temperature'] = CultTemp
+                            self.var_Library[Clone_ID]['Expression_Biomass'] = Biomass
+                            self.var_Library[Clone_ID]['Expression_Rate'] = round(GrowthMax * self.var_Library[Clone_ID]['Promoter_Strength'],2)
+                        else:
+                            print('Maximum biomass and/or maximum growth rate are incorrect.')
                     else:
-                        print('Maximum biomass and/or maximum growth rate are incorrect.')
+                        print('Experiment failed, bad equipment.')
                 else:
                     print('Error, Clone ID does not exist. Choose existing Clone ID.')
             else:
@@ -133,7 +151,9 @@ class Mutant:
         import time
         import random
 
-        if self._Mutant__Resources > 0:
+        ResCost = 100
+        Exp_Duration = 48
+        if self._Mutant__Resources > ResCost:
             
             capacity = self._Mutant__BiomassMax
             # the time of the half maximum population (inflection point) is calculated according to here:
@@ -149,33 +169,33 @@ class Mutant:
             r_tmax = Help_GrowthConstant(self, Temp_tmax)
             # using the worst temperature growth rate to compute longest simulation time, maximum set to 72 h
             duration_tmax = d_mult * 1/r_tmax * np.log((capacity - P0)/P0) + 1
-            t_max = np.arange(np.minimum(73, duration_tmax))
+            t_max = np.arange(np.minimum(Exp_Duration, duration_tmax))
             
             # create an empty DataFrame with t_max as first column
             col = []
             col.append('time [h]')
-            col.append('[g/L]:')
+#             col.append('[g/L]:')
             for i in range(len(CultTemps)):
                 col.append('exp.{} biomass conc. at {} °C'.format(i+1, (CultTemps[i])))
 
-            df = pd.DataFrame(np.empty(shape=(len(t_max), len(CultTemps)+2), dtype=float), columns = col)
+            df = pd.DataFrame(np.empty(shape=(len(t_max), len(CultTemps)+1), dtype=float), columns = col)
             df[:len(t_max)] = np.nan 
             new_df = pd.DataFrame({'time [h]': t_max})
             df.update(new_df)
             
             #computing of biomass data and updating of DataFrame
             for i in range(len(CultTemps)):
-                if self._Mutant__Resources > 0:
+                if self._Mutant__Resources > ResCost:
                     wait = 0.01 # has to be adjusted, waiting time for loading bar
                     
-                    if random.uniform(0,1) > 0.1: # in 10% of cases the culture does not grow (failure of the experiment)
+                    if random.uniform(0,1) > self._Mutant__ExpSucRate: # experiment failure depending on investment to equipment
                         r = Help_GrowthConstant(self, CultTemps[i])
                         # the result can reach very small values, which poses downstream problems, hence the lowest value is set to 0.05
                         if r > 0.05: # under process conditions it might be realistic, source : https://www.thieme-connect.de/products/ebooks/pdf/10.1055/b-0034-10021.pdf
-                            duration = d_mult * 1/r * np.log((capacity - P0)/P0) + 1
+                            duration = Exp_Duration #d_mult * 1/r * np.log((capacity - P0)/P0) + 1
                         else:
-                            duration = 7
-                        t = np.arange(np.minimum(73, duration))
+                            duration = Exp_Duration
+                        t = np.arange(np.minimum(Exp_Duration, duration))
                         
                         # biomass data is calculated according to https://en.wikipedia.org/wiki/Logistic_function
                         mu = capacity / (1 + (capacity-P0) / P0 * np.exp(-r * t))
@@ -190,7 +210,7 @@ class Mutant:
                     else:
                         mu = P0
                         sigma = 0.08*mu
-                        exp_TempGrowthExp = [random.normalvariate(mu, sigma) for i in range(7)] # if cells haven't grown, the measurement is only continued for 6h
+                        exp_TempGrowthExp = [random.normalvariate(mu, sigma) for i in range(Exp_Duration)] # if cells haven't grown, the measurement is only continued for 6h
                         
                         loading_time = wait * 7
                         exp = ' of exp.{} at {} °C'.format(i+1, (CultTemps[i]))
@@ -203,11 +223,12 @@ class Mutant:
                 new_df = pd.DataFrame({'exp.{} biomass conc. at {} °C'.format(i+1, (CultTemps[i])): exp_TempGrowthExp})
                 df.update(new_df)
             
-                self._Mutant__Resources -= 1
+                self._Mutant__Resources -= ResCost
             
-            excel_writer = pd.ExcelWriter('Strain_characterization_{}.xlsx'.format(n)) # Export DataFrame to Excel
-            df.to_excel(excel_writer, sheet_name='different temp')
-            excel_writer.close()
+#             excel_writer = pd.ExcelWriter('Strain_characterization_{}.xlsx'.format(n)) # Export DataFrame to Excel
+#             df.to_excel(excel_writer, sheet_name='different temp')
+#             excel_writer.close()
+            df.to_csv('Strain_characterization_{}.csv'.format(n), index=False)
             
         else:
             Error_Resources()
@@ -221,8 +242,13 @@ class Mutant:
         
         if Sequence_ReferenceDistance(Promoter) > .4:
             return print('Promoter sequence deviates too much from the given structure.')
-        
-        if self._Mutant__Resources > 0:
+
+        ResCost = 200
+        if self._Mutant__Resources > ResCost:
+            self._Mutant__Resources -= ResCost
+            if random.uniform(0,1) < self._Mutant__ExpSucRate:
+                print('Experiment failed, bad equipment.')
+                return
             
             NaConc = 0.1 # 100 mM source: https://www.genelink.com/Literature/ps/R26-6400-MW.pdf (previous 50 mM: https://academic.oup.com/nar/article/18/21/6409/2388653)
             OptLen = self._Mutant__OptPrLen
@@ -261,9 +287,7 @@ class Mutant:
                 self.add_Promoter(Clone_ID, Promoter)
             else:
                 print('Cloning failed')
-                
-            self._Mutant__Resources -= 1
-        
+                        
         else:
             print('Not enough resources available.')
     
@@ -564,3 +588,11 @@ def Plot_ExpressionRate():
         the influence of this strength.
         The factor can be used to influence the range of the promoter strength and thus the range
         of the final expression rate.'''
+    
+def ErrorRate(Invest, ResTotal= 5000, relKM=.005, Vmax=.9):
+    '''
+    Calculate the experimental error rate based on the investment to equipment. Based on inverse Michaelis-Menten equation mit max error 0.9 and min error 0.1.
+    '''
+    KM = relKM*ResTotal
+    myMax = 1
+    return myMax - (Vmax * Invest) / (KM + Invest) 
