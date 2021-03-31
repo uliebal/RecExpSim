@@ -9,7 +9,7 @@ class Mutant:
     # random assignment of the production phase, either during growth phase or stationary phase
     __ProdPhase = 'exponential' if randint(0,1)==0 else 'stationary'
     # resources, e.g. money, for conducting tests
-    __Resources = 4500
+    __Resources = 10000
     __BiomassMax = None
     __ExpSucRate = None
     
@@ -90,7 +90,7 @@ class Mutant:
             if hasattr(self, 'var_Library'):
                 if Clone_ID in self.var_Library:
                     self._Mutant__Resources -= ResCost
-                    if random.uniform(0,1) < self._Mutant__ExpSucRate:
+                    if random.uniform(0,1) > self._Mutant__ExpSucRate:
                         # testing whether the determined maximum biomass and the determined maximum growth rate are close to the actual ones
                         if 1 - np.abs(Biomass-self._Mutant__BiomassMax) / self._Mutant__BiomassMax > accuracy_Test and 1 - np.abs(GrowthRate-Help_GrowthConstant(self, self._Mutant__OptTemp)) / Help_GrowthConstant(self, self._Mutant__OptTemp) > accuracy_Test:
                             # Growth rate was only checked, for the calculation the rate resulting from the temperature is used
@@ -98,7 +98,11 @@ class Mutant:
                             GrowthMax = Growth_Maxrate(self, r, Biomass)
                             self.var_Library[Clone_ID]['Expression_Temperature'] = CultTemp
                             self.var_Library[Clone_ID]['Expression_Biomass'] = Biomass
-                            self.var_Library[Clone_ID]['Expression_Rate'] = round(GrowthMax * self.var_Library[Clone_ID]['Promoter_Strength'],2)
+                            AbsRate = round(GrowthMax * self.var_Library[Clone_ID]['Promoter_Strength'],2)
+                            FinalRelRate = round(AbsRate/Calc_MaxExpress(self),2)
+                            self.var_Library[Clone_ID]['Expression_Rate'] = FinalRelRate
+                            print('{} final vaccine production rate: {}'.format(Clone_ID, FinalRelRate))
+                            print('The final production rate is comparable between groups.')
                         else:
                             print('Maximum biomass and/or maximum growth rate are incorrect.')
                     else:
@@ -111,23 +115,6 @@ class Mutant:
         else:
             Error_Resources()
 
-
-    def show_TargetExpressionRate(self):
-        '''Function to calculate the maximum possible expression rate and to tell the students what the minimum rate should be.'''
-        BiomassMax = self._Mutant__BiomassMax
-        OptTemp = self._Mutant__OptTemp
-        factor = self._Mutant__InflProStreng
-        # Values see init function at the beginning
-        if self.var_Host == 'Ecol':
-            MaximumPromoterStrength = round(0.057 * factor,2)
-        elif self.var_Host == 'Pput':
-            MaximumPromoterStrength = round(0.04 * factor,2)
-        r = Help_GrowthConstant(self, OptTemp)
-        GrowthMax = Growth_Maxrate(self, r, BiomassMax)
-        achievExpRate = round(0.75*GrowthMax * MaximumPromoterStrength,2)
-        print('At least an expression rate of {} should be achieved by the production experiment.'.format(achievExpRate))
-        
-        
     def plot_ReferencePromoterStrength(self):
         '''Function to plot the promoter strength of the optimal sequence additionally as reference.'''
         import matplotlib.pyplot as plt
@@ -297,6 +284,13 @@ class Mutant:
         self.var_Substrate = Substrate
             
    
+    def ExportExperiments(self):
+        '''
+        Export of all experiments to a csv file
+        '''
+        Result_df = NestDict2df(self.var_Library)
+        FileName = 'Production_Experiments.csv'
+        Result_df.to_csv(FileName, index=True)
         
 def Help_PromoterStrength(Mutant, Clone_ID, Predict_File=None, Similarity_Thresh=.4):
     '''Expression of the recombinant protein.
@@ -596,3 +590,27 @@ def ErrorRate(Invest, ResTotal= 5000, relKM=.005, Vmax=.9):
     KM = relKM*ResTotal
     myMax = 1
     return myMax - (Vmax * Invest) / (KM + Invest) 
+
+
+def Calc_MaxExpress(self):
+    '''Function to calculate the maximum possible expression rate.'''
+    BiomassMax = self._Mutant__BiomassMax
+    OptTemp = self._Mutant__OptTemp
+    factor = self._Mutant__InflProStreng
+    # Values see init function at the beginning
+    if self.var_Host == 'Ecol':
+        MaximumPromoterStrength = round(0.057 * factor,2)
+    elif self.var_Host == 'Pput':
+        MaximumPromoterStrength = round(0.04 * factor,2)
+    r = Help_GrowthConstant(self, OptTemp)
+    GrowthMax = Growth_Maxrate(self, r, BiomassMax)
+    return round(GrowthMax * MaximumPromoterStrength,2)
+
+
+def NestDict2df(mydict):
+    '''
+    Converts a nested dictionary into a dataframe
+    '''
+    import pandas as pd
+    
+    return pd.concat([pd.DataFrame.from_dict(mydict[who], orient='index', columns=[who]) for who in mydict.keys()], axis=1).transpose()
