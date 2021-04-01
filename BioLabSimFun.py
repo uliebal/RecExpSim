@@ -227,8 +227,8 @@ class Mutant:
         import numpy as np
         import random
         
-        if Sequence_ReferenceDistance(Promoter) > .4:
-            return print('Promoter sequence deviates too much from the given structure.')
+#         if Sequence_ReferenceDistance(Promoter) > .4:
+#             return print('Promoter sequence deviates too much from the given structure.')
 
         ResCost = 200
         if self._Mutant__Resources > ResCost:
