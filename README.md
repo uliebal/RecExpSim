@@ -17,4 +17,4 @@ Licence: See LICENCE file @https://git.rwth-aachen.de/ulf.liebal/biolabsim, or @
 
 Click the Jupyter icon to start BioLabSim at the Jupyter instance RWTH Aachen University:
 
-[![](https://jupyter.pages.rwth-aachen.de/documentation/images/badge-launch-rwth-jupyter.svg)](https://jupyter.rwth-aachen.de/hub/spawn?profile=biolabsim&next=/user-redirect/lab/tree/biolabsim/1-Laboratory.ipynb)
+[![](https://jupyter.pages.rwth-aachen.de/documentation/images/badge-launch-rwth-jupyter.svg)](https://jupyter.rwth-aachen.de/hub/spawn?profile=biolabsim)
