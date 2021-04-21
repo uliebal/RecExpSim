@@ -163,7 +163,7 @@ class Mutant:
             col.append('time [h]')
 #             col.append('[g/L]:')
             for i in range(len(CultTemps)):
-                col.append('exp.{} biomass conc. at {} °C'.format(i+1, (CultTemps[i])))
+                col.append('exp.{} biomass conc. at {} °C'.format(i, (CultTemps[i])))
 
             df = pd.DataFrame(np.empty(shape=(len(t_max), len(CultTemps)+1), dtype=float), columns = col)
             df[:len(t_max)] = np.nan 
@@ -191,7 +191,7 @@ class Mutant:
                         exp_TempGrowthExp = [random.normalvariate(mu[k], sigma[k]) for k in range(len(mu))]
                         
                         loading_time = wait * len(t)
-                        exp = ' of exp.{} at {} °C'.format(i+1, (CultTemps[i]))
+                        exp = ' of exp.{} at {} °C'.format(i, (CultTemps[i]))
                         Help_Progressbar(45, loading_time, exp)
                         
                     else:
@@ -200,14 +200,14 @@ class Mutant:
                         exp_TempGrowthExp = [random.normalvariate(mu, sigma) for i in range(Exp_Duration)] # if cells haven't grown, the measurement is only continued for 6h
                         
                         loading_time = wait * 7
-                        exp = ' of exp.{} at {} °C'.format(i+1, (CultTemps[i]))
+                        exp = ' of exp.{} at {} °C'.format(i, (CultTemps[i]))
                         Help_Progressbar(45, loading_time, exp)
                 
                 else:
                     Error_Resources()
                     return
         
-                new_df = pd.DataFrame({'exp.{} biomass conc. at {} °C'.format(i+1, (CultTemps[i])): exp_TempGrowthExp})
+                new_df = pd.DataFrame({'exp.{} biomass conc. at {} °C'.format(i, (CultTemps[i])): exp_TempGrowthExp})
                 df.update(new_df)
             
                 self._Mutant__Resources -= ResCost
