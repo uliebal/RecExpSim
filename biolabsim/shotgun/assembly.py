@@ -180,4 +180,14 @@ class RandomAssembler (Assembler) :
 
 
     def apply ( self, scaffolds:List[Scaffold] ) -> EstimatedSequence :
+        """
+        Attributes
+        ----------
+        scaffolds
+            Scaffolds that were returned from fragmentation.
+
+        Returns
+        -------
+        An estimation of bases for each position, based on random placement.
+        """
         return estimate_from_overlap( self.apply_internal(scaffolds) )

@@ -1,8 +1,10 @@
 
-from biolabsim.host import Host, Strain
-from biolabsim.metabolism import Help_StrainCharacterizer, measure_EnzymeLevel1
-from biolabsim.genome import measure_BaseCompare
-from biolabsim.organism.ecol import Ecol
+from biolabsim.simulation.host import Host
+from biolabsim.simulation.strain import Strain
+from biolabsim.simulation.metabolism import Help_StrainCharacterizer
+from biolabsim.measurement.fluxes import measure_EnzymeLevel1
+from biolabsim.measurement.sequencing import measure_BaseCompare
+from biolabsim.simulation.preset.ecol import Ecol
 
 
 myHost = Ecol()

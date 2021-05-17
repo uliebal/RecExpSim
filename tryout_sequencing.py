@@ -5,16 +5,16 @@ import numpy as np
 
 from biolabsim import set_seed, FabricatedHost, Sequencer, print_scaffold, write_scaffolds_to_file, \
     RandomAssembler, estimate_from_overlap, print_assembly_evaluation, print_estimation_evaluation, \
-    GreedyContigAssembler, evaluate_sequence
+    GreedyContigAssembler, evaluate_sequence, Ecol
 
 
 # Set random seed
 set_seed(2021)
 
 # Get a good Host to be sequenced.
-#wt_host = Ecol()
+wt_host = Ecol()
 #target_host = wt_host.clone_with_mutation(name="Mut1")
-target_host = FabricatedHost( genome_size=120, gc_content=0.6 )
+target_host = FabricatedHost( genome_size=80, gc_content=0.6 )
 genome = target_host.get_genome()
 
 # Create the Sequencer. It will fragment the genome.
