@@ -3,7 +3,7 @@ GenomeSequence is able to output a sequence given the current gene library.
 """
 
 from __future__ import annotations
-from typing import List
+from typing import List, Optional
 
 from Bio.Seq import Seq
 
@@ -16,24 +16,26 @@ from .genome_library import GenomeLibrary
 
 class GenomeSequence ( Module ) :
 
-    org: Organism
-
     genlib: GenomeLibrary
 
-    def __init__ ( self, org:Organism, genlib:GenomeLibrary ) :
+
+
+    def __init__ ( self, org:Organism, genlib:GenomeLibrary, ref:Optional[Module] = None ) :
         super().__init__(org)
         self.genlib = genlib
-        self.org.bind( 'initialize', self.listen_initialize )
 
+        if ref is not None :
+            pass
+        else :
+            pass
 
-    def clone ( self, org:Organism, genlib:GenomeLibrary  ) -> GenomeSequence :
-        """ TODO: Review if genlib should be passed here. """
-        new_mod = GenomeSequence( org=org, genlib=genlib )
-        return new_mod
+        self.org.bind( InitializeEvent, self.listen_initialize )
+
 
 
     def listen_initialize ( self, event:InitializeEvent ) -> None :
         print("GenomeSequence has initialized.")
+
 
 
     def print_sequence ( self ) -> Seq :

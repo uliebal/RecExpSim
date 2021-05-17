@@ -11,10 +11,11 @@ observable that can be used by each module to communicate with other modules.
 from __future__ import annotations
 from abc import ABC, abstractmethod
 
-from typing import List, Callable, NamedTuple
+from typing import List, Callable, NamedTuple, Optional, Type, Dict
 
-#from ..experiment import Experiment
+# from ..experiment import Experiment
 from .events import EventType, Event
+from .modules.base import Module
 
 
 
@@ -23,34 +24,66 @@ ListenerCallback = Callable[[Event],None]
 
 
 class ListenerEntry ( NamedTuple ) :
-    typ: EventType
+    typ: Type[Event]
     run: ListenerCallback
 
 
 
-class Organism ( ABC ) :
+class Organism :
+
+    # modules: Dict[str,Module]
+    # def __init__ ( self, exp: Experiment, module_defs: Optional[List[Type[Module]]], ref: Optional[Organism] ) :
+    #     self.exp = exp
+    #     self.listeners = []
+    #     if module_defs is not None : # Create new with requested Module types.
+    #         for ModDef in module_defs :
+    #             self.modules[ ModDef( org=self ) ]
+    #     elif ref is not None : # Duplicate given a reference Organism.
+    #         for mod in ref.modules :
+    #             self.modules[ type(mod) ] = mod.clone(self)
+    #     else :
+    #         raise Exception("Attempted to initialize an Organism without a Module definitions nor a reference Organism.")
 
     exp: 'Experiment'
 
     listeners: List[ListenerEntry]
 
 
-    def __init__ ( self, exp: 'Experiment' ) :
-        """ TODO: Deal with experiment circular dependency. """
+
+    def __init__ ( self, exp: 'Experiment', ref: Optional[Organism] = None ) :
+        """
+        Init is responsible to initialize all modules of an organism, may it be new from scratch or
+        by using another organism as a reference.
+
+        Code from derived classes should be:
+
+            super().__init__( exp=exp, ref=ref )
+
+            if ref is not None :
+                self.module = Module( ref=ref.module )
+            else :
+                self.module = Module()
+        """
         self.exp = exp
         self.listeners = []
 
 
+
+    def clone ( self ) -> Organism :
+        """ Clones a new Organism on the same experiment. """
+        return type(self)( exp=self.exp, ref=self )
+
+
+
     def emit ( self, event: Event ) -> None :
+        """ Trigger all listeners for a given Event. """
         for le in self.listeners :
-            if event.typ == le.typ :
+            if type(event) == le.typ :
                 le.run(event) # run the listener with the emitted event.
 
 
-    def bind ( self, typ: EventType, run: ListenerCallback ) -> None :
+
+    def bind ( self, typ: Type[Event], run: ListenerCallback ) -> None :
+        """ Bind a new listener for an Event. """
         self.listeners.append( ListenerEntry( typ=typ, run=run ) )
-
-
-    def clone ( self ) -> Organism :
-        return type(self)( exp=self.exp, ref=self )
 

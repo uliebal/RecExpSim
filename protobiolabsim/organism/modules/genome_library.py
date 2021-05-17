@@ -7,6 +7,7 @@ in `registry.gene` which has special ways to allow for copy-on-write.
 
 from __future__ import annotations
 from copy import copy
+from typing import Optional, Final
 
 from ...record.gene.base import Gene
 from ..base import Organism
@@ -17,26 +18,27 @@ from .base import Module
 
 class GenomeLibrary ( Module ) :
 
-    org: Organism
-
     genes: set[Gene]
 
-    def __init__ ( self, org:Organism ) :
-        super().__init__(org)
-        self.genes = set()
-        self.org.bind( 'insert_gene', self.listen_insert_gene )
-        self.org.bind( 'remove_gene', self.listen_remove_gene )
 
 
-    def clone ( self, org:Organism ) -> GenomeLibrary :
-        new_mod = GenomeLibrary( org=org )
-        new_mod.genes = copy(self.genes)
-        return new_mod
+    def __init__ ( self, org:Organism, ref:Optional[GenomeLibrary] = None ) :
+        super().__init__(org,ref)
+
+        if ref is not None :
+            self.genes = copy(ref.genes)
+        else :
+            self.genes = set()
+
+        self.org.bind( InsertGeneEvent, self.listen_insert_gene )
+        self.org.bind( RemoveGeneEvent, self.listen_remove_gene )
+
 
 
     def listen_insert_gene ( self, event:InsertGeneEvent ) -> None :
         self.genes.add( event.gene )
         print( "Added gene={} to the GenomeLibrary.".format(event.gene.get_name()) )
+
 
 
     def listen_remove_gene ( self, event:RemoveGeneEvent ) -> None :

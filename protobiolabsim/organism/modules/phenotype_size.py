@@ -4,7 +4,7 @@ The number inside this module (example: a size of a cell) will increase with the
 """
 
 from __future__ import annotations
-from typing import List
+from typing import Optional
 
 from ...record.gene.base import Gene
 from ..base import Organism
@@ -19,21 +19,25 @@ class PhenotypeSize ( Module ) :
 
     size: int
 
-    def __init__ ( self, org:Organism ) :
+
+
+    def __init__ ( self, org:Organism, ref:Optional[PhenotypeSize] = None ) :
         super().__init__(org)
-        self.size = 0
-        self.org.bind( 'insert_gene', self.listen_insert_gene )
-        self.org.bind( 'remove_gene', self.listen_remove_gene )
 
+        if ref is not None :
+            self.size = ref.size
+        else :
+            self.size = 0
 
-    def clone ( self, org:Organism ) -> PhenotypeSize :
-        new_mod = PhenotypeSize( org=org )
-        return new_mod
+        self.org.bind( InsertGeneEvent, self.listen_insert_gene )
+        self.org.bind( RemoveGeneEvent, self.listen_remove_gene )
+
 
 
     def listen_insert_gene ( self, event:InsertGeneEvent ) -> None :
         self.size += 1
         print("Incremented size by 1 on PhenotypeSize.")
+
 
 
     def listen_remove_gene ( self, event:RemoveGeneEvent ) -> None :
