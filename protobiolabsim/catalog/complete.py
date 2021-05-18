@@ -1,30 +1,35 @@
 """
-An organism that implements all currently existing modules.
+An experiment that uses organisms which implements all currently existing modules.
 """
 
 from __future__ import annotations
 from typing import Optional, TypedDict, Final
 
 from ..utils import coalesce
-from ..record.gene.base import Gene
 from ..experiment import Experiment
-from .base import Organism
-from .events import InitializeEvent, InsertGeneEvent, RemoveGeneEvent, PromStrCalcEvent
-from .modules.genome_library import GenomeLibrary
-from .modules.genome_sequence import GenomeSequence
-from .modules.phenotype_size import PhenotypeSize
+from ..registry import Registry
+from ..organism import Organism
+from ..extensions.genome.events import InsertGeneEvent, RemoveGeneEvent
+from ..extensions.genome import GenomeLibrary, GenomeSequence
+
+from ..extensions.genome.records.gene import Gene
+from ..extensions.genome.modules.genome_library import GenomeLibrary
+from ..extensions.genome.modules.genome_sequence import GenomeSequence
+from ..extensions.phenotype.phenotype_size import PhenotypeSize
 
 
 
-class CompleteOrganism ( Organism ) :
+class CompleteExperiment (Experiment) :
 
-    # modules: CompleteModules
-    # def __init__ ( self, exp: Experiment, ref: Optional[CompleteOrganism] ) :
-    #     super().__init__(
-    #         exp= exp,
-    #         module_defs= [ GenomeLibrary, GenomeSequence, PhenotypeSize, PromStrCalc ] if ref is None else None,
-    #         ref= ref
-    #     )
+    # TODO: Are Registries really necessary or does garbage collection handle everything?
+    #gene_reg: Registry
+
+    def __init__ ( self ) :
+        super().__init__()
+
+
+
+class CompleteOrganism (Organism) :
 
     genlib: GenomeLibrary
 
@@ -45,8 +50,6 @@ class CompleteOrganism ( Organism ) :
             self.genlib = GenomeLibrary( org=self )
             self.genseq = GenomeSequence( org=self, genlib=self.genlib )
             self.phenosize = PhenotypeSize( org=self )
-
-        self.emit( InitializeEvent() )
 
 
 

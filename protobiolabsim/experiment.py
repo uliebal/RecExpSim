@@ -3,26 +3,33 @@ Experiment is the top-most scope. It includes all organisms and registries and a
 namespace.
 
 TODO: See if this is necessary. Can registries be top-level?
-  For now: all Organism, Registry and Records fully depend on an Experiment.
+    For now: all Organism, Registry and Records fully depend on an Experiment.
 """
 
 from __future__ import annotations
-from typing import Type
+from typing import Set
+from abc import ABC
 
-from .organism.base import Organism
-from .registry.interface import Registry
-from .record.gene.base import Gene
+from .organism import Organism
+from .registry import Registry
 
 
-class Experiment :
 
-    orgs: list[Organism]
+class Experiment (ABC) :
 
-    gene_reg: Registry[Gene]
+    orgs: Set[Organism]
+
+
 
     def __init__ ( self ) :
-        self.orgs = []
-        self.gene_reg = Registry[Gene]()
+        self.orgs = set()
+
+
+
+    def bind_organism ( self, org:Organism ) -> None :
+        self.orgs.add(org)
+
+
 
     # def create_organism ( self, org_class:Type[Organism], **kwargs ) -> None :
     #     org = org_class( exp=self, **kwargs )

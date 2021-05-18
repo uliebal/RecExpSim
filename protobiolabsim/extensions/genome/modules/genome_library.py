@@ -9,10 +9,10 @@ from __future__ import annotations
 from copy import copy
 from typing import Optional, Final
 
-from ...record.gene.base import Gene
-from ..base import Organism
+from ....organism import Organism
+from ....module import Module
+from ..records.gene import Gene
 from ..events import InsertGeneEvent, RemoveGeneEvent
-from .base import Module
 
 
 
@@ -30,8 +30,8 @@ class GenomeLibrary ( Module ) :
         else :
             self.genes = set()
 
-        self.org.bind( InsertGeneEvent, self.listen_insert_gene )
-        self.org.bind( RemoveGeneEvent, self.listen_remove_gene )
+        self.org.observe( InsertGeneEvent, self.listen_insert_gene )
+        self.org.observe( RemoveGeneEvent, self.listen_remove_gene )
 
 
 

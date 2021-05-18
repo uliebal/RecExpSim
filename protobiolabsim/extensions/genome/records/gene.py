@@ -10,19 +10,14 @@ from abc import ABC, abstractmethod
 
 from Bio.Seq import Seq
 
-#from ...experiment import Experiment
-from ..interface import Record
+from ....record import Record
 
 
 
 class Gene ( Record, ABC ) :
 
-    exp: Experiment
-
-    def __init__ ( self, exp: Experiment ) :
-        """ When a gene is created it registers itself in the gene registry. """
-        exp.gene_reg.insert(self)
-        self.exp = exp
+    def __init__ ( self ) :
+        pass
 
     @abstractmethod
     def clone ( self ) -> Gene :

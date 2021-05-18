@@ -13,9 +13,8 @@ from abc import ABC, abstractmethod
 
 from typing import List, Callable, NamedTuple, Optional, Type, Dict
 
-# from ..experiment import Experiment
-from .events import EventType, Event
-from .modules.base import Module
+# from .experiment import Experiment
+from .events import Event
 
 
 
@@ -24,7 +23,7 @@ ListenerCallback = Callable[[Event],None]
 
 
 class ListenerEntry ( NamedTuple ) :
-    typ: Type[Event]
+    evtype: Type[Event]
     run: ListenerCallback
 
 
@@ -64,6 +63,7 @@ class Organism :
             else :
                 self.module = Module()
         """
+        exp.bind_organism(self)
         self.exp = exp
         self.listeners = []
 
@@ -78,12 +78,12 @@ class Organism :
     def emit ( self, event: Event ) -> None :
         """ Trigger all listeners for a given Event. """
         for le in self.listeners :
-            if type(event) == le.typ :
+            if type(event) == le.evtype :
                 le.run(event) # run the listener with the emitted event.
 
 
 
-    def bind ( self, typ: Type[Event], run: ListenerCallback ) -> None :
-        """ Bind a new listener for an Event. """
-        self.listeners.append( ListenerEntry( typ=typ, run=run ) )
+    def observe ( self, evtype: Type[Event], run: ListenerCallback ) -> None :
+        """ Bind a new listener for a type of event. """
+        self.listeners.append( ListenerEntry( evtype=evtype, run=run ) )
 

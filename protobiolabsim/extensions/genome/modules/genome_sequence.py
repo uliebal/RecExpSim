@@ -7,10 +7,10 @@ from typing import List, Optional
 
 from Bio.Seq import Seq
 
-from ..base import Organism
-from ..events import InitializeEvent
-from .base import Module
-from .genome_library import GenomeLibrary
+from ....organism import Organism
+from ....module import Module
+from ..records.gene import Gene
+from ..modules.genome_library import GenomeLibrary
 
 
 
@@ -28,13 +28,6 @@ class GenomeSequence ( Module ) :
             pass
         else :
             pass
-
-        self.org.bind( InitializeEvent, self.listen_initialize )
-
-
-
-    def listen_initialize ( self, event:InitializeEvent ) -> None :
-        print("GenomeSequence has initialized.")
 
 
 

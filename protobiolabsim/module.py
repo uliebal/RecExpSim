@@ -3,14 +3,14 @@ A Module is an extension of behaviour that can be attached to an Organism.
 """
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Optional
 
 # from ..base import Organism
 
 
 
-class Module :
+class Module (ABC) :
 
     org: 'Organism'
 

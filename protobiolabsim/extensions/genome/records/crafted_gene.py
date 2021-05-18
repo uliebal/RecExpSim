@@ -6,12 +6,11 @@ from __future__ import annotations
 
 from Bio.Seq import Seq
 
-from ...experiment import Experiment
-from .base import Gene
+from .gene import Gene
 
 
 
-class CraftedGene ( Gene ) :
+class CraftedGene (Gene) :
 
     name: str
 
@@ -19,8 +18,8 @@ class CraftedGene ( Gene ) :
 
     prom: Seq
 
-    def __init__ ( self, name:str, orf:Seq, prom:Seq, exp=Experiment ) :
-        super().__init__(exp)
+    def __init__ ( self, name:str, orf:Seq, prom:Seq ) :
+        super().__init__()
         self.name = name
         self.orf = orf
         self.prom = prom
@@ -30,7 +29,6 @@ class CraftedGene ( Gene ) :
             name=self.name,
             orf=self.orf, # Can pass because Seq is immutable.
             prom=self.prom, # Can pass because Seq is immutable.
-            exp=self.exp
         )
 
     def get_name ( self ) -> str :
@@ -49,6 +47,5 @@ class CraftedGene ( Gene ) :
             name=self.name,
             orf=new_orf,
             prom=self.prom, # Can pass because Seq is immutable.
-            exp=self.exp
         )
 

@@ -1,0 +1,71 @@
+
+from __future__ import annotations
+from Bio.Seq import Seq
+
+from protobiolabsim.catalog.complete import CompleteExperiment, CompleteOrganism
+from protobiolabsim.extensions.genome.records.crafted_gene import CraftedGene
+
+exp = CompleteExperiment()
+
+# Org 1 has a single gene.
+
+org1 = CompleteOrganism( exp=exp )
+
+gen1 = CraftedGene( name="Cx76", orf=Seq("AACTGGT"), prom=Seq("TTCGT") )
+
+org1.insert_gene( gen1 ) # Model import would call multiple insert gene.
+
+print( "Organism 1 DNA: {}".format( org1.genseq.print_sequence() ) )
+
+
+
+
+
+
+# Org 2 has an additional gene.
+
+gen2 = CraftedGene( name="Hut3", orf=Seq("GGGTTG"), prom=Seq("CCT") )
+
+org2 = org1.clone()
+
+org2.insert_gene( gen2 )
+
+print( "Organism 2 DNA: {}".format( org2.genseq.print_sequence() ) )
+
+# Org 3 has a mutation on the second gene.
+
+gen3 = gen2.make_variant( orf_loc=3, orf_sub="A" )
+
+org3 = org2.clone()
+
+org3.replace_gene( gen2, gen3 )
+
+print( "Organism 3 DNA: {}".format( org3.genseq.print_sequence() ) )
+
+# Show the gene registry.
+
+# print("Gene Registry:")
+# for gene in exp.gene_reg.records :
+#     print("  {}  {}  {}".format(gene.get_name(),gene.get_prom(),gene.get_orf()))
+
+
+
+print("Finished")
+
+
+
+
+# for org in exp.orgs :
+#     org.genlib.check_included(gene_rec)
+
+#     # if generec in genlib_mod.genes
+
+# org.genlib.genes['ATP'].substitute_promoter( "ATTACG" )
+# org.genseq.substitute_bases( ch=0, pos=1360, base="C" )
+# org.genseq.substitute_seq( ch=0, pos=[1360:1363], sub="CAA" )
+
+
+# org.genseq.match_and_replace( match="ATTCA", sub="ATTGA" )
+# org.genseq.match_and_replace( match="ATTCA", offset=4, sub="G" )
+
+

@@ -6,14 +6,13 @@ The number inside this module (example: a size of a cell) will increase with the
 from __future__ import annotations
 from typing import Optional
 
-from ...record.gene.base import Gene
-from ..base import Organism
-from ..events import InsertGeneEvent, RemoveGeneEvent
-from .base import Module
+from ...organism import Organism
+from ...module import Module
+from ..genome.events import InsertGeneEvent, RemoveGeneEvent
 
 
 
-class PhenotypeSize ( Module ) :
+class PhenotypeSize (Module) :
 
     org: Organism
 
@@ -29,8 +28,8 @@ class PhenotypeSize ( Module ) :
         else :
             self.size = 0
 
-        self.org.bind( InsertGeneEvent, self.listen_insert_gene )
-        self.org.bind( RemoveGeneEvent, self.listen_remove_gene )
+        self.org.observe( InsertGeneEvent, self.listen_insert_gene )
+        self.org.observe( RemoveGeneEvent, self.listen_remove_gene )
 
 
 
