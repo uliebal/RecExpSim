@@ -23,17 +23,22 @@ class Gene ( Record, ABC ) :
     def clone ( self ) -> Gene :
         pass
 
+
+    @property
     @abstractmethod
-    def get_name ( self ) -> str :
+    def name ( self ) -> str :
         pass
 
+    @property
     @abstractmethod
-    def get_orf ( self ) -> Seq :
+    def prom ( self ) -> Seq :
         pass
 
+    @property
     @abstractmethod
-    def get_prom ( self ) -> Seq :
+    def orf ( self ) -> Seq :
         pass
+
 
     @abstractmethod
     def make_variant ( self, orf_loc:int, orf_sub=Seq ) -> Gene :

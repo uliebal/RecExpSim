@@ -1,7 +1,8 @@
 """
-All operations that generate random numbers come from this globally defined random generator.
+All operations that generate random numbers may come from this globally defined random generator.
 
-This allows the user to provide a seed and generate the same sequences on every run.
+This allows the user to provide a seed and generate the same sequences on every run as long as
+requests are made in the same order.
 
 The methods it exposes are the same of those from a numpy Generator object.
 https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator
