@@ -13,7 +13,7 @@ general_model = FermentationModel(org=org)
 monod = MonodModel(org=org, operation_mode='batch', conditions=randomize_cond(seed=seed, duration=20),
                    params=randomize_params(seed=seed))
 # alternatively
-monod2 = MonodModel(org=org, operation_mode='batch')    # default seed is 100, default duration 24
+monod2 = MonodModel(org=org)    # default seed is 100, default duration 24, batch mode, conditions&params randomized
 
 start_params = monod.get_start_values()                 # only used internally
 result = monod.calculate_monod()
