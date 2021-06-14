@@ -23,15 +23,15 @@ def randomize_cond(seed: int = 100, duration: int = 24) -> TypedDict('conditions
 
     Parameters
     ----------
-        seed : int
+        seed:
             Seed for random number generator. Default: 100
-        duration: int
+        duration:
             Maximum duration of modeled process [h]. Default: 24 h
 
     Returns
     -------
-        conditions: Dict[str, float]
-            Randomized process conditions as Dict
+        conditions:
+            Randomized process conditions
     """
     set_seed(seed)
     conditions = {
@@ -41,7 +41,7 @@ def randomize_cond(seed: int = 100, duration: int = 24) -> TypedDict('conditions
         'time': range(1, duration+1),               # Process Duration [h]
         'pH':   round(pick_uniform(3, 7), 1),       # optimal pH value (no reference)
         'temp': int(pick_uniform(25, 40))           # optimal growth temperature
-        # TODO: Event in case optimal process temperature is added in either Recexpsim.RecOrganism/here -> update org
+        # TODO: Event in case optimal process temperature is added in Recexpsim.RecOrganism -> update Temp here?
         # 'Temp': self.org.growth.opt_growth_temp
     }
     return conditions
@@ -53,13 +53,13 @@ def randomize_params(seed: int = 100) -> Dict[str, float]:
 
     Parameters
     ----------
-        seed : int
+        seed:
             Seed for random number generator. Default: 100
 
     Returns
     -------
-        params: Dict[str, float]
-            Randomized kinetic parameters as Dict
+        params:
+            Randomized kinetic parameters
     """
     set_seed(seed)
     params = {
@@ -111,7 +111,7 @@ class MonodModel(FermentationModel):
     this, additional information like the mode of operation and kinetic parameters are stored.
     """
     # Mode of operation of modeled fermentation process
-    # TODO: Add fedbatch and continuous mode calculation, possibly further modes
+    # FIXME: (FIXMEs = personal notes) Add fedbatch and continuous mode calculation, possibly further modes
     operation_mode: Literal['batch', 'fedbatch', 'continuous']
     # Optional inhibition terms to model different metabolic effects, like product inhibiton, diauxic growth etc.
     # TODO: Design classes for inhibitions and params instead of using Dict/List?
@@ -145,7 +145,7 @@ class MonodModel(FermentationModel):
         """
         Returns
         -------
-        description : str
+        description:
             Brief description of operation mode, parameters and conditions used in the model
         """
         description = f'Fermentation model instance for a {self.operation_mode} microbial production process.\n' \
@@ -159,7 +159,7 @@ class MonodModel(FermentationModel):
 
         Returns
         -------
-        start_params: dict
+        start_params:
             Initial process derivatives for first calculation step
         """
         u0, Yx, k1 = self.params['u0'], self.params['Yx'], self.params['k1']
@@ -173,7 +173,7 @@ class MonodModel(FermentationModel):
                 rS0 = 0
             rP0 = (k1 * u0) * X0                # initial rate of change for product (P)
 
-        else:                                   # TODO: add fedbatch & continuous mode
+        else:                                   # FIXME: add fedbatch & continuous mode
             rX0 = 0
             rS0 = 0
             rP0 = 0
@@ -198,7 +198,7 @@ class MonodModel(FermentationModel):
 
         Returns
         -------
-            monod_result: FermentationOutcome
+            monod_result:
                 Result of kinetics (X, S, P, µ, rX, rS, rP) as Lists
         """
         start_values = self.get_start_values()
@@ -210,7 +210,7 @@ class MonodModel(FermentationModel):
         time, S, P, X, temp, pH = self.conditions['time'], [self.conditions['S0']], [self.conditions['P0']],\
             [self.conditions['X0']], self.conditions['temp'], self.conditions['pH']
 
-        # Adapt umax/k1 for suboptimal pH/Temp.       TODO: This isnt scientifically backed (literature search needed)!
+        # Adapt umax/k1 for suboptimal pH/Temp.      FIXME: This isnt scientifically backed (literature search needed)!
         # The greater the distance of temperature from optimum (30), the smaller µmax (biomass growth)
         umax = umax * (1 - (abs(30 - temp) / 100))  # TODO: Get optimal growth rate & temperature from organism?
         # The greater the distance of pH from optimum (5), the smaller k1 (product formation rate)
@@ -219,39 +219,24 @@ class MonodModel(FermentationModel):
         # Calculate discrete monod kinetics via difference quotients FIXME: add source
         for j in time:
             new_u = umax * S[j - 1] / (Ks + S[j - 1])   # difference quotient of µ
-            if new_u >= 0:
-                u.append(new_u)
-            else:
-                u.append(0)
+            u.append(max(0, new_u))
 
             new_rX = u[j - 1] * X[j - 1]                # difference quotient of Biomass
-            if new_rX >= 0:
-                rX.append(new_rX)
-            else:
-                rX.append(0)
+            rX.append(max(0, new_rX))
             X.append(X[j - 1] + rX[j])                  # New [Biomass]
 
             new_rS = -(rX[j - 1] / Yx)                  # difference quotient of substrate
-            if new_rS <= 0:
-                rS.append(new_rS)
-            else:
-                rS.append(0)
+            rS.append(max(0, new_rS))
             new_S = S[j - 1] + rS[j]
-            if new_S < 0:
-                S.append(0)                             # New [Substrate]
-            else:
-                S.append(new_S)
+            S.append(max(0, new_S))
 
             new_rP = (k1 * u[j]) * X[j]                 # difference quotient of product
-            if new_rP >= 0:
-                rP.append(new_rP)
-            else:
-                rP.append(0)
-
+            rP.append(max(0, new_rP))
             P.append(P[j - 1] + rP[j])                  # New [Product]
 
         # Save results as FermentationOutcome
         results = {'X':  X, 'S':  S, 'P':  P, 'u':  u, 'rX': rX, 'rS': rS, 'rP': rP}
-        monod_result = FermentationOutcome(outcome=True, results=results, message=str(self))  # TODO: Is this correct?
+        # TODO: What is the purpose of outcome and message?
+        monod_result = FermentationOutcome(outcome=True, results=results, message=str(self))
 
         return monod_result
