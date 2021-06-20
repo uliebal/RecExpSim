@@ -54,7 +54,7 @@ class Organism :
 
 
 
-    def __init__ ( self, exp: 'Experiment' ) :
+    def __init__ ( self, exp: 'Experiment', seed: Optional[int] = None ) :
         """
         Init is responsible to initialize all modules of an organism, may it be new from scratch or
         by using another organism as a reference.
@@ -69,7 +69,7 @@ class Organism :
         exp.bind_organism(self)
         self.exp = exp
         self.listeners = []
-        self.seed_sequence = SeedSequence()
+        self.seed_sequence = SeedSequence(seed)
 
 
 

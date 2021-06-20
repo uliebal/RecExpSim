@@ -34,7 +34,8 @@ class ProductionOutcome (OperationOutcome) :
 
 class GrowthBehaviour ( Module ) :
 
-    opt_growth_temp: int
+    opt_growth_temp: float
+    opt_growth_ph: float
     max_biomass: int
     exp_suc_rate: float # This would be better placed in the Catalog.Organism
 
@@ -43,10 +44,11 @@ class GrowthBehaviour ( Module ) :
     # to be optional just in case a 'ref' is passed. Maybe do clone(dep_mods,ref) which itself
     # calls the init with all parameters passed by reference. And then deconstruct the 'params' to
     # use kwargs.
-    def __init__ ( self, org:Organism, opt_growth_temp:int, max_biomass:int ) :
+    def __init__ ( self, org:Organism, opt_growth_temp:int, max_biomass:int, opt_growth_ph:float ) :
         super().__init__(org)
 
         self.opt_growth_temp = opt_growth_temp # TODO: no validation
+        self.opt_growth_ph = opt_growth_ph # TODO: no validation
         self.max_biomass = max_biomass # TODO: no validation
         self.exp_suc_rate = 0.1 # ErrorRate(EquipInvest, self._Mutant__Resources)
 
@@ -57,6 +59,7 @@ class GrowthBehaviour ( Module ) :
             org=org,
             opt_growth_temp= self.opt_growth_temp,
             max_biomass= self.max_biomass,
+            opt_growth_ph= self.opt_growth_ph,
             exp_suc_rate= self.exp_suc_rate,
         )
 

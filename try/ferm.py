@@ -1,22 +1,31 @@
 """
 This script uses the methods and classes defined in fermentation_model.py.
 """
-from protobiolabsim.catalog.recexpsim import RecOrganism
-from protobiolabsim.experiment import Experiment
-from protobiolabsim.extensions.modules.fermentation_model import FermentationModel, MonodModel, randomize_cond, \
-    randomize_params
+
+# Use biolabsim from parent folder.
+import os
+import sys
+sys.path.append( os.path.abspath(os.path.join('.')) )
+sys.path.append( os.path.abspath(os.path.join('..')) )
+
+from protobiolabsim.catalog.fermprosim import FermExperiment, SomeAcidicOrganism
+
 
 seed = 68                                              # Change seed for different conditions and params
-exp = Experiment()
-org = RecOrganism(exp)
-general_model = FermentationModel(org=org)
-monod = MonodModel(org=org, operation_mode='batch', conditions=randomize_cond(seed=seed, duration=20),
-                   params=randomize_params(seed=seed))
-# alternatively
-monod2 = MonodModel(org=org)    # default seed is 100, default duration 24, batch mode, conditions&params randomized
+exp = FermExperiment()
+org = exp.create_acidic_organism(seed)
+# alternatively (but less preferred for the educational workflow)
+org2 = SomeAcidicOrganism( exp=exp )    # default seed is 100, default duration 24, batch mode, conditions&params randomized
 
-start_params = monod.get_start_values()                 # only used internally
-result = monod.calculate_monod()
+# Run the model.
+result = org.calc_monod_kinetics()
+# alternatively (but less preferred for the educational workflow)
+result2 = org.monod.calculate_monod()
+
+print("ORGANISM:")
+org.print_status()
+print("RESULT:\n{}".format(result))
+print("MODEL:\n{}".format(org.monod))
 
 # TODO: Clone doesnt contain calculated results. Desired behaviour or should results be saved in model instance?
-monod3 = monod.clone()                                  # Doesnt contain result!
+#org3 = org.clone()                                  # Doesnt contain result!

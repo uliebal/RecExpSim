@@ -12,21 +12,54 @@ from dataclasses import dataclass
 from ...common import OperationOutcome
 from ...organism import Organism
 from ...module import Module
-from protobiolabsim.random import set_seed, pick_uniform
+from ...random import set_seed, pick_uniform
+from .growth_behaviour import GrowthBehaviour
 
 
-def randomize_cond(seed: int = 100, duration: int = 24) -> TypedDict('conditions', {'S0': float, 'P0': float,
-                                                                                    'X0': float, 'time': range,
-                                                                                    'pH': float, 'temp': int}):
+
+OperationMode = Literal['batch', 'fedbatch', 'continuous']
+
+InhibitionTerm = Literal['substrate_inhib', 'product_inhib', 'diauxie', 'diffusion_inhib']
+
+@dataclass
+class ConditionSet :
+    S0: float
+    P0: float
+    X0: float
+    time: range
+    pH: float
+    temp: int
+
+@dataclass
+class ParamSet :
+    u0: float
+    umax: float
+    Ks: float
+    Yx: float
+    k1: float
+
+@dataclass
+class FermentationResult :
+    X: List[float]
+    S: List[float]
+    P: List[float]
+    u: List[float]
+    rX: List[float]
+    rS: List[float]
+    rP: List[float]
+
+
+
+def randomize_cond(seed: int = 100, duration: int = 24) -> ConditionSet:
     """
     Randomizes "optimal" process conditions for FermentationModel instance.
 
     Parameters
     ----------
         seed:
-            Seed for random number generator. Default: 100
+            Seed for random number generator.
         duration:
-            Maximum duration of modeled process [h]. Default: 24 h
+            Maximum duration of modeled process [h].
 
     Returns
     -------
@@ -34,20 +67,21 @@ def randomize_cond(seed: int = 100, duration: int = 24) -> TypedDict('conditions
             Randomized process conditions
     """
     set_seed(seed)
-    conditions = {
-        'S0':   round(pick_uniform(19, 21), 3),     # Initial substrate concentration [g/L]
-        'P0':   0,                                  # Initial product concentration [g/L]
-        'X0':   round(pick_uniform(0.05, 0.3), 3),  # Initial biomass concentration [g/L]'
-        'time': range(1, duration+1),               # Process Duration [h]
-        'pH':   round(pick_uniform(3, 7), 1),       # optimal pH value (no reference)
-        'temp': int(pick_uniform(25, 40))           # optimal growth temperature
+    conditions = ConditionSet(
+        S0=   round(pick_uniform(19, 21), 3),     # Initial substrate concentration [g/L]
+        P0=   0,                                  # Initial product concentration [g/L]
+        X0=   round(pick_uniform(0.05, 0.3), 3),  # Initial biomass concentration [g/L]'
+        time= range(1, duration+1),               # Process Duration [h]
+        pH=   round(pick_uniform(3, 7), 1),       # optimal pH value (no reference)
+        temp= int(pick_uniform(25, 40))           # optimal growth temperature
         # TODO: Event in case optimal process temperature is added in Recexpsim.RecOrganism -> update Temp here?
         # 'Temp': self.org.growth.opt_growth_temp
-    }
+    )
     return conditions
 
 
-def randomize_params(seed: int = 100) -> Dict[str, float]:
+
+def randomize_params(seed: int = 100) -> ParamSet:
     """
     Randomizes "optimal" kinetic parameters for Monodmodel instance.
 
@@ -62,23 +96,15 @@ def randomize_params(seed: int = 100) -> Dict[str, float]:
             Randomized kinetic parameters
     """
     set_seed(seed)
-    params = {
-        'u0':   0,                                  # Initial growth rate [h^-1]
-        'umax': round(pick_uniform(0.5, 1.1), 3),   # maximal growth rate [h^-1] (default 0.5 - 1.1)
-        'Ks':   round(pick_uniform(2, 8), 3),       # Monod substrate affinity constant (default 2 - 8) [g/L]
-        'Yx':   round(pick_uniform(0.4, 0.6), 3),   # Yield coefficient for growth on glucose (default 0.4 - 0.6) [g/g]
-        'k1':   round(pick_uniform(0.05, 0.2), 3)   # Production rate of Product (default 0.05 - 0.2) [# h^-1]
-    }
+    params = ParamSet(
+        u0=   0,                                  # Initial growth rate [h^-1]
+        umax= round(pick_uniform(0.5, 1.1), 3),   # maximal growth rate [h^-1] (default 0.5 - 1.1)
+        Ks=   round(pick_uniform(2, 8), 3),       # Monod substrate affinity constant (default 2 - 8) [g/L]
+        Yx=   round(pick_uniform(0.4, 0.6), 3),   # Yield coefficient for growth on glucose (default 0.4 - 0.6) [g/g]
+        k1=   round(pick_uniform(0.05, 0.2), 3)   # Production rate of Product (default 0.05 - 0.2) [# h^-1]
+    )
     return params
 
-
-@dataclass(frozen=True)
-class FermentationOutcome(OperationOutcome):
-    """
-    The outcome of a simulated fermentation process.
-    Contains a dictionary with lists of calculated values like X (biomass), S (substrate) and P (product).
-    """
-    results: Dict[str, List[float]]
 
 
 class FermentationModel(Module):
@@ -86,16 +112,14 @@ class FermentationModel(Module):
     nonparametric (e.g. neural network, SVM...). Since most (all?) bioprocess models need initial information about
     the process setup, those can be saved in the conditions attribute.
     """
-    # TODO: Design class for conditions instead of using Dicts?
     # (Starting) Conditions of fermentation process to be modeled, e.g. Temperature, pH, Substrate concentration(s)...
-    conditions: TypedDict('conditions', {'S0': float, 'P0': float, 'X0': float, 'time': range, 'pH': float,
-                                         'temp': int})
-    # Organism, to which the model is attached
-    org: Organism
+    conditions: ConditionSet
 
-    def __init__(self, org: Organism, conditions: Dict = randomize_cond()):
+    # Organism, to which the model is attached. NOTE: Existence is implied by Module.
+    # org: Organism
+
+    def __init__(self, org: Organism, conditions: ConditionSet):
         super().__init__(org)
-
         self.conditions = conditions
 
     def clone(self) -> FermentationModel:
@@ -105,36 +129,46 @@ class FermentationModel(Module):
         )
 
 
+
 class MonodModel(FermentationModel):
     """
     This is a class which can be used to describe fermentation processes that follow monod kinetics. To achieve
     this, additional information like the mode of operation and kinetic parameters are stored.
     """
+
+    # Keep a relationship to the Growth module.
+    growth: GrowthBehaviour
+
     # Mode of operation of modeled fermentation process
     # FIXME: (FIXMEs = personal notes) Add fedbatch and continuous mode calculation, possibly further modes
-    operation_mode: Literal['batch', 'fedbatch', 'continuous']
+    operation_mode: OperationMode
+
     # Optional inhibition terms to model different metabolic effects, like product inhibiton, diauxic growth etc.
-    # TODO: Design classes for inhibitions and params instead of using Dict/List?
-    inhibition_terms: Optional[List[Literal['substrate_inhib', 'product_inhib', 'diauxie', 'diffusion_inhib']]]
+    inhibition_terms: List[InhibitionTerm]
+        # NOTE: Optional Lists should usually be replaced by empty lists.
+
     # Kinetic parameters depending on type of model and organism, e.g. maximal growth rate µmax
-    params: Dict[str, float]
-    # (Starting) Conditions of fermentation process to be modeled, e.g. Temperature, pH, Substrate concentration(s)...
-    conditions: TypedDict('conditions', {'S0': float, 'P0': float, 'X0': float, 'time': range, 'pH': float,
-                                         'temp': int})
+    params: ParamSet
 
-    def __init__(self, org: Organism, operation_mode: Literal['batch', 'fedbatch', 'continuous'] = 'batch',
-                 inhibition_terms: List = None, params: Dict = randomize_params(), conditions: Dict = None):
-        super().__init__(org)
-        self.operation_mode = operation_mode
-        if inhibition_terms is not None:
-            self.inhibition_terms = inhibition_terms
+    def __init__(
+            self, org: Organism, growth: GrowthBehaviour,
+            params: ParamSet,
+            conditions: ConditionSet,
+            operation_mode: OperationMode = 'batch',
+            inhibition_terms: List[InhibitionTerm] = [] ):
+        super().__init__( org=org, conditions=conditions )
+        self.growth = growth
         self.params = params
-        if conditions is not None:
-            self.conditions = conditions
+        self.operation_mode = operation_mode
+        self.inhibition_terms = inhibition_terms
 
-    def clone(self) -> MonodModel:
+    def clone(self, growth: GrowthBehaviour) -> MonodModel:
+        """
+        FIXME: Avoid pass-by-reference and copy all values.
+        """
         return MonodModel(
             org=self.org,
+            growth=growth, # Need to use the cloned Growth module.
             operation_mode=self.operation_mode,
             inhibition_terms=self.inhibition_terms,
             params=self.params,
@@ -162,8 +196,8 @@ class MonodModel(FermentationModel):
         start_params:
             Initial process derivatives for first calculation step
         """
-        u0, Yx, k1 = self.params['u0'], self.params['Yx'], self.params['k1']
-        X0, S0 = self.conditions['X0'], self.conditions['S0']
+        u0, Yx, k1 = self.params.u0, self.params.Yx, self.params.k1
+        X0, S0 = self.conditions.X0, self.conditions.S0
 
         if self.operation_mode == 'batch':
             rX0 = u0 * X0                       # initial rate of change for biomass (X)
@@ -186,7 +220,7 @@ class MonodModel(FermentationModel):
 
         return start_params
 
-    def calculate_monod(self) -> FermentationOutcome:
+    def calculate_monod(self) -> FermentationResult:
         """
         Calculates monod kinetics for current model instance.
 
@@ -198,45 +232,56 @@ class MonodModel(FermentationModel):
 
         Returns
         -------
-            monod_result:
-                Result of kinetics (X, S, P, µ, rX, rS, rP) as Lists
+            Result of kinetics (X, S, P, µ, rX, rS, rP) as Lists
         """
-        start_values = self.get_start_values()
+        start_values = self.get_start_values() # NOTE: If pedantic, this could be a Dataclass.
         rX, rS, rP = [start_values['rX0']], [start_values['rS0']], [start_values['rP0']]
 
-        Ks, Yx, k1, u, umax = self.params['Ks'], self.params['Yx'], self.params['k1'],\
-            [self.params['u0']], self.params['umax']
+        Ks, Yx, k1, u, umax = self.params.Ks, self.params.Yx, self.params.k1,\
+            [self.params.u0], self.params.umax
 
-        time, S, P, X, temp, pH = self.conditions['time'], [self.conditions['S0']], [self.conditions['P0']],\
-            [self.conditions['X0']], self.conditions['temp'], self.conditions['pH']
+        time, S, P, X, temp, pH = self.conditions.time, [self.conditions.S0], [self.conditions.P0],\
+            [self.conditions.X0], self.conditions.temp, self.conditions.pH
 
         # Adapt umax/k1 for suboptimal pH/Temp.      FIXME: This isnt scientifically backed (literature search needed)!
         # The greater the distance of temperature from optimum (30), the smaller µmax (biomass growth)
-        umax = umax * (1 - (abs(30 - temp) / 100))  # TODO: Get optimal growth rate & temperature from organism?
+        opt_temp = self.growth.opt_growth_temp
+        umax = umax * (1 - (abs(opt_temp - temp) / 100))  # TODO: Get optimal growth rate from organism?
         # The greater the distance of pH from optimum (5), the smaller k1 (product formation rate)
-        k1 = k1 * (1 - (abs(5 - pH) / 100))         # TODO: Get optimal pH from organism?
+        opt_pH = self.growth.opt_growth_ph
+        k1 = k1 * (1 - (abs(opt_pH - pH) / 100))
 
         # Calculate discrete monod kinetics via difference quotients FIXME: add source
         for j in time:
             new_u = umax * S[j - 1] / (Ks + S[j - 1])   # difference quotient of µ
-            u.append(max(0, new_u))
+            if new_u >= 0:
+                u.append(new_u)
+            else:
+                u.append(0)
 
             new_rX = u[j - 1] * X[j - 1]                # difference quotient of Biomass
-            rX.append(max(0, new_rX))
+            if new_rX >= 0:
+                rX.append(new_rX)
+            else:
+                rX.append(0)
             X.append(X[j - 1] + rX[j])                  # New [Biomass]
 
             new_rS = -(rX[j - 1] / Yx)                  # difference quotient of substrate
-            rS.append(max(0, new_rS))
+            if new_rS <= 0:
+                rS.append(new_rS)
+            else:
+                rS.append(0)
             new_S = S[j - 1] + rS[j]
-            S.append(max(0, new_S))
+            if new_S < 0:
+                S.append(0)                             # New [Substrate]
+            else:
+                S.append(new_S)
 
             new_rP = (k1 * u[j]) * X[j]                 # difference quotient of product
-            rP.append(max(0, new_rP))
+            if new_rP >= 0:
+                rP.append(new_rP)
+            else:
+                rP.append(0)
             P.append(P[j - 1] + rP[j])                  # New [Product]
 
-        # Save results as FermentationOutcome
-        results = {'X':  X, 'S':  S, 'P':  P, 'u':  u, 'rX': rX, 'rS': rS, 'rP': rP}
-        # TODO: What is the purpose of outcome and message?
-        monod_result = FermentationOutcome(outcome=True, results=results, message=str(self))
-
-        return monod_result
+        return FermentationResult( X=X, S=S, P=P, u=u, rX=rX, rS=rS, rP=rP )
