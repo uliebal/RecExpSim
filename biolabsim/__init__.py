@@ -12,7 +12,7 @@ from .common import Base, Sequence, PromoterSite, ReadMethod
 
 from .random import set_seed
 
-from .simulation import Strain, HostHasNoStrain, Host, Ecol, FabricatedHost, Pput, Entry, Library
+from .simulation import Strain, HostHasNoStrain, Host, Ecol, FabricatedHost, Pput, Entry, Library, Help_GenomeGenerator
 
 from .shotgun import (
     Assembler, GreedyContigAssembler, RandomAssembler, Scaffold, LocalizedSequence,
@@ -21,6 +21,6 @@ from .shotgun import (
     print_scaffold_as_fastq, print_scaffold, print_assembly_evaluation, print_estimation_evaluation
 )
 
-# from .measurement import ( ) # TODO: Fill in with public methods
+from .measurement import (measure_EnzymeLevel1) # TODO: Fill in with public methods
 
 # from .manipulation import ( ) # TODO: Fill in with public methods
