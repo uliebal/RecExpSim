@@ -81,7 +81,9 @@ def Help_StrainCharacterizer(HostName, GenesDF, Genome_WT, Genome_MT, Model):
     num_cores = multiprocessing.cpu_count()
 #     use_core = min([num_cores, n])
 
-    Result = Parallel(n_jobs=num_cores)(delayed(make_UpdateExpression)(HostName, GenesDF, Genome_WT, Genome_MT, myRct.id) for myRct in Model.reactions)
+#     Result = Parallel(n_jobs=num_cores)(delayed(make_UpdateExpression)(HostName, GenesDF, Genome_WT, Genome_MT, myRct.id) for myRct in Model.reactions)
+    Result = Parallel(n_jobs=num_cores)(delayed(make_UpdateExpression)(HostName, GenesDF, Genome_WT, Genome_MT, myRct) for myRct in GenesDF['RctID'])
+
     RctNew_df = pd.DataFrame(Result)
 
     return RctNew_df
