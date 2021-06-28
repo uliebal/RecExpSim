@@ -9,7 +9,6 @@ def measure_BaseCompare(Seq1, Seq2):
 
 
 # TODO: This file also occurs in `biolabsim.simulation.expression` with a very similar code.
-# Probably the version in expression is more recent.
 def Help_PromoterStrength(Host, Sequence, Scaler=1, Similarity_Thresh=.4, Predict_File=None):
     '''Expression of the recombinant protein.
         Arguments:
