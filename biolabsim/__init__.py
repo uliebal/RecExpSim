@@ -12,7 +12,7 @@ from .common import Base, Sequence, PromoterSite, ReadMethod
 
 from .random import set_seed
 
-from .simulation import Strain, HostHasNoStrain, Host, Ecol, FabricatedHost, Pput, Entry, Library, Help_GenomeGenerator
+from .simulation import Strain, HostHasNoStrain, Host, Ecol, FabricatedHost, Pput, Entry, Library, Help_GenomeGenerator, make_UpdateExpression, Help_StrainCharacterizer, make_DetectRegulatorPromoterMut
 
 from .shotgun import (
     Assembler, GreedyContigAssembler, RandomAssembler, Scaffold, LocalizedSequence,
