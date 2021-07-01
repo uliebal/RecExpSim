@@ -1,5 +1,5 @@
 
-from .fluxes import measure_EnzymeLevel1
+from .fluxes import measure_EnzymeLevel1, measure_EnzymeLevel
 
 from .physiology import (
     Help_TempGrowthExp, Help_MeasurePromoterStrength, Help_ProductionExperiment, Help_GrowthConstant,

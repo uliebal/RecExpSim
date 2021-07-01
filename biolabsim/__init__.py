@@ -21,6 +21,6 @@ from .shotgun import (
     print_scaffold_as_fastq, print_scaffold, print_assembly_evaluation, print_estimation_evaluation
 )
 
-from .measurement import (measure_EnzymeLevel1) # TODO: Fill in with public methods
+from .measurement import (measure_EnzymeLevel1, measure_EnzymeLevel) # TODO: Fill in with public methods
 
 # from .manipulation import ( ) # TODO: Fill in with public methods
