@@ -1,7 +1,7 @@
 
 from copy import deepcopy
 from ..simulation.strain import Strain
-from ..simulation.metabolism import make_DetectRegulatorPromoterMut
+# from ..simulation.metabolism import make_DetectRegulatorPromoterMut
 
 
 def measure_EnzymeLevel1(HostName:str, StrainWT:Strain, StrainMut:Strain):
@@ -44,27 +44,3 @@ def measure_EnzymeLevel1(HostName:str, StrainWT:Strain, StrainMut:Strain):
     return RctNewDF, Set_Boundary, Expr_Change
 
 
-
-def measure_EnzymeLevel(HostName:str, StrainWT:Strain, StrainMut:Strain):
-    '''
-    The function differences of expression levels of enzymes between two strains.
-    '''
-    import numpy as np
-    from ..simulation.metabolism import Help_StrainCharacterizer
-
-    RefGenDF = StrainWT.genes_df
-    RefGenome = str(StrainWT.genome)
-    MutGenome = str(StrainMut.genome)
-    RefModel = StrainWT.model
-
-    RctNewDF = Help_StrainCharacterizer(HostName, RefGenDF, RefGenome, MutGenome, RefModel)
-    
-    # identifying changes in regulator expression
-    RegNewAr = make_DetectRegulatorPromoterMut(StrainWT, StrainMut, RctNewDF)
-
-    # combining promoter changes enzyme + regulator
-    AllNewAr = RctNewDF['RctFlag'].values | RegNewAr
-    AllNewDF = deepcopy(RctNewDF)
-    AllNewDF['RctFlag'] = AllNewAr  
-
-    return AllNewDF

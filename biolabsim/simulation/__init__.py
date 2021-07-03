@@ -9,6 +9,6 @@ from .library import Entry, Library
 
 from .genome import Help_GenomeGenerator
 
-from .expression import make_UpdateExpression
+from .expression import make_UpdateExpression, Help_PromoterStrength
 
-from .metabolism import Help_StrainCharacterizer, make_DetectRegulatorPromoterMut
+from .metabolism import Help_StrainCharacterizer, Help_Expr2Flux

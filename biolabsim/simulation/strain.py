@@ -65,7 +65,7 @@ class WildtypeStrain (Strain) :
 
         self.genes_df = Help_GeneAnnotator(host_name, self.model)
         self.genes_df['Fluxes'], self.objective = Help_FluxCalculator(host_name, self)
-        self.genes_df['Expr2Flux'] = Help_Expr2Flux(self.genes_df)
+        self.genes_df['Expr2Flux'] = Help_Expr2Flux(self.genes_df['Fluxes'], self.genes_df['Expression'])
 
         wt_genome = Help_GenomeGenerator(self.genes_df, genome_size, genome_gc_content)
         self.genome = Sequence(wt_genome)
