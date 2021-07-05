@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import numpy as np
+from pandas.core.frame import DataFrame
 from cobra.io import read_sbml_model
 from typing import TYPE_CHECKING
+from copy import deepcopy
 
 if TYPE_CHECKING: # Avoid circular dependencies because of typing.
     from .host import Host
@@ -129,15 +131,16 @@ def Help_FluxCalculator ( HostName:str, StrainWT:Strain, StrainMut:Optional[Stra
 
     return Fluxes.fluxes.values, Fluxes.objective_value
 
-def Help_Expr2Flux(GenesDF):
+def Help_Expr2Flux(Fluxes, Expression):
     '''
     Function to correlate expression strength with flux.
     Input:
-        GenesDF:        DataFrame, details of enzymes
+        Fluxes:        np-array, flux values from reference GSMM cobrapy
+        Expression:    np-array, expression values from reference promoter
     Output:
         Corr_ExprFlux:  array, correlation factor
     '''
-    Corr_ExprFlux = GenesDF['Fluxes'].values/GenesDF['Expression'].values
+    Corr_ExprFlux = Fluxes/Expression
 
     return Corr_ExprFlux
 
@@ -155,3 +158,19 @@ def make_AdaptModel(StrainID):
 
     return Model
 
+
+# def make_DetectRegulatorPromoterMut(StrainWt:Strain, StrainMut:Strain, RctNewDF:DataFrame):
+# #     for obj in (StrainWt, StrainMut):
+# #         assert isinstance(obj, Strain), 'wrong strain type: must be Strain'
+# #     assert isinstance(RctNewDF, DataFrame), 'ReactNewDF of wrong type: input dataframe'
+#     GenesDF = StrainWt.genes_df
+#     # finding regulators in GenesDF
+#     myRegIndx = GenesDF[GenesDF['RegType'] != 0].index.values
+#     # finding index of regulators with changes in the promoter
+#     RegUpdatePromIndx = myRegIndx[RctNewDF.loc[myRegIndx, 'RctFlag'].values]
+#     # finding name of regulators with changes in the promoter
+#     RegUpdatePromName = RctNewDF.loc[RegUpdatePromIndx, 'RctID'].values
+#     # finding enzymes regulated by regulator
+#     EnzUpdateReguIndx = GenesDF['TF_regulated'].isin(RegUpdatePromName)
+    
+#     return EnzUpdateReguIndx

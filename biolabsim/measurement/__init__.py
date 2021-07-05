@@ -6,4 +6,4 @@ from .physiology import (
     Growth_Maxrate, Express_Max
 )
 
-from .sequencing import measure_BaseCompare
+from .sequencing import measure_BaseCompare, Help_PromoterStrength

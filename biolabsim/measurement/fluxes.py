@@ -1,5 +1,7 @@
 
+from copy import deepcopy
 from ..simulation.strain import Strain
+# from ..simulation.metabolism import make_DetectRegulatorPromoterMut
 
 
 def measure_EnzymeLevel1(HostName:str, StrainWT:Strain, StrainMut:Strain):
@@ -40,3 +42,5 @@ def measure_EnzymeLevel1(HostName:str, StrainWT:Strain, StrainMut:Strain):
     Set_Boundary = {'lower': np.hstack([PosIncInd,NegDecInd]),'upper': np.hstack([PosDecInd,NegIncInd])}
 
     return RctNewDF, Set_Boundary, Expr_Change
+
+

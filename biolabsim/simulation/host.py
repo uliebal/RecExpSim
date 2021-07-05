@@ -87,6 +87,18 @@ class Host:
 
         return new_host
 
+    def clone_identical ( self, name:str ) -> 'Host' :
+        """
+        Will return a strain identical but independent to the original host.
+        """
+        if self.strain is None :
+            raise HostHasNoStrain()
+
+        # Copy this host and change the mutated pieces.
+        new_host = deepcopy(self) # Shallow copy because strain is re-created.
+            # TODO: If there are problems of Dataframes being mutated in_place, change this to deep copy.
+
+        return new_host
 
 
     def get_genome ( self ) -> Sequence :
