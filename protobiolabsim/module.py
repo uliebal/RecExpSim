@@ -43,3 +43,9 @@ class Module (ABC) :
 
     def clone ( self ) -> Module :
         raise Exception("Cloning not implemented for module '{}'.".format(type(self).__name__))
+
+
+
+class ModuleException (Exception) :
+    """ Exception that is triggered when a module cannot be created. """
+    pass

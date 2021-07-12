@@ -95,3 +95,9 @@ class Organism :
     def make_generator ( self ) -> Generator :
         """ Construct a random number generator with the same seed stored in the organism. """
         return Generator(PCG64( self.seed_sequence ))
+
+
+
+class OrganismException (Exception) :
+    """ Exception that is triggered when a Organism cannot be created. """
+    pass

@@ -24,12 +24,12 @@ class CraftedGene (Gene) :
         self._orf = orf
         self._prom = prom
 
-    def clone ( self ) -> CraftedGene :
-        return CraftedGene(
-            name=self._name,
-            orf=self._orf, # Can pass because Seq is immutable.
-            prom=self._prom, # Can pass because Seq is immutable.
-        )
+    # def clone ( self ) -> CraftedGene :
+    #     return CraftedGene(
+    #         name=self._name,
+    #         orf=self._orf, # Can pass because Seq is immutable.
+    #         prom=self._prom, # Can pass because Seq is immutable.
+    #     )
 
     @property
     def name ( self ) -> str :

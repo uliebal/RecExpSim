@@ -2,51 +2,77 @@
 from __future__ import annotations
 from Bio.Seq import Seq
 
-from protobiolabsim.catalog.complete import CompleteExperiment, CompleteOrganism
-from protobiolabsim.extensions.genome.records.crafted_gene import CraftedGene
+# Use biolabsim from parent folder.
+import os
+import sys
+sys.path.append( os.path.abspath(os.path.join('.')) )
+sys.path.append( os.path.abspath(os.path.join('..')) )
 
-exp = CompleteExperiment()
+from protobiolabsim.catalog.recexpsim2 import RecExperiment2, Ecol
+from protobiolabsim.extensions.records.gene.crafted_gene import CraftedGene
+
+exp = RecExperiment2()
 
 # Org 1 has a single gene.
 
-org1 = CompleteOrganism( exp=exp )
+org1 = Ecol( exp=exp )
+org1.print_status()
 
-gen1 = CraftedGene( name="Cx76", orf=Seq("AACTGGT"), prom=Seq("TTCGT") )
+gen1 = CraftedGene( name="Cx76", orf=Seq("ATGAACTGGTTACCGGATCGCTTATCGCTACG"), prom=Seq("TTCGTG") )
+org1.genome.insert_gene( gene=gen1, loc=20 ) # Model import would call multiple insert gene.
+org1.print_status()
 
-org1.insert_gene( gen1 ) # Model import would call multiple insert gene.
+gen2 = CraftedGene( name="Bh44", orf=Seq("ATGTGGTCTATGCATTTATG"), prom=Seq("CCCGGGCCC") )
+org1.genome.insert_gene( gene=gen2, loc=70 ) # Model import would call multiple insert gene.
+org1.print_status()
 
-print( "Organism 1 DNA: {}".format( org1.genseq.print_sequence() ) )
+gen3 = CraftedGene( name="Pre6", orf=Seq("ATGTTATTAG"), prom=Seq("GCG") )
+org1.genome.insert_gene( gene=gen3, loc=10 ) # Model import would call multiple insert gene.
+org1.print_status()
+
+gen4 = CraftedGene( name="X7", orf=Seq("ATGTATAGT"), prom=Seq("TAATAG") )
+org1.genome.insert_gene( gene=gen4, loc=50 ) # Model import would call multiple insert gene.
+org1.print_status()
+
+pri = Seq("CGGGT")
+matches = org1.genome.calc_primer_matches(pri)
+print("Primer Matches:\n" + "\n".join([ "  > {} | {}:{}".format( m.success, m.loc_start, m.loc_end ) for m in matches ]))
+
+pri = pri
+gen5 = CraftedGene( name="Cx76", orf=Seq("TTTTTTTTTTT"), prom=Seq("GCCCATTGACAAGGCTCTCGCGGCCAGGTATAATTGCACG") )
+( org2, outcome ) = org1.clone_with_recombination( primer=pri, gene=gen5, tm=25 )
+print("Org2 Cloning Outcome: " + str(outcome))
+org2.print_status()
 
 
 
 
 
+# # Org 2 has an additional gene.
 
-# Org 2 has an additional gene.
+# gen2 = CraftedGene( name="Hut3", orf=Seq("GGGTTG"), prom=Seq("CCT") )
 
-gen2 = CraftedGene( name="Hut3", orf=Seq("GGGTTG"), prom=Seq("CCT") )
+# org2 = org1.clone()
 
-org2 = org1.clone()
+# org2.insert_gene( gen2 )
 
-org2.insert_gene( gen2 )
+# print( "Organism 2 DNA: {}".format( org2.genseq.print_sequence() ) )
 
-print( "Organism 2 DNA: {}".format( org2.genseq.print_sequence() ) )
+# # Org 3 has a mutation on the second gene.
 
-# Org 3 has a mutation on the second gene.
+# gen3 = gen2.make_variant( orf_loc=3, orf_sub="A" )
 
-gen3 = gen2.make_variant( orf_loc=3, orf_sub="A" )
+# org3 = org2.clone()
 
-org3 = org2.clone()
+# org3.replace_gene( gen2, gen3 )
 
-org3.replace_gene( gen2, gen3 )
+# print( "Organism 3 DNA: {}".format( org3.genseq.print_sequence() ) )
 
-print( "Organism 3 DNA: {}".format( org3.genseq.print_sequence() ) )
+# # Show the gene registry.
 
-# Show the gene registry.
-
-# print("Gene Registry:")
-# for gene in exp.gene_reg.records :
-#     print("  {}  {}  {}".format(gene.get_name(),gene.get_prom(),gene.get_orf()))
+# # print("Gene Registry:")
+# # for gene in exp.gene_reg.records :
+# #     print("  {}  {}  {}".format(gene.get_name(),gene.get_prom(),gene.get_orf()))
 
 
 

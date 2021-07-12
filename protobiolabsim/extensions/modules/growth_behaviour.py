@@ -57,7 +57,6 @@ class GrowthBehaviour ( Module ) :
             org=org,
             opt_growth_temp= self.opt_growth_temp,
             max_biomass= self.max_biomass,
-            exp_suc_rate= self.exp_suc_rate,
         )
 
 

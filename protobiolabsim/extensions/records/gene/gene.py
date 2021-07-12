@@ -19,10 +19,9 @@ class Gene ( Record, ABC ) :
     def __init__ ( self ) :
         pass
 
-    @abstractmethod
-    def clone ( self ) -> Gene :
-        pass
-
+    # @abstractmethod
+    # def clone ( self ) -> Gene :
+    #     pass
 
     @property
     @abstractmethod
@@ -39,7 +38,3 @@ class Gene ( Record, ABC ) :
     def orf ( self ) -> Seq :
         pass
 
-
-    @abstractmethod
-    def make_variant ( self, orf_loc:int, orf_sub=Seq ) -> Gene :
-        pass

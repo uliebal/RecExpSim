@@ -33,12 +33,14 @@ def Sequence_ReferenceDistance(SeqObj, RefSeq):
 
 
 
-def check_recombination (Promoter:Seq, Primer:Seq, Tm:int, RefPromoter:Seq, OptPrimerLen:int) -> OperationOutcome :
-    '''Experiment to clone selected promoter. Return whether the experiment was successfull.'''
+def check_primer_integrity (Promoter:Seq, Primer:Seq, Tm:int, RefPromoter:Seq, OptPrimerLen:int) -> OperationOutcome :
+    '''
+    Experiment to clone selected promoter. Return whether the experiment was successful.
+    '''
     import numpy as np
 
     if Sequence_ReferenceDistance(Promoter, RefPromoter) > .4:
-        return (False, 'Promoter sequence deviates too much from the given structure.')
+        return OperationOutcome(False,'Promoter sequence deviates too much from the given structure.')
 
     NaConc = 0.1 # 100 mM source: https://www.genelink.com/Literature/ps/R26-6400-MW.pdf (previous 50 mM: https://academic.oup.com/nar/article/18/21/6409/2388653)
     AllowDevi = 0.2 # allowed deviation
@@ -70,28 +72,18 @@ def check_recombination (Promoter:Seq, Primer:Seq, Tm:int, RefPromoter:Seq, OptP
     PrimerComp = Primer.complement()
 
     if DeviLen <= AllowDevi and DeviTm <= AllowDevi/2 and Primer_Length <= 30 and PrimerComp == Promoter[:len(Primer)]:
-        return (True, 'Cloning was successfull.')
+        return OperationOutcome(True, 'All good')
 
     if not DeviLen <= AllowDevi :
-        return (False, 'Primer length deviation too big.')
+        return OperationOutcome(False, 'Primer length deviation too big.')
     if not DeviTm <= AllowDevi/2 :
-        return (False, 'Temperature deviation too big.')
+        return OperationOutcome(False, 'Temperature deviation too big.')
     if not Primer_Length <= 30 :
-        return (False, 'Primer length too big.')
+        return OperationOutcome(False, 'Primer length too big.')
     if not PrimerComp == Promoter[:len(Primer)] :
-        return (False, 'Primer not compatible with promoter.')
+        return OperationOutcome(False, 'Primer not compatible with promoter.')
 
-    return (False, 'Cloning failed')
-
-
-
-
-
-def check_primer_integrity ( primer:Seq ) -> Tuple[bool,str] :
-    """ Non-deterministic check if the primer itself is well built. """
-    return (True, "Primer is good.")
-
-
+    return OperationOutcome(False, 'Cloning failed')
 
 
 
