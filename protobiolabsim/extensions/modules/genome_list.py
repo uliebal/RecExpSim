@@ -1,5 +1,5 @@
 """
-GenomeLibrary is a module that stores the multiple genes an Organism may have.
+GenomeList is a module that stores the multiple genes an Organism may have.
 
 """
 
@@ -17,7 +17,7 @@ from ..utils import Help_PromoterStrength
 
 
 
-class GenomeLibrary ( Module ) :
+class GenomeList ( Module ) :
 
     genes: set[Gene]
 

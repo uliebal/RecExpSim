@@ -12,7 +12,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from ...common import OperationOutcome
+from ...common import Outcome
 from ...random import pick_uniform, pick_normal
 from ...organism import Organism
 from ...module import Module
@@ -33,7 +33,8 @@ class GenomeExpression ( Module ) :
     opt_primer_len: int
 
     # Factor which influences the range of the promoter strength. TODO: These characteristics maybe go elsewhere.
-    infl_prom_streng : int
+    infl_prom_streng : float
+    species_prom_streng : float
 
     # Path to parameter files. TODO: use Paths.
     regressor_file:str
@@ -43,7 +44,7 @@ class GenomeExpression ( Module ) :
 
     def __init__ (
         self, org:Organism, genlib:GenomeLibrary,
-        opt_primer_len:int, infl_prom_streng:int, regressor_file:str, addparams_file:str,
+        opt_primer_len:int, infl_prom_streng:float, species_prom_streng:float, regressor_file:str, addparams_file:str,
     ) :
         super().__init__(org)
 
@@ -51,6 +52,7 @@ class GenomeExpression ( Module ) :
 
         self.opt_primer_len = opt_primer_len
         self.infl_prom_streng = infl_prom_streng
+        self.species_prom_streng = species_prom_streng
         self.regressor_file = regressor_file
         self.addparams_file = addparams_file
 
@@ -65,13 +67,10 @@ class GenomeExpression ( Module ) :
             genlib= self.genlib,
             opt_primer_len= self.opt_primer_len,
             infl_prom_streng= self.infl_prom_streng,
+            species_prom_streng= self.species_prom_streng,
             regressor_file= self.regressor_file,
             addparams_file= self.addparams_file,
         )
-
-
-
-
 
 
 

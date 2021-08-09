@@ -1,7 +1,7 @@
 """
-WIP - Work in Progress
-This Module tries to fuse both the gene list and sequence together.
-Changes to one will affect the other part.
+GenomeLibrary is a more complex version of GenomeList:
+ - support for genome sequences
+ - genes are located inside the sequence
 """
 
 
@@ -172,13 +172,16 @@ def check_primer_integrity ( primer:Seq ) -> bool :
 
 
 def find_best_primer_match ( sequence:Seq, primer:Seq ) -> Optional[PrimerMatch] :
-    """ Find best match for a template sequence. """
+    """ Find best match for a template sequence.
+    TODO: Primer matching is dependent on organism. algo_params:Optional[Dict] = None
+    """
 
     # The primer matches with the complement sequence.
     comp_seq = sequence.complement()
 
     # Build the aligner for matching.
     aligner = PairwiseAligner()
+    #aligner = extend( aligner, algo_params )
     aligner.mode = 'global' # target_end_gap_score, query_end_gap_score
     aligner.match_score = 1
     aligner.mismatch_score = -1

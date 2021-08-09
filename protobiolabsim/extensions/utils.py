@@ -8,7 +8,7 @@ from typing import Tuple
 from Bio.Seq import Seq
 
 from ..random import pick_uniform
-from ..common import OperationOutcome
+from ..common import Outcome
 from .records.gene.gene import Gene
 
 
@@ -33,14 +33,15 @@ def Sequence_ReferenceDistance(SeqObj, RefSeq):
 
 
 
-def check_primer_integrity (Promoter:Seq, Primer:Seq, Tm:int, RefPromoter:Seq, OptPrimerLen:int) -> OperationOutcome :
+def check_primer_integrity_and_recombination (Promoter:Seq, Primer:Seq, Tm:int, RefPromoter:Seq, OptPrimerLen:int) -> Outcome :
     '''
     Experiment to clone selected promoter. Return whether the experiment was successful.
     '''
     import numpy as np
 
     if Sequence_ReferenceDistance(Promoter, RefPromoter) > .4:
-        return OperationOutcome(False,'Promoter sequence deviates too much from the given structure.')
+        return Outcome
+    (False, 'Promoter sequence deviates too much from the given structure.')
 
     NaConc = 0.1 # 100 mM source: https://www.genelink.com/Literature/ps/R26-6400-MW.pdf (previous 50 mM: https://academic.oup.com/nar/article/18/21/6409/2388653)
     AllowDevi = 0.2 # allowed deviation
@@ -72,18 +73,24 @@ def check_primer_integrity (Promoter:Seq, Primer:Seq, Tm:int, RefPromoter:Seq, O
     PrimerComp = Primer.complement()
 
     if DeviLen <= AllowDevi and DeviTm <= AllowDevi/2 and Primer_Length <= 30 and PrimerComp == Promoter[:len(Primer)]:
-        return OperationOutcome(True, 'All good')
+        return Outcome
+    (True)
 
     if not DeviLen <= AllowDevi :
-        return OperationOutcome(False, 'Primer length deviation too big.')
+        return Outcome
+    (False, 'Primer length deviation too big.')
     if not DeviTm <= AllowDevi/2 :
-        return OperationOutcome(False, 'Temperature deviation too big.')
+        return Outcome
+    (False, 'Temperature deviation too big.')
     if not Primer_Length <= 30 :
-        return OperationOutcome(False, 'Primer length too big.')
+        return Outcome
+    (False, 'Primer length too big.')
     if not PrimerComp == Promoter[:len(Primer)] :
-        return OperationOutcome(False, 'Primer not compatible with promoter.')
+        return Outcome
+    (False, 'Primer not compatible with promoter.')
 
-    return OperationOutcome(False, 'Cloning failed')
+    return Outcome
+(False, 'Cloning failed')
 
 
 
@@ -91,7 +98,7 @@ def Help_PromoterStrength(
     PromSequence, RefPromoter:str, Scaler=1, Similarity_Thresh=.4, Regressor_File=None, AddParams_File=None
 ) -> float :
     '''
-    TODO: Documentation out of sync.
+    TODO: Some arguments are missing.
     Expression of the recombinant protein.
         Arguments:
             Host:       class, contains optimal growth temperature, production phase
@@ -111,7 +118,7 @@ def Help_PromoterStrength(
         Predictor = joblib.load(Regressor_File)
         Params = pickle.load(open(AddParams_File, 'rb'))
         Positions_removed = Params['Positions_removed']
-#         Expr_Scaler = Params[Scaler_DictName]
+        # Expr_Scaler = Params[Scaler_DictName]
 
         X = np.array(list_onehot(np.delete(list_integer(PromSequence),Positions_removed, axis=0))).reshape(1,-1)
         GC_cont = (PromSequence.count('G') + PromSequence.count('C'))/len(PromSequence)

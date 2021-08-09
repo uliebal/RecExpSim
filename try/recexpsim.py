@@ -78,16 +78,15 @@ print("\nPromoter Strength of {} is: {}".format(NewGene.name, prom_str))
 
 
 # 4.1.3 Measurement of the final vaccine expression rate
-# To perform the production experiment replace None with the Clone_ID variable name of your best performing clone, the optimal growth temperature, the corresponding maximum growth rate and the maximum biomass (in this order).
 # in Make_ProductionExperiment: Clone_ID (string), Opt. Temp (int), Opt. Growth rate (float), Opt. Biomass (int)
 
-# TODO:
-# prod_outcome = good_host.Make_ProductionExperiment(None, None, None, None)
-# print('Final vaccine production rate: {}'.format(prod_outcome.Expression_Rate))
+prod_outcome = good_host.produce_vaccine( gene=NewGene, cult_temp=26, growth_rate=0.81, biomass=50 )
+print('Final vaccine production rate: {} {}'.format( prod_outcome[0], prod_outcome[1] ))
 
 # 4.2.1 Visualization of the results
 # DataFile = 'Production_Experiments.csv'
 # my_data = np.genfromtxt(DataFile, delimiter=',', skip_header=1).reshape(-1,7)
+
 # GCcont, Express = my_data[:,2], my_data[:,6]
 # plt.plot(GCcont,Express, linestyle = '--', marker = 'x', color = 'grey')
 # plt.gca().set(xlabel='GC-cont', ylabel='rel. expression', xlim=(.4,.8), ylim=(0,1))

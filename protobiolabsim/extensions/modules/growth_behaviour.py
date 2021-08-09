@@ -13,43 +13,40 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from ...common import OperationOutcome
+from ...common import Outcome
 from ...random import pick_uniform, pick_normal
 from ...organism import Organism
 from ...module import Module
 from ..records.gene.gene import Gene
 from ..utils import Help_GrowthConstant, Growth_Maxrate
+from .genome_expression import GenomeExpression
 #from .growth_record import Growth
-
-
-
-@dataclass(frozen=True)
-class ProductionOutcome (OperationOutcome) :
-    Expression_Temperature: float
-    Expression_Biomass: float
-    Expression_Rate: float
-
 
 
 
 class GrowthBehaviour ( Module ) :
 
+    # Dependent module Genome Expression holding the genes to express.
+    genexpr: GenomeExpression
+
     opt_growth_temp: int
     max_biomass: int
-    exp_suc_rate: float # This would be better placed in the Catalog.Organism
 
 
     # TODO: I'm not happy about this constructor approach with ref. I don't like that all parameters need
     # to be optional just in case a 'ref' is passed. Maybe do clone(dep_mods,ref) which itself
     # calls the init with all parameters passed by reference. And then deconstruct the 'params' to
     # use kwargs.
-    def __init__ ( self, org:Organism, opt_growth_temp:int, max_biomass:int ) :
+    def __init__ (
+        self, org:Organism, genexpr:GenomeExpression,
+        opt_growth_temp:int, max_biomass:int
+    ) :
         super().__init__(org)
 
-        self.opt_growth_temp = opt_growth_temp # TODO: no validation
-        self.max_biomass = max_biomass # TODO: no validation
-        self.exp_suc_rate = 0.1 # ErrorRate(EquipInvest, self._Mutant__Resources)
+        self.genexpr = genexpr
 
+        self.opt_growth_temp = opt_growth_temp # TODO: no validation
+        self.max_biomass = max_biomass
 
 
     def clone ( self, org:Organism ) -> GrowthBehaviour :
@@ -105,7 +102,7 @@ class GrowthBehaviour ( Module ) :
         #computing of biomass data and updating of DataFrame
         for i in range(len(CultTemps)):
 
-            if pick_uniform(0,1) > self.exp_suc_rate: # experiment failure depending on investment to equipment
+            if pick_uniform(0,1) > self.org.exp.suc_rate: # TODO: Too nested. # experiment failure depending on investment to equipment
                 r = Help_GrowthConstant(OptTemp, CultTemps[i])
                 # the result can reach very small values, which poses downstream problems, hence the lowest value is set to 0.05
                 if r > 0.05: # under process conditions it might be realistic, source : https://www.thieme-connect.de/products/ebooks/pdf/10.1055/b-0034-10021.pdf
@@ -141,61 +138,38 @@ class GrowthBehaviour ( Module ) :
 
 
 
+    def Make_ProductionExperiment ( self, gene:Gene, CultTemp, GrowthRate, Biomass, ref_prom:str, accuracy_Test=.9 ) -> Outcome :
+        """
+        Return
+        ======
+        [ expression_rate, error_text ]
+        """
+        growth_const = Help_GrowthConstant(self.opt_growth_temp, self.opt_growth_temp)
+
+        # testing whether the determined maximum biomass and the determined maximum growth rate are close to the actual ones
+        if not (
+            1 - np.abs(Biomass-self.max_biomass) / self.max_biomass > accuracy_Test
+            and 1 - np.abs(GrowthRate-growth_const) / growth_const > accuracy_Test
+        ) :
+            return Outcome( 0, 'Maximum biomass and/or maximum growth rate are incorrect.' )
+
+        # Growth rate was only checked, for the calculation the rate resulting from the temperature is used
+        r = Help_GrowthConstant(self, CultTemp)
+        GrowthMax = Growth_Maxrate(r, Biomass)
+        PromStrength = self.genexpr.calc_prom_str( gene=gene, ref_prom=ref_from )
+        AbsRate = round(GrowthMax * PromStrength,2)
+        FinalRelRate = round(AbsRate/Calc_MaxExpress(self),2)
+        return Outcome( FinalRelRate )
 
 
 
-# TODO: Finish ProductionExperiment
-# Integrate as much as possible from utils into the modules.
-
-
-#     def Make_ProductionExperiment(self, gene:Gene, CultTemp, GrowthRate, Biomass, accuracy_Test=.9) -> ProductionOutcome :
-
-
-#                     if pick_uniform(0,1) > self.exp_suc_rate:
-#                         growth_const = Help_GrowthConstant(self.opt_growth_temp, self.opt_growth_temp)
-#                         # testing whether the determined maximum biomass and the determined maximum growth rate are close to the actual ones
-#                         if (
-#                             1 - np.abs(Biomass-self.max_biomass) / self.max_biomass > accuracy_Test
-#                             and 1 - np.abs(GrowthRate-growth_const) / growth_const > accuracy_Test
-#                         ) :
-#                             # Growth rate was only checked, for the calculation the rate resulting from the temperature is used
-#                             r = Help_GrowthConstant(self, CultTemp)
-#                             GrowthMax = Growth_Maxrate(r, Biomass)
-#                             PromStrength = calc_prom_str ( self, gene:Gene, ref_prom:str ) -> float :
-#                             AbsRate = round(GrowthMax * self.var_Library[Clone_ID]['Promoter_Strength'],2)
-#                             FinalRelRate = round(AbsRate/Calc_MaxExpress(self),2)
-#                             self.var_Library[Clone_ID]['Expression_Rate'] = FinalRelRate
-#                             return ProductionOutcome(
-#                                 outcome=True,
-#                                 Expression_Temperature=CultTemp,
-#                                 Expression_Biomass=Biomass,
-#                                 Expression_Rate=FinalRelRate
-#                             )
-#                         else:
-#                             print('Maximum biomass and/or maximum growth rate are incorrect.')
-#                     else:
-#                         print('Experiment failed, bad equipment.')
-#                 else:
-#                     print('Error, Clone ID does not exist. Choose existing Clone ID.')
-#             else:
-#                 print('Error, no promoter sequence has been cloned and tested yet. Perform a cloning first and then test the expression with "Make_MeasurePromoterStrength(Clone_ID)".')
-
-#         else:
-#             Error_Resources()
-
-
-
-
-# def Calc_MaxExpress(self):
-#     '''Function to calculate the maximum possible expression rate.'''
-#     BiomassMax = self.max_biomass
-#     OptTemp = self.opt_growth_temp
-#     factor = self._Mutant__InflProStreng
-#     # Values see init function at the beginning
-#     if self.var_Host == 'Ecol':
-#         MaximumPromoterStrength = round(0.057 * factor,2)
-#     elif self.var_Host == 'Pput':
-#         MaximumPromoterStrength = round(0.04 * factor,2)
-#     r = Help_GrowthConstant(self, OptTemp)
-#     GrowthMax = Growth_Maxrate(r, BiomassMax)
-#     return round(GrowthMax * MaximumPromoterStrength,2)
+    def Calc_MaxExpress (self) -> float :
+        '''Function to calculate the maximum possible expression rate.'''
+        BiomassMax = self.max_biomass
+        OptTemp = self.opt_growth_temp
+        factor = self.genexpr.infl_prom_streng
+        species_str = self.genexpr.species_prom_streng
+        MaximumPromoterStrength = round(0.057 * factor,2)
+        r = Help_GrowthConstant(self, OptTemp)
+        GrowthMax = Growth_Maxrate(r, BiomassMax)
+        return round(GrowthMax * MaximumPromoterStrength,2)

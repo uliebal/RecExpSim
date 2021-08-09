@@ -35,8 +35,9 @@ org1.genome.insert_gene( gene=gen4, loc=50 ) # Model import would call multiple 
 org1.print_status()
 
 pri = Seq("CGGGT")
+print("Want to use primer: " + pri)
 matches = org1.genome.calc_primer_matches(pri)
-print("Primer Matches:\n" + "\n".join([ "  > {} | {}:{}".format( m.success, m.loc_start, m.loc_end ) for m in matches ]))
+print("Primer Matches:\n" + "\n".join([ "  > success {} | locus {}:{}".format( m.success, m.loc_start, m.loc_end ) for m in matches ]))
 
 pri = pri
 gen5 = CraftedGene( name="Cx76", orf=Seq("TTTTTTTTTTT"), prom=Seq("GCCCATTGACAAGGCTCTCGCGGCCAGGTATAATTGCACG") )
