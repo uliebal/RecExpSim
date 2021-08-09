@@ -15,7 +15,7 @@ import pandas as pd
 
 from ...common import Outcome
 from ...random import pick_uniform, pick_normal
-from ...organism import Organism
+from ...host import Host
 from ...module import Module
 from ..records.gene.gene import Gene
 from ..utils import Help_GrowthConstant, Growth_Maxrate
@@ -38,10 +38,10 @@ class GrowthBehaviour ( Module ) :
     # calls the init with all parameters passed by reference. And then deconstruct the 'params' to
     # use kwargs.
     def __init__ (
-        self, org:Organism, genexpr:GenomeExpression,
+        self, host:Host, genexpr:GenomeExpression,
         opt_growth_temp:int, max_biomass:int
     ) :
-        super().__init__(org)
+        super().__init__(host)
 
         self.genexpr = genexpr
 
@@ -49,9 +49,9 @@ class GrowthBehaviour ( Module ) :
         self.max_biomass = max_biomass
 
 
-    def clone ( self, org:Organism ) -> GrowthBehaviour :
+    def clone ( self, host:Host ) -> GrowthBehaviour :
         return GrowthBehaviour(
-            org=org,
+            host=host,
             opt_growth_temp= self.opt_growth_temp,
             max_biomass= self.max_biomass,
         )
@@ -62,8 +62,8 @@ class GrowthBehaviour ( Module ) :
         """
         TODO: Ideally, growth should return a table with enough information to contain the
         biomass results and to infer the loading times. Loading times is a synthetic construct
-        that should be contained in the Organism, while the Module should only contain efficient
-        calculations. The Organism is an API for the User and may add interaction such as
+        that should be contained in the Host, while the Module should only contain efficient
+        calculations. The Host is an API for the User and may add interaction such as
         Resource management and loading times.
         """
         CultTemps = np.array(CultTemps)
@@ -102,7 +102,7 @@ class GrowthBehaviour ( Module ) :
         #computing of biomass data and updating of DataFrame
         for i in range(len(CultTemps)):
 
-            if pick_uniform(0,1) > self.org.exp.suc_rate: # TODO: Too nested. # experiment failure depending on investment to equipment
+            if pick_uniform(0,1) > self.host.exp.suc_rate: # TODO: Too nested. # experiment failure depending on investment to equipment
                 r = Help_GrowthConstant(OptTemp, CultTemps[i])
                 # the result can reach very small values, which poses downstream problems, hence the lowest value is set to 0.05
                 if r > 0.05: # under process conditions it might be realistic, source : https://www.thieme-connect.de/products/ebooks/pdf/10.1055/b-0034-10021.pdf
@@ -111,7 +111,7 @@ class GrowthBehaviour ( Module ) :
                     duration = Exp_Duration
                 t = np.arange(np.minimum(Exp_Duration, duration))
 
-                # biomass data is calculated according to https://en.wikipedia.org/wiki/Logistic_function
+                # biomass data is calculated according to https://en.wikipedia.host/wiki/Logistic_function
                 mu = capacity / (1 + (capacity-P0) / P0 * np.exp(-r * t))
                 sigma = 0.1*mu
 

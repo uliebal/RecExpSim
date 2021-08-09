@@ -1,6 +1,6 @@
 """
 A newer version of the RecExpSim Catalog with some differences:
-  - The organism has a full sequence (of genes and background)
+  - The host has a full sequence (of genes and background)
   - Gene insertion is done via cutting sites and primer matching
 """
 
@@ -15,7 +15,7 @@ from ..random import pick_integer
 from ..utils import Help_Progressbar
 from ..experiment import Experiment
 from ..registry import Registry
-from ..organism import Organism, OrganismException
+from ..host import Host, HostException
 
 from ..config import DATADIR
 from ..extensions.modules.growth_behaviour import GrowthBehaviour
@@ -33,7 +33,7 @@ class RecExperiment2 (Experiment) :
 
 
 
-class RecOrganism2 (Organism) :
+class RecHost2 (Host) :
 
     growth: GrowthBehaviour
 
@@ -63,38 +63,38 @@ class RecOrganism2 (Organism) :
         if genome is not None :
             self.genome = genome
         elif all( arg is not None for arg in [ bg_size, bg_gc_content ] ) :
-            self.genome = GenomeLibrary( org=self, bg_size=bg_size, bg_gc_content=bg_gc_content )
+            self.genome = GenomeLibrary( host=self, bg_size=bg_size, bg_gc_content=bg_gc_content )
         else :
-            raise OrganismException("GenomeLibrary module cannot be initialized for this Organism")
+            raise HostException("GenomeLibrary module cannot be initialized for this Host")
 
         # Initialize GrowthBehaviour module.
         if growth is not None :
             self.growth = growth
         elif all( arg is not None for arg in [ opt_growth_temp, max_biomass ] ) :
-            self.growth = GrowthBehaviour( org=self,
+            self.growth = GrowthBehaviour( host=self,
                 opt_growth_temp=opt_growth_temp, max_biomass=max_biomass
             )
         else :
-            raise OrganismException("GrowthBehaviour module cannot be initialized for this Organism")
+            raise HostException("GrowthBehaviour module cannot be initialized for this Host")
 
         # Initialize GenomeExpression module.
         if genexpr is not None :
             self.genexpr = genexpr
         elif all( arg is not None for arg in [ bg_size, bg_gc_content ] ) :
-            self.genexpr = GenomeExpression( org=self, genlib=self.genome,
+            self.genexpr = GenomeExpression( host=self, genlib=self.genome,
                 opt_primer_len=opt_primer_len, infl_prom_streng=infl_prom_streng,
                 regressor_file=regressor_file, addparams_file=addparams_file
             )
         else :
-            raise OrganismException("GenomeExpression module cannot be initialized for this Organism")
+            raise HostException("GenomeExpression module cannot be initialized for this Host")
 
 
-    def clone ( self ) -> RecOrganism2 :
+    def clone ( self ) -> RecHost2 :
         """
         TODO: Not sure how I like this cloning. I need to get into deep properties like
             `self.growth.opt_growth_temp` to re-create the modules. I want to call `module.clone`.
         """
-        return RecOrganism2(
+        return RecHost2(
             exp=self.exp,
             genome=self.genome.clone(self),
             growth=self.growth.clone(self),
@@ -104,7 +104,7 @@ class RecOrganism2 (Organism) :
 
 
     def print_status ( self, width:int=1000 ) -> None :
-        print("Organism Information:")
+        print("Host Information:")
 
         print("  opt_growth_temp = {}".format( self.growth.opt_growth_temp ))
         print("  max_biomass = {}".format( self.growth.max_biomass ))
@@ -165,32 +165,32 @@ class RecOrganism2 (Organism) :
 
 
 
-    def clone_with_recombination ( self, primer:Seq, gene:Gene, tm:int ) -> Tuple[Organism,str] :
+    def clone_with_recombination ( self, primer:Seq, gene:Gene, tm:int ) -> Tuple[Host,str] :
         """
-        Clone the organism while trying to insert a gene. The Clone might or might not contain
+        Clone the host while trying to insert a gene. The Clone might or might not contain
         the added Gene.
-        Returns: ( cloned_organism, outcome_message )
+        Returns: ( cloned_host, outcome_message )
         """
 
         # A clone is always made.
-        cloned_org = self.clone()
+        cloned_host = self.clone()
 
         ref_prom = 'GCCCATTGACAAGGCTCTCGCGGCCAGGTATAATTGCACG'
         primer_integrity = check_primer_integrity(gene.prom, primer, tm, ref_prom, self.genexpr.opt_primer_len)
         if primer_integrity.success == False :
-            return ( cloned_org, "Primer Failed: " + primer_integrity.error )
+            return ( cloned_host, "Primer Failed: " + primer_integrity.error )
 
-        matches = cloned_org.genome.calc_primer_matches(primer)
+        matches = cloned_host.genome.calc_primer_matches(primer)
         if len(matches) == 0 :
-            return ( cloned_org, "No insertion sites matched." )
+            return ( cloned_host, "No insertion sites matched." )
 
         # Both primer integrity and recombination succeeded. Insert the new gene into all
         # insertion sites with good enough matching.
         for match in matches :
             if match.success > 0.5 :
-                cloned_org.genome.insert_gene(gene, match.loc_end)
+                cloned_host.genome.insert_gene(gene, match.loc_end)
 
-        return ( cloned_org, "Cloning with recombination succeeded." )
+        return ( cloned_host, "Cloning with recombination succeeded." )
 
 
 
@@ -202,7 +202,7 @@ class RecOrganism2 (Organism) :
 
 
 
-class Ecol (RecOrganism2) :
+class Ecol (RecHost2) :
     def __init__ ( self, exp ) :
         opt_growth_temp = pick_integer(25,40)  # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
         infl_prom_streng = pick_integer(30,50) # explanation see Plot_ExpressionRate
@@ -222,7 +222,7 @@ class Ecol (RecOrganism2) :
 
 
 
-class Pput (RecOrganism2) :
+class Pput (RecHost2) :
     def __init__ ( self, exp ) :
         opt_growth_temp = pick_integer(25,40)  # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
         infl_prom_streng = pick_integer(30,50) # explanation see Plot_ExpressionRate

@@ -1,11 +1,11 @@
 """
-An organism is a unit that can take in any number of organism modules. It serves as the container
+An host is a unit that can take in any number of host modules. It serves as the container
 of all modules and allows for obverser-event communication between the modules. In addition, it is
 capable of properly copying itself and it's modules. It also provides some facilities for
 pseudo-random generation to allow deterministic generation.
 
-In technical terms, the Organism uses composition-over-inheritance to define all behaviours that
-Modules may add to it. In addition to the usual forwarding methods, the Organism is also an
+In technical terms, the Host uses composition-over-inheritance to define all behaviours that
+Modules may add to it. In addition to the usual forwarding methods, the Host is also an
 observable that can be used by each module to communicate with other modules.
 """
 
@@ -13,11 +13,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import List, Callable, NamedTuple, Optional, Type, Dict
 
-from numpy.random import SeedSequence, Generator, PCG64
-
 # from .experiment import Experiment
 from .events import Event
-from .random import pick_integer
+from .random import Generator
 
 
 
@@ -31,51 +29,51 @@ class ListenerEntry ( NamedTuple ) :
 
 
 
-class Organism :
+class Host :
 
     # modules: Dict[str,Module]
-    # def __init__ ( self, exp: Experiment, module_defs: Optional[List[Type[Module]]], ref: Optional[Organism] ) :
+    # def __init__ ( self, exp: Experiment, module_defs: Optional[List[Type[Module]]], ref: Optional[Host] ) :
     #     self.exp = exp
     #     self.listeners = []
     #     if module_defs is not None : # Create new with requested Module types.
     #         for ModDef in module_defs :
-    #             self.modules[ ModDef( org=self ) ]
-    #     elif ref is not None : # Duplicate given a reference Organism.
+    #             self.modules[ ModDef( host=self ) ]
+    #     elif ref is not None : # Duplicate given a reference Host.
     #         for mod in ref.modules :
     #             self.modules[ type(mod) ] = mod.clone(self)
     #     else :
-    #         raise Exception("Attempted to initialize an Organism without a Module definitions nor a reference Organism.")
+    #         raise Exception("Attempted to initialize an Host without a Module definitions nor a reference Host.")
 
     exp: 'Experiment'
 
     listeners: List[ListenerEntry]
 
-    seed_sequence: int
+    rnd_seed: int
 
 
 
-    def __init__ ( self, exp: 'Experiment' ) :
+    def __init__ ( self, exp: 'Experiment', seed:Optional[int]=None ) :
         """
-        Init is responsible to initialize all modules of an organism, may it be new from scratch or
-        by using another organism as a reference.
+        Init is responsible to initialize all modules of an host, may it be new from scratch or
+        by using another host as a reference.
 
         Code from derived classes should be:
 
             super().__init__( exp=exp, ref=ref )
 
-            self.moduleA = Module( org=self )
-            self.moduleB = Module( org=self, depModule=self.moduleA )
+            self.moduleA = Module( host=self )
+            self.moduleB = Module( host=self, depModule=self.moduleA )
         """
-        exp.bind_organism(self)
+        exp.bind_host(self)
         self.exp = exp
         self.listeners = []
-        self.seed_sequence = SeedSequence()
+        self.rnd_seed = seed
 
 
 
-    def clone ( self ) -> Organism :
-        """ Clones a new Organism on the same experiment. """
-        raise Exception("Cloning not implemented for organism '{}'.".format(type(self).__name__))
+    def clone ( self ) -> Host :
+        """ Clones a new Host on the same experiment. """
+        raise Exception("Cloning not implemented for host '{}'.".format(type(self).__name__))
 
 
     def emit ( self, event: Event ) -> None :
@@ -93,11 +91,11 @@ class Organism :
 
 
     def make_generator ( self ) -> Generator :
-        """ Construct a random number generator with the same seed stored in the organism. """
-        return Generator(PCG64( self.seed_sequence ))
+        """ Construct a random number generator with the same seed stored in the host. """
+        return Generator(self.rnd_seed)
 
 
 
-class OrganismException (Exception) :
-    """ Exception that is triggered when a Organism cannot be created. """
+class HostException (Exception) :
+    """ Exception that is triggered when a Host cannot be created. """
     pass

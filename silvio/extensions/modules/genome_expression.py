@@ -14,7 +14,7 @@ import pandas as pd
 
 from ...common import Outcome
 from ...random import pick_uniform, pick_normal
-from ...organism import Organism
+from ...host import Host
 from ...module import Module
 from .genome_library import GenomeLibrary
 from ..records.gene.gene import Gene
@@ -43,10 +43,10 @@ class GenomeExpression ( Module ) :
 
 
     def __init__ (
-        self, org:Organism, genlib:GenomeLibrary,
+        self, host:Host, genlib:GenomeLibrary,
         opt_primer_len:int, infl_prom_streng:float, species_prom_streng:float, regressor_file:str, addparams_file:str,
     ) :
-        super().__init__(org)
+        super().__init__(host)
 
         self.genlib = genlib
 
@@ -56,14 +56,14 @@ class GenomeExpression ( Module ) :
         self.regressor_file = regressor_file
         self.addparams_file = addparams_file
 
-        # self.org.observe( InsertGeneEvent, self.listen_insert_gene )
-        # self.org.observe( RemoveGeneEvent, self.listen_remove_gene )
+        # self.host.observe( InsertGeneEvent, self.listen_insert_gene )
+        # self.host.observe( RemoveGeneEvent, self.listen_remove_gene )
 
 
 
-    def clone ( self, org:Organism ) -> GenomeExpression :
+    def clone ( self, host:Host ) -> GenomeExpression :
         return GenomeExpression(
-            org= org,
+            host= host,
             genlib= self.genlib,
             opt_primer_len= self.opt_primer_len,
             infl_prom_streng= self.infl_prom_streng,

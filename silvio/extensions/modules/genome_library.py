@@ -15,7 +15,7 @@ from Bio.Seq import Seq
 from Bio.Blast.Record import Alignment
 from Bio.Align import PairwiseAligner
 
-from ...organism import Organism
+from ...host import Host
 from ...module import Module
 from ..records.gene.gene import Gene
 from ..records.gene.localized_gene import LocalizedGene
@@ -51,19 +51,19 @@ class GenomeLibrary (Module) :
 
 
     def __init__ (
-        self, org:Organism,
+        self, host:Host,
         sequence:Optional[Seq] = None, # (option 1: pre-defined sequence)
         bg_size:Optional[int] = None, # (option 2: new sequence)
         bg_gc_content: Optional[float] = None, # (option 2: new sequence)
         locgenes:List[LocalizedGene] = []
     ) :
-        super().__init__(org)
+        super().__init__(host)
 
         # Two options: sequence can come either pre-defined or is generated on the spot.
         if sequence is not None :
             self.sequence = sequence
         elif bg_size is not None and bg_gc_content is not None :
-            self.sequence = make_background_seq( rnd=org.make_generator(), size=bg_size, gc_content=bg_gc_content )
+            self.sequence = make_background_seq( rnd=host.make_generator(), size=bg_size, gc_content=bg_gc_content )
         else :
             raise Exception ("Creating GenomeLibrary module without either pre-defined or generated sequence.")
 
@@ -76,13 +76,13 @@ class GenomeLibrary (Module) :
             )
             self.locgenes.append( new_loc_gene )
 
-        # self.org.observe( InsertGeneEvent, self.listen_insert_gene )
-        #self.org.observe( RemoveGeneEvent, self.listen_remove_gene )
+        # self.host.observe( InsertGeneEvent, self.listen_insert_gene )
+        #self.host.observe( RemoveGeneEvent, self.listen_remove_gene )
 
 
-    def clone ( self, org:Organism ) -> GenomeLibrary :
+    def clone ( self, host:Host ) -> GenomeLibrary :
         return GenomeLibrary(
-            org=org,
+            host=host,
             sequence=self.sequence,
             locgenes=self.locgenes
         )
@@ -173,7 +173,7 @@ def check_primer_integrity ( primer:Seq ) -> bool :
 
 def find_best_primer_match ( sequence:Seq, primer:Seq ) -> Optional[PrimerMatch] :
     """ Find best match for a template sequence.
-    TODO: Primer matching is dependent on organism. algo_params:Optional[Dict] = None
+    TODO: Primer matching is dependent on host. algo_params:Optional[Dict] = None
     """
 
     # The primer matches with the complement sequence.
@@ -205,7 +205,7 @@ def find_best_primer_match ( sequence:Seq, primer:Seq ) -> Optional[PrimerMatch]
 
 
 # def build_sequence ( self ) -> Seq :
-#     rnd = self.org.make_generator()
+#     rnd = self.host.make_generator()
 #     gc = self.bg_gc_content
 #     at = 1 - self.bg_gc_content
 

@@ -1,5 +1,5 @@
 """
-GenomeList is a module that stores the multiple genes an Organism may have.
+GenomeList is a module that stores the multiple genes an Host may have.
 
 """
 
@@ -9,7 +9,7 @@ from typing import Optional, Final
 
 from Bio.Seq import Seq
 
-from ...organism import Organism
+from ...host import Host
 from ...module import Module
 from ..records.gene.gene import Gene
 from ..events import InsertGeneEvent, RemoveGeneEvent
@@ -22,19 +22,19 @@ class GenomeList ( Module ) :
     genes: set[Gene]
 
 
-    def __init__ ( self, org:Organism, genes: set[Gene] = set() ) :
-        super().__init__(org)
+    def __init__ ( self, host:Host, genes: set[Gene] = set() ) :
+        super().__init__(host)
 
         self.genes = genes
 
-        # self.org.observe( InsertGeneEvent, self.listen_insert_gene )
-        # self.org.observe( RemoveGeneEvent, self.listen_remove_gene )
+        # self.host.observe( InsertGeneEvent, self.listen_insert_gene )
+        # self.host.observe( RemoveGeneEvent, self.listen_remove_gene )
 
 
 
-    def clone ( self, org:Organism ) -> GenomeLibrary :
+    def clone ( self, host:Host ) -> GenomeLibrary :
         return GenomeLibrary(
-            org=org,
+            host=host,
             genes=copy(self.genes),
         )
 

@@ -1,5 +1,5 @@
 """
-An experiment that uses organisms which implements all currently existing modules.
+An experiment that uses hosts which implements all currently existing modules.
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ from ..random import pick_integer, pick_uniform
 from ..utils import Help_Progressbar
 from ..experiment import Experiment
 from ..registry import Registry
-from ..organism import Organism
+from ..host import Host
 
 from ..config import DATADIR
 from ..extensions.modules.growth_behaviour import GrowthBehaviour
@@ -25,16 +25,20 @@ from ..extensions.utils import check_primer_integrity_and_recombination
 
 
 class RecExperiment (Experiment) :
+    """
+    Recombinant Expression Experiment with culture growth and genetic recombination.
+    Has a budget system to limit bruteforcing.
+    """
 
     suc_rate: float
 
-    def __init__ ( self ) :
+    def __init__ ( self, equipment_investment = 0 ) :
         super().__init__()
-        self.suc_rate = pick_uniform( 0.8, 1.0 ) # ErrorRate(EquipInvest, self._Mutant__Resources)
+        self.suc_rate = ErrorRate(equipment_investment, 10000)
 
 
 
-class RecOrganism (Organism) :
+class RecHost (Host) :
 
     growth: GrowthBehaviour
 
@@ -51,24 +55,24 @@ class RecOrganism (Organism) :
     ) :
         super().__init__(exp=exp)
 
-        self.genlist = GenomeList( org=self )
-        self.genexpr = GenomeExpression( org=self, genlib=self.genlist,
+        self.genlist = GenomeList( host=self )
+        self.genexpr = GenomeExpression( host=self, genlib=self.genlist,
             opt_primer_len=opt_primer_len, infl_prom_streng=infl_prom_streng,
             species_prom_streng=species_prom_streng,
             regressor_file=regressor_file, addparams_file=addparams_file
         )
-        self.growth = GrowthBehaviour( org=self,
+        self.growth = GrowthBehaviour( host=self,
             genexpr=self.genexpr,
             opt_growth_temp=opt_growth_temp, max_biomass=max_biomass
         )
 
 
-    def clone ( self ) -> RecOrganism :
+    def clone ( self ) -> RecHost :
         """
         TODO: Not sure how I like this cloning. I need to get into deep properties like
             `self.growth.opt_growth_temp` to re-create the modules. I want to call `module.clone`.
         """
-        return RecOrganism(
+        return RecHost(
             exp=self.exp,
             opt_growth_temp= self.growth.opt_growth_temp,
             infl_prom_streng= self.genexpr.infl_prom_streng,
@@ -82,7 +86,7 @@ class RecOrganism (Organism) :
 
 
     def print_status ( self ) -> None :
-        print("Organism Information:")
+        print("Host Information:")
         print("  opt_growth_temp = {}".format( self.growth.opt_growth_temp ))
         print("  max_biomass = {}".format( self.growth.max_biomass ))
         print("  opt_primer_len = {}".format( self.genexpr.opt_primer_len ))
@@ -105,15 +109,15 @@ class RecOrganism (Organism) :
 
 
 
-    def clone_with_recombination ( self, primer:Seq, gene:Gene, tm:int ) -> Tuple[Organism,str] :
+    def clone_with_recombination ( self, primer:Seq, gene:Gene, tm:int ) -> Tuple[Host,str] :
         """
-        Clone the organism while trying to insert a gene. The Clone might or might not contain
+        Clone the host while trying to insert a gene. The Clone might or might not contain
         the added Gene.
-        Returns: ( cloned_organism, outcome_message )
+        Returns: ( cloned_host, outcome_message )
         """
 
         # A clone is always made.
-        cloned_org:RecOrganism = self.clone()
+        cloned_org:RecHost = self.clone()
 
         ref_prom = 'GCCCATTGACAAGGCTCTCGCGGCCAGGTATAATTGCACG'
         primer_integrity = check_primer_integrity_and_recombination(gene.prom, primer, tm, ref_prom, self.genexpr.opt_primer_len)
@@ -145,7 +149,7 @@ class RecOrganism (Organism) :
 
 
 
-class Ecol (RecOrganism) :
+class Ecol (RecHost) :
     def __init__ ( self, exp ) :
         opt_growth_temp = pick_integer(25,40)  # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
         infl_prom_streng = pick_integer(30,50) # explanation see Plot_ExpressionRate
@@ -166,7 +170,7 @@ class Ecol (RecOrganism) :
 
 
 
-class Pput (RecOrganism) :
+class Pput (RecHost) :
     def __init__ ( self, exp ) :
         opt_growth_temp = pick_integer(25,40)  # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
         infl_prom_streng = pick_integer(30,50) # explanation see Plot_ExpressionRate

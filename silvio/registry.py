@@ -1,6 +1,6 @@
 """
-Registries provide an efficient way to store Records that are used by multiple Organisms.
-That way, each organism only needs to store a reference to each registered object (for example
+Registries provide an efficient way to store Records that are used by multiple Hosts.
+That way, each host only needs to store a reference to each registered object (for example
 a gene) instead to storing and copying the entire gene.
 When editing an object in the registry, the editor should make sure to practice copy-on-write.
 

@@ -1,36 +1,41 @@
 """
-Experiment is the top-most scope. It includes all organisms and registries and acts as a global
+Experiment is the top-most scope. It includes all hosts and registries and acts as a global
 namespace.
 
 TODO: See if this is necessary. Can registries be top-level?
-    For now: all Organism, Registry and Records fully depend on an Experiment.
+    For now: all Host, Registry and Records fully depend on an Experiment.
 """
 
 from __future__ import annotations
 from typing import Set
 from abc import ABC
 
-from .organism import Organism
+from .host import Host
 from .registry import Registry
+from .random import Generator
 
 
 
 class Experiment (ABC) :
 
-    orgs: Set[Organism]
+    hosts: Set[Host]
+
+    # The experiment will hold an internal random generator to allow repeatability.
+    rnd_gen: Generator
 
 
 
-    def __init__ ( self ) :
-        self.orgs = set()
+    def __init__ ( self, seed:Optional[Union[int,SeedSequence]]=None ) :
+        self.hosts = set()
+        self.rnd_gen = Generator(seed)
 
 
 
-    def bind_organism ( self, org:Organism ) -> None :
-        self.orgs.add(org)
+    def bind_host ( self, host:Host ) -> None :
+        self.hosts.add(host)
 
 
 
-    # def create_organism ( self, org_class:Type[Organism], **kwargs ) -> None :
-    #     org = org_class( exp=self, **kwargs )
-    #     self.orgs.append( org )
+    # def create_host ( self, host_class:Type[Host], **kwargs ) -> None :
+    #     host = host_class( exp=self, **kwargs )
+    #     self.hosts.append( host )

@@ -4,7 +4,8 @@ All operations that generate random numbers may come from this globally defined 
 This allows the user to provide a seed and generate the same sequences on every run as long as
 requests are made in the same order.
 
-The methods it exposes are the same of those from a numpy Generator object.
+The methods it exposes are the same of those from a numpy Generator object, but with typing and
+slightly altered parameters.
 https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator
 """
 
@@ -14,7 +15,7 @@ from numpy.random import Generator, PCG64
 
 
 
-# Initialize the generator with a random seed first.
+# Initialize the global generator with a random seed first.
 _randgen = Generator(PCG64())
 
 
@@ -73,3 +74,35 @@ def pick_exponential ( beta:float ) -> float :
     Pick a single number from an exponential distribution.
     """
     return _randgen.exponential( beta )
+
+
+
+class Generator () :
+    """ All random methods also exist inside a local generator object. """
+
+    gen: np.Generator
+
+    def __init__ ( self, seed:Optional[int] = None ) :
+        self.gen = Generator(PCG64(SeedSequence(seed)))
+
+    def pick_choice ( choices:List[Any], weights:List[float] = None ) -> Any :
+        probs = None
+        if weights is not None :
+            sum_w = sum(list(weights))
+            probs = [ w / sum_w for w in list(weights) ]
+        return self.gen.choice( choices, p=probs )
+
+    def pick_sample ( choices:List[Any], amount:int ) -> List[Any] :
+        return self.gen.choice( choices, size=amount, replace=False )
+
+    def pick_integer ( low:int, high:int ) -> int :
+        return self.gen.integers( low, high, endpoint=False )
+
+    def pick_uniform ( low:float = 0, high:float = 1 ) -> float :
+        return self.gen.uniform( low, high )
+
+    def pick_normal ( mean:float = 0, sd:float = 0 ) -> float :
+        return self.gen.normal( mean, sd )
+
+    def pick_exponential ( beta:float ) -> float :
+        return self.gen.exponential( beta )

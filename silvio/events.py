@@ -1,5 +1,5 @@
 """
-Events that serve as communication for and between organism modules.
+Events that serve as communication for and between host modules.
 """
 
 from abc import ABC
