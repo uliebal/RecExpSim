@@ -3,10 +3,11 @@ A Module is an extension of behaviour that can be attached to an Host.
 """
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
-from typing import Optional
+from abc import ABC
+from typing import Optional, TYPE_CHECKING
 
-# from ..base import Host
+if TYPE_CHECKING:
+    from ..base import Host
 
 
 
@@ -29,7 +30,7 @@ class Module (ABC) :
 
         Extending Modules have the following structure on their __init__ :
 
-            super().__init__(host,ref)          # Call parent init.
+            super().__init__(host,ref)         # Call parent init.
             self.depmodule = depmodule         # Add dependent modules.
 
             self.param1 = param1               # Set the params from the arguments.
@@ -38,11 +39,6 @@ class Module (ABC) :
 
         """
         self.host = host
-
-
-
-    def clone ( self ) -> Module :
-        raise Exception("Cloning not implemented for module '{}'.".format(type(self).__name__))
 
 
 

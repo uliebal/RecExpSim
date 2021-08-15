@@ -7,31 +7,33 @@ TODO: See if this is necessary. Can registries be top-level?
 """
 
 from __future__ import annotations
-from typing import Set
+from typing import Set, Optional, Union, TYPE_CHECKING
 from abc import ABC
 
-from .host import Host
-from .registry import Registry
+from numpy.random import SeedSequence
+
+if TYPE_CHECKING :
+    from ..base import Host
 from .random import Generator
 
 
 
 class Experiment (ABC) :
 
-    hosts: Set[Host]
+    hosts: Set['Host']
 
     # The experiment will hold an internal random generator to allow repeatability.
     rnd_gen: Generator
 
 
 
-    def __init__ ( self, seed:Optional[Union[int,SeedSequence]]=None ) :
+    def __init__ ( self, seed:Optional[Union[int,SeedSequence]] = None ) :
         self.hosts = set()
         self.rnd_gen = Generator(seed)
 
 
 
-    def bind_host ( self, host:Host ) -> None :
+    def bind_host ( self, host:'Host' ) -> None :
         self.hosts.add(host)
 
 

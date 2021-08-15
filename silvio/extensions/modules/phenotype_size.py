@@ -3,9 +3,6 @@ This is a TESTING module to showcase Host events.
 The number inside this module (example: a size of a cell) will increase with the number of genes.
 """
 
-from __future__ import annotations
-from typing import Optional
-
 from ...host import Host
 from ...module import Module
 from ..genome.events import InsertGeneEvent, RemoveGeneEvent
@@ -20,13 +17,10 @@ class PhenotypeSize (Module) :
 
 
 
-    def __init__ ( self, host:Host, ref:Optional[PhenotypeSize] = None ) :
+    def __init__ ( self, host:Host, size:int = 0 ) :
         super().__init__(host)
 
-        if ref is not None :
-            self.size = ref.size
-        else :
-            self.size = 0
+        self.size = 0
 
         self.host.observe( InsertGeneEvent, self.listen_insert_gene )
         self.host.observe( RemoveGeneEvent, self.listen_remove_gene )

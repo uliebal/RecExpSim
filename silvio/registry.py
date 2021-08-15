@@ -7,9 +7,7 @@ When editing an object in the registry, the editor should make sure to practice 
 Entries of a registry must be copy-able.
 """
 
-from abc import ABC, abstractmethod
-from typing import TypeVar, Generic, List, Set
-from copy import copy
+from typing import Set
 
 from .record import Record
 

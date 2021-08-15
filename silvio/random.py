@@ -9,14 +9,15 @@ slightly altered parameters.
 https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator
 """
 
-from typing import Any, List
+import sys
+from typing import Any, List, Optional
 
-from numpy.random import Generator, PCG64
+from numpy.random import Generator as NumpyGenerator, PCG64
 
 
 
 # Initialize the global generator with a random seed first.
-_randgen = Generator(PCG64())
+_randgen = NumpyGenerator(PCG64())
 
 
 
@@ -26,7 +27,7 @@ def set_seed ( new_seed:int ) -> None :
     pseudo-random sequence.
     """
     global _randgen
-    _randgen = Generator(PCG64(new_seed))
+    _randgen = NumpyGenerator(PCG64(new_seed))
 
 
 
@@ -76,33 +77,43 @@ def pick_exponential ( beta:float ) -> float :
     return _randgen.exponential( beta )
 
 
+def pick_seed () -> int :
+    """
+    Pick a new number that is usable as a seed.
+    """
+    return _randgen.integers(0)
+
+
 
 class Generator () :
     """ All random methods also exist inside a local generator object. """
 
-    gen: np.Generator
+    gen: NumpyGenerator
 
     def __init__ ( self, seed:Optional[int] = None ) :
-        self.gen = Generator(PCG64(SeedSequence(seed)))
+        self.gen = NumpyGenerator(PCG64(seed))
 
-    def pick_choice ( choices:List[Any], weights:List[float] = None ) -> Any :
+    def pick_choice ( self, choices:List[Any], weights:List[float] = None ) -> Any :
         probs = None
         if weights is not None :
             sum_w = sum(list(weights))
             probs = [ w / sum_w for w in list(weights) ]
         return self.gen.choice( choices, p=probs )
 
-    def pick_sample ( choices:List[Any], amount:int ) -> List[Any] :
+    def pick_sample ( self, choices:List[Any], amount:int ) -> List[Any] :
         return self.gen.choice( choices, size=amount, replace=False )
 
-    def pick_integer ( low:int, high:int ) -> int :
+    def pick_integer ( self, low:int, high:int ) -> int :
         return self.gen.integers( low, high, endpoint=False )
 
-    def pick_uniform ( low:float = 0, high:float = 1 ) -> float :
+    def pick_uniform ( self, low:float = 0, high:float = 1 ) -> float :
         return self.gen.uniform( low, high )
 
-    def pick_normal ( mean:float = 0, sd:float = 0 ) -> float :
+    def pick_normal ( self, mean:float = 0, sd:float = 0 ) -> float :
         return self.gen.normal( mean, sd )
 
-    def pick_exponential ( beta:float ) -> float :
+    def pick_exponential ( self, beta:float ) -> float :
         return self.gen.exponential( beta )
+
+    def pick_seed ( self ) -> int :
+        return self.gen.integers(sys.maxsize)

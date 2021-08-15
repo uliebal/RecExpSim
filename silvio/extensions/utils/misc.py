@@ -1,17 +1,14 @@
 """
-TODO: Almost all of the methods inside this `utils.py` file can me integrated into module functions.
+Methods that are not yet assigned to another place. They usually include methods before the
+restructuring.
+TODO: Almost all of the methods inside this file can me integrated into module functions.
 """
-
-
-from typing import Tuple
 
 from Bio.Seq import Seq
 
-from ..random import pick_uniform
-from ..common import Outcome
-from .records.gene.gene import Gene
-
-
+from ...random import pick_uniform
+from ...outcome import Outcome
+from .transform import list_onehot, list_integer
 
 
 
@@ -25,11 +22,9 @@ def Sequence_ReferenceDistance(SeqObj, RefSeq):
     import numpy as np
 
     Num_Samp = len(SeqObj)
-    SequenceDistance = np.sum([int(seq1!=seq2) for seq1,seq2 in zip(RefSeq, SeqObj)], dtype='float')/len(SeqObj)
+    SequenceDistance = np.sum([int(seq1 != seq2) for seq1,seq2 in zip(RefSeq, SeqObj)], dtype='float')/Num_Samp
 
     return SequenceDistance
-
-
 
 
 
@@ -40,8 +35,7 @@ def check_primer_integrity_and_recombination (Promoter:Seq, Primer:Seq, Tm:int, 
     import numpy as np
 
     if Sequence_ReferenceDistance(Promoter, RefPromoter) > .4:
-        return Outcome
-    (False, 'Promoter sequence deviates too much from the given structure.')
+        return Outcome(False, 'Promoter sequence deviates too much from the given structure.')
 
     NaConc = 0.1 # 100 mM source: https://www.genelink.com/Literature/ps/R26-6400-MW.pdf (previous 50 mM: https://academic.oup.com/nar/article/18/21/6409/2388653)
     AllowDevi = 0.2 # allowed deviation
@@ -69,28 +63,22 @@ def check_primer_integrity_and_recombination (Promoter:Seq, Primer:Seq, Tm:int, 
     DeviTm_2 = np.absolute(Primer_Tm_err_2 - Tm)/Primer_Tm_err_2
     DeviTm = min(DeviTm_1, DeviTm_2)
 
-    #create the complementary sequence of the primer to check for mistakes:
+    # create the complementary sequence of the primer to check for mistakes:
     PrimerComp = Primer.complement()
 
     if DeviLen <= AllowDevi and DeviTm <= AllowDevi/2 and Primer_Length <= 30 and PrimerComp == Promoter[:len(Primer)]:
-        return Outcome
-    (True)
+        return Outcome(True)
 
     if not DeviLen <= AllowDevi :
-        return Outcome
-    (False, 'Primer length deviation too big.')
+        return Outcome(False, 'Primer length deviation too big.')
     if not DeviTm <= AllowDevi/2 :
-        return Outcome
-    (False, 'Temperature deviation too big.')
+        return Outcome(False, 'Temperature deviation too big.')
     if not Primer_Length <= 30 :
-        return Outcome
-    (False, 'Primer length too big.')
+        return Outcome(False, 'Primer length too big.')
     if not PrimerComp == Promoter[:len(Primer)] :
-        return Outcome
-    (False, 'Primer not compatible with promoter.')
+        return Outcome(False, 'Primer not compatible with promoter.')
 
-    return Outcome
-(False, 'Cloning failed')
+    return Outcome(False, 'Cloning failed')
 
 
 
@@ -130,41 +118,6 @@ def Help_PromoterStrength(
 
 
 
-
-
-def list_integer(SeqList):
-    '''define input values'''
-    alphabet = 'ACGT'
-    char_to_int = dict((c,i) for i,c in enumerate(alphabet))
-    IntegerList = list()
-    for mySeq in SeqList:
-        # integer encode input data
-        integer_encoded = [char_to_int[char] for char in mySeq.upper()]
-        IntegerList.append(integer_encoded)
-    return IntegerList
-
-
-
-
-
-def list_onehot(IntegerList):
-    OneHotList = list()
-    for integer_encoded in IntegerList:
-        onehot_encoded = list()
-        for value in integer_encoded:
-            letter = [0 for _ in range(4)]
-            letter[value] = 1
-            onehot_encoded.append(letter)
-        OneHotList.append(onehot_encoded)
-    return OneHotList
-
-
-
-
-
-
-
-
 def Help_GrowthConstant(OptTemp, CultTemp, var=5):
     '''Function that generates the growth rate constant. The growth rate constant depends on the optimal growth temperature and the cultivation temperature. It is sampled from a Gaussian distribution with the mean at the optimal temperature and variance 1.
     Arguments:
@@ -175,7 +128,6 @@ def Help_GrowthConstant(OptTemp, CultTemp, var=5):
         growth_rate_const: float, constant for use in logistic growth equation
     '''
 
-    import numpy as np
     from scipy.stats import norm
 
     r_pdf = norm(OptTemp, var)
@@ -184,8 +136,6 @@ def Help_GrowthConstant(OptTemp, CultTemp, var=5):
     growth_rate_const = r_pdf.pdf(CultTemp) / r_pdf.pdf(OptTemp)
 
     return growth_rate_const
-
-
 
 
 
@@ -200,12 +150,11 @@ def Growth_Maxrate(growth_rate_const, Biomass):
             growth_rate_max: float, maximum growth rate
     '''
     # biomass checks
-#     if Biomass > Mutant._Mutantmax_biomass or not Biomass:
-#         print('Error, no biomass was set or unexpected value or the maximum possible biomass was exceeded. Enter a value for the biomass again.')
+    # if Biomass > Mutant._Mutantmax_biomass or not Biomass:
+    #     print('Error, no biomass was set or unexpected value or the maximum possible biomass was exceeded. Enter a value for the biomass again.')
 
     # Equation for calculating the maximum slope
     # https://www.tjmahr.com/anatomy-of-a-logistic-growth-curve/
     GrowthMax = Biomass * growth_rate_const / 4
 
     return GrowthMax
-

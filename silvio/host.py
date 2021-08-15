@@ -10,12 +10,17 @@ observable that can be used by each module to communicate with other modules.
 """
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
-from typing import List, Callable, NamedTuple, Optional, Type, Dict
+from typing import List, Callable, NamedTuple, Optional, Type
 
-# from .experiment import Experiment
+from .experiment import Experiment
 from .events import Event
 from .random import Generator
+
+
+
+class HostException (Exception) :
+    """ Exception that is triggered when a Host cannot be created. """
+    pass
 
 
 
@@ -52,7 +57,7 @@ class Host :
 
 
 
-    def __init__ ( self, exp: 'Experiment', seed:Optional[int]=None ) :
+    def __init__ ( self, exp: 'Experiment', seed:Optional[int] = None ) :
         """
         Init is responsible to initialize all modules of an host, may it be new from scratch or
         by using another host as a reference.
@@ -73,7 +78,8 @@ class Host :
 
     def clone ( self ) -> Host :
         """ Clones a new Host on the same experiment. """
-        raise Exception("Cloning not implemented for host '{}'.".format(type(self).__name__))
+        return Host( exp=self.exp )
+
 
 
     def emit ( self, event: Event ) -> None :
@@ -93,9 +99,3 @@ class Host :
     def make_generator ( self ) -> Generator :
         """ Construct a random number generator with the same seed stored in the host. """
         return Generator(self.rnd_seed)
-
-
-
-class HostException (Exception) :
-    """ Exception that is triggered when a Host cannot be created. """
-    pass

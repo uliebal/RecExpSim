@@ -6,17 +6,16 @@ GenomeLibrary is a more complex version of GenomeList:
 
 
 from __future__ import annotations
-from copy import copy
-from typing import Optional, Set, List, NamedTuple
+from typing import Optional, List, NamedTuple
 
 from numpy.random import Generator
-from Bio import pairwise2
 from Bio.Seq import Seq
-from Bio.Blast.Record import Alignment
+# from Bio.Blast.Record import Alignment
 from Bio.Align import PairwiseAligner
 
 from ...host import Host
 from ...module import Module
+from ...utils import alldef
 from ..records.gene.gene import Gene
 from ..records.gene.localized_gene import LocalizedGene
 from ..events import InsertGeneEvent, RemoveGeneEvent
@@ -52,18 +51,22 @@ class GenomeLibrary (Module) :
 
     def __init__ (
         self, host:Host,
-        sequence:Optional[Seq] = None, # (option 1: pre-defined sequence)
-        bg_size:Optional[int] = None, # (option 2: new sequence)
-        bg_gc_content: Optional[float] = None, # (option 2: new sequence)
+        sequence:Optional[Seq] = None,
+        bg_size:Optional[int] = None,
+        bg_gc_content:Optional[float] = None,
         locgenes:List[LocalizedGene] = []
     ) :
         super().__init__(host)
 
-        # Two options: sequence can come either pre-defined or is generated on the spot.
-        if sequence is not None :
+        # Init 1: pre-defined sequence
+        if alldef( sequence ) :
             self.sequence = sequence
-        elif bg_size is not None and bg_gc_content is not None :
+
+        # Init 2: new sequence
+        elif alldef( bg_size, bg_gc_content ) :
             self.sequence = make_background_seq( rnd=host.make_generator(), size=bg_size, gc_content=bg_gc_content )
+
+        # Failed Init
         else :
             raise Exception ("Creating GenomeLibrary module without either pre-defined or generated sequence.")
 
@@ -76,16 +79,9 @@ class GenomeLibrary (Module) :
             )
             self.locgenes.append( new_loc_gene )
 
-        # self.host.observe( InsertGeneEvent, self.listen_insert_gene )
-        #self.host.observe( RemoveGeneEvent, self.listen_remove_gene )
+        self.host.observe( InsertGeneEvent, self.listen_insert_gene )
+        self.host.observe( RemoveGeneEvent, self.listen_remove_gene )
 
-
-    def clone ( self, host:Host ) -> GenomeLibrary :
-        return GenomeLibrary(
-            host=host,
-            sequence=self.sequence,
-            locgenes=self.locgenes
-        )
 
 
     @property
@@ -93,18 +89,19 @@ class GenomeLibrary (Module) :
         return self.locgenes
 
 
-    # def listen_insert_gene ( self, event:InsertGeneEvent ) -> None :
-    #     self.genes[event.gene] = LocGene( gene=event.gene, loc=event.loc )
-    #     print( "Added gene={} loc={} to the GenomeLibrary.".format(
-    #         event.gene.get_name(), event.loc
-    #     ))
+
+    def listen_insert_gene ( self, event:InsertGeneEvent ) -> None :
+        self.insert_gene( gene=event.gene, loc=event.loc )
+        print( "Added gene={} loc={} to the GenomeLibrary.".format(
+            event.gene.get_name(), event.loc
+        ))
 
 
 
-    # def listen_remove_gene ( self, event:RemoveGeneEvent ) -> None :
-    #     """ Remove a gene from the library and sequence. """
-    #     del self.genes[event.gene]
-    #     print( "Removed gene={} from the GenomeLibrary.".format(event.gene.get_name()) )
+    def listen_remove_gene ( self, event:RemoveGeneEvent ) -> None :
+        """ Remove a gene from the library and sequence. """
+        del self.genes[event.gene]
+        print( "Removed gene={} from the GenomeLibrary.".format(event.gene.get_name()) )
 
 
 
@@ -154,9 +151,6 @@ class GenomeLibrary (Module) :
 
 
 
-
-
-
 def make_background_seq ( rnd:Generator, size:int, gc_content:float ) -> Seq :
     gc = gc_content
     at = 1 - gc_content
@@ -199,8 +193,6 @@ def find_best_primer_match ( sequence:Seq, primer:Seq ) -> Optional[PrimerMatch]
             success= best_alignment.score / len(primer)
         )
     return None
-
-
 
 
 

@@ -9,29 +9,24 @@ import sys
 sys.path.append( os.path.abspath(os.path.join('.')) )
 sys.path.append( os.path.abspath(os.path.join('..')) )
 
-# Set a predictable seed.
-from protobiolabsim.random import set_seed
-set_seed(100)
-
 
 # 1. Set-up of simulation environment
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-#from tabulate import tabulate
-from protobiolabsim.catalog.recexpsim import RecExperiment, RecOrganism, Ecol, Pput
+from silvio.catalog.recexpsim_original import RecExperiment
 print('System ready')
 
 
 # 2. Lab setup
-exp = RecExperiment() # TODO: Budget System not implemented.
-host = Ecol(exp=exp)
+exp = RecExperiment( seed=100, equipment_investment=1500 )
+host = exp.create_host( 'ecol' )
 print()
 host.print_status()
 
 
 # 3.1. Experiment set-up
-temperatures = [26,30,34] #[22,24,26,28,30]
+temperatures = [26,30,34] # [22,24,26,28,30]
 print()
 cult_df = host.sim_growth(temperatures)
 print(cult_df.to_string())
@@ -46,7 +41,7 @@ plt.show()
 
 
 # 3.2.2.2 Determine maximum biomass and growth rate
-Idx_optT, Linear_optT = 1, 13
+Idx_optT, Linear_optT = 0, 7
 MB = np.mean(Biomass.iloc[Linear_optT:,Idx_optT])
 GR = np.polyfit(Time.iloc[:Linear_optT],LnBiomass.iloc[:Linear_optT,Idx_optT],1)
 print()
@@ -54,11 +49,11 @@ print('max biomass: {:.0f}\nmax growth rate: {:.2f}'.format(MB,GR[0]))
 
 
 # 4.1.1 Promoter choice and cloning
-from protobiolabsim.extensions.records.gene.crafted_gene import CraftedGene
+from silvio.extensions.records.gene.crafted_gene import CraftedGene
 from Bio.Seq import Seq
 Promoter1 = Seq("GCCCAAAAAAAAAGCAAACACGTAAAGGAAAAAATGCACG")
-Primer1 =   Seq("CGGGTTTTTTTTTCG")
-Tm =        48 # melting temperature
+Primer1 = Seq("CGGGTTTTTTTTTCG")
+Tm = 48 # melting temperature
 NewGene = CraftedGene( name="MyGenA", prom=Promoter1, orf="GGGGGGGGGG" )
 
 print("\nTry cloning with bad melting temperature.")
@@ -73,15 +68,18 @@ good_host.print_status()
 
 
 # 4.1.2 Measurement of the promoter strength
-prom_str = good_host.calculate_promoter_strength( NewGene )
+prom_str = good_host.calc_promoter_strength( NewGene )
 print("\nPromoter Strength of {} is: {}".format(NewGene.name, prom_str))
 
 
 # 4.1.3 Measurement of the final vaccine expression rate
 # in Make_ProductionExperiment: Clone_ID (string), Opt. Temp (int), Opt. Growth rate (float), Opt. Biomass (int)
 
-prod_outcome = good_host.produce_vaccine( gene=NewGene, cult_temp=26, growth_rate=0.81, biomass=50 )
-print('Final vaccine production rate: {} {}'.format( prod_outcome[0], prod_outcome[1] ))
+bad_prod_outcome = good_host.sim_vaccine_production( gene=NewGene, cult_temp=26, growth_rate=0.91, biomass=49 )
+print('Final vaccine production rate: {} {}'.format( bad_prod_outcome.value, bad_prod_outcome.error ))
+
+good_prod_outcome = good_host.sim_vaccine_production( gene=NewGene, cult_temp=26, growth_rate=0.91, biomass=49 )
+print('Final vaccine production rate: {} {}'.format( good_prod_outcome.value, good_prod_outcome.error ))
 
 # 4.2.1 Visualization of the results
 # DataFile = 'Production_Experiments.csv'

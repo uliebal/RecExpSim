@@ -3,12 +3,13 @@ Events that serve as communication for and between host modules.
 """
 
 from abc import ABC
-from typing import Literal, NamedTuple
-from dataclasses import dataclass
 
 
 
-class Event :
+class Event (ABC) :
+    """
+    Events are changes to the Host that will be handled by the Modules.
+    """
     pass
 
 
