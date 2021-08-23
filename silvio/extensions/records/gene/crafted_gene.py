@@ -52,4 +52,3 @@ class CraftedGene (Gene) :
             orf=new_orf,
             prom=self._prom, # Can pass because Seq is immutable.
         )
-

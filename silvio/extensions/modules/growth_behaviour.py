@@ -41,7 +41,7 @@ class GrowthBehaviour ( Module ) :
         """
         TODO: Ideally, growth should return a table with enough information to contain the
         biomass results and to infer the loading times. Loading times is a synthetic construct
-        that should be contained in the Host, while the Module should only contain efficient
+        that should be contained in a catalog Host, while the Module should only contain efficient
         calculations. The Host is an API for the User and may add interaction such as
         Resource management and loading times.
 

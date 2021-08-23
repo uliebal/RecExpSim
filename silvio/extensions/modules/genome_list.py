@@ -28,17 +28,11 @@ class GenomeList ( Module ) :
 
 
     def listen_insert_gene ( self, event:InsertGeneEvent ) -> None :
-        self.insert_gene( event.gene )
-        print( "Added gene={} to the GenomeLibrary.".format(event.gene.get_name()) )
+        self.genes.add( event.gene )
+        return ( "Added gene={} to the GenomeLibrary.".format(event.gene.name) )
 
 
 
     def listen_remove_gene ( self, event:RemoveGeneEvent ) -> None :
         self.genes.remove( event.gene )
-        print( "Removed gene={} from the GenomeLibrary.".format(event.gene.get_name()) )
-
-
-
-    def insert_gene ( self, gene:Gene ) :
-        """ Insert a gene at a specific location in the sequence. """
-        self.genes.add(gene)
+        return ( "Removed gene={} from the GenomeLibrary.".format(event.gene.name) )

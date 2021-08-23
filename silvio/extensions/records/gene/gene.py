@@ -37,4 +37,3 @@ class Gene ( Record, ABC ) :
     @abstractmethod
     def orf ( self ) -> Seq :
         pass
-

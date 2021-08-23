@@ -15,6 +15,7 @@ from typing import List, Callable, NamedTuple, Optional, Type
 from .experiment import Experiment
 from .events import Event
 from .random import Generator
+from .utils import coalesce
 
 
 
@@ -24,7 +25,9 @@ class HostException (Exception) :
 
 
 
-ListenerCallback = Callable[[Event],None]
+# The callback will execute provide an event to the listener an expect a message to add to
+# the event log.
+ListenerCallback = Callable[[Event],Optional[str]]
 
 
 
@@ -51,13 +54,21 @@ class Host :
 
     exp: 'Experiment'
 
+    name: str
+
     listeners: List[ListenerEntry]
 
-    rnd_seed: int
+    # The event_log holds small messages of all events that occured to the host.
+    event_log: List[str]
+
+    rnd_seed: Optional[int]
+
+    # Number of clones made. This is used by the cloning method to generate new names.
+    clone_counter: int
 
 
 
-    def __init__ ( self, exp: 'Experiment', seed:Optional[int] = None ) :
+    def __init__ ( self, exp:'Experiment', ref:Optional[Host] = None, name:str = None, seed:Optional[int] = None ) :
         """
         Init is responsible to initialize all modules of an host, may it be new from scratch or
         by using another host as a reference.
@@ -72,13 +83,38 @@ class Host :
         exp.bind_host(self)
         self.exp = exp
         self.listeners = []
-        self.rnd_seed = seed
+        self.event_log = []
+        self.clone_counter = 0
+        self.name = 'unnamed' # start unnamed and get a name later in this constructor
+        self.rnd_seed = None
+
+        # Creating with ref puts some defaults on hierarchical names and stable seeds.
+        if ref is not None :
+            self.name, self.rnd_seed = ref.make_clone_attrs()
+
+        # Constructor attributes always override all other values.
+        if name is not None :
+            self.name = name
+        if seed is not None :
+            self.rnd_seed = seed
 
 
 
-    def clone ( self ) -> Host :
-        """ Clones a new Host on the same experiment. """
-        return Host( exp=self.exp )
+    def make_clone_attrs ( self ) -> [ str, int ] :
+        """
+        Generate attributes for a possible clone.
+
+        Returns
+        -------
+        [ name, seed ]
+            name: A hierarchical name is generated.
+            seed: A stable seed is generated.
+        """
+        self.clone_counter += 1
+        gen = self.make_generator()
+        hierarchical_name = self.name + "." + str(self.clone_counter)
+        stable_seed = gen.pick_seed() + self.clone_counter
+        return [ hierarchical_name, stable_seed ]
 
 
 
@@ -86,7 +122,8 @@ class Host :
         """ Trigger all listeners for a given Event. """
         for le in self.listeners :
             if type(event) == le.evtype :
-                le.run(event) # run the listener with the emitted event.
+                log_entry = le.run(event) # run the listener with the emitted event.
+                self.event_log.append(coalesce( log_entry, "no description" ))
 
 
 

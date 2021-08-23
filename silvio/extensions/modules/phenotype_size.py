@@ -29,10 +29,10 @@ class PhenotypeSize (Module) :
 
     def listen_insert_gene ( self, event:InsertGeneEvent ) -> None :
         self.size += 1
-        print("Incremented size by 1 on PhenotypeSize.")
+        return ("Incremented size by 1 on PhenotypeSize.")
 
 
 
     def listen_remove_gene ( self, event:RemoveGeneEvent ) -> None :
         self.size -= 1
-        print("Decremented size by 1 on PhenotypeSize.")
+        return ("Decremented size by 1 on PhenotypeSize.")

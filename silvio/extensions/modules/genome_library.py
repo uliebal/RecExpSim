@@ -92,8 +92,8 @@ class GenomeLibrary (Module) :
 
     def listen_insert_gene ( self, event:InsertGeneEvent ) -> None :
         self.insert_gene( gene=event.gene, loc=event.loc )
-        print( "Added gene={} loc={} to the GenomeLibrary.".format(
-            event.gene.get_name(), event.loc
+        return ( "Added gene={} loc={} to the GenomeLibrary.".format(
+            event.gene.name, event.loc
         ))
 
 
@@ -101,7 +101,7 @@ class GenomeLibrary (Module) :
     def listen_remove_gene ( self, event:RemoveGeneEvent ) -> None :
         """ Remove a gene from the library and sequence. """
         del self.genes[event.gene]
-        print( "Removed gene={} from the GenomeLibrary.".format(event.gene.get_name()) )
+        return ( "Removed gene={} from the GenomeLibrary.".format(event.gene.name) )
 
 
 
@@ -196,11 +196,14 @@ def find_best_primer_match ( sequence:Seq, primer:Seq ) -> Optional[PrimerMatch]
 
 
 
-# def build_sequence ( self ) -> Seq :
+# TODO: Unused method that would create a full sequence by taking a list of genes and filling the
+#   spaces in between with background bases. Since the background sequence is created at the
+#   beginning I am not using this method.
+# def build_sequence_from_gene_list ( self ) -> Seq :
 #     rnd = self.host.make_generator()
 #     gc = self.bg_gc_content
 #     at = 1 - self.bg_gc_content
-
+#
 #     # Write the sequence from begin to end. Genes have their sequence copied and random bases
 #     # are used to fill non-coding positions. Overlapping genes have undefined behaviour.
 #     # TODO: When gene positions overlap it actually writes both gene sequences in sequence but
@@ -208,26 +211,26 @@ def find_best_primer_match ( sequence:Seq, primer:Seq ) -> Optional[PrimerMatch]
 #     # overlapping regions.
 #     locgenes = self.genes.values()
 #     locgenes.sort( key=lambda el: el.loc )
-
+#
 #     seq = Seq()
 #     cur = 0
 #     bg_size = 0 # Current amount of background bases.
 #     for locgene in locgenes :
-
+#
 #         # If the gene starts later, then fill the space with random (background) bases.
 #         filler = locgene.loc - cur
 #         if filler > 0 :
 #             new_bases = rnd.choice( 'ATCG', size=filler, p=[at,at,gc,gc] )
 #             bg_size += filler
 #             seq += "".join(new_bases)
-
+#
 #         # Copy the gene sequence.
 #         seq = seq + locgene.gene.get_prom() + locgene.gene.get_orf()
-
+#
 #     # At the end, if the minimum of background bases was not filled, to that now.
 #     filler = min( 0, self.bg_min_size - bg_size )
 #     if filler > 0 :
 #         new_bases = rnd.choice( 'ATCG', size=filler, p=[at,at,gc,gc] )
 #         seq += "".join(new_bases)
-
+#
 #     return seq
