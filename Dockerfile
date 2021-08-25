@@ -9,7 +9,8 @@ RUN conda create -n py39 python=3.9
 SHELL ["conda", "run", "-n", "py39", "/bin/bash", "-c"]
 
 # Install iPyKernel
-RUN pip install ipykernel && ipython kernel install --user --name=py39 && conda deactivate
+# RUN pip install ipykernel && ipython kernel install --user --name=py39 && conda deactivate
+RUN conda activate py39 && pip install ipykernel && ipython kernel install --user --name=py39 && conda deactivate 
 
 # Add modified Notebook Config. Sets py39 as default environment
 ADD ./jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
