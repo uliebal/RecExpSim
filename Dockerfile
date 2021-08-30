@@ -6,14 +6,18 @@ FROM ${BASE_IMAGE}
 RUN conda create -n py39 python=3.9
 
 # Activate py39 Environment
-SHELL ["conda", "run", "-n", "py39", "/bin/bash", "-c"]
+SHELL ["conda", "run", "--no-capture-output", "-n", "py39", "/bin/bash", "-c"]
 
 # Install iPyKernel
-RUN pip install ipykernel && ipython kernel install --user --name=py39 && conda deactivate
-
-# Add modified Notebook Config. Sets py39 as default environment
-ADD ./jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
+RUN pip install ipykernel && ipython kernel install --user --name=py39
 
 # Install packages via requirements.txt
 ADD requirements.txt .
 RUN pip install -r requirements.txt
+
+SHELL ["/bin/bash"]
+
+# Add modified Notebook Config. Sets py39 as default environment
+ADD ./jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
+
+
