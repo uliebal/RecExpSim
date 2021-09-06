@@ -1,26 +1,27 @@
 """
 Experiment is the top-most scope. It includes all hosts and registries and acts as a global
 namespace.
-
-TODO: See if this is necessary. Can registries be top-level?
-    For now: all Host, Registry and Records fully depend on an Experiment.
 """
 
-from __future__ import annotations
-from typing import Set, Optional, Union, TYPE_CHECKING
+from typing import Set, Optional, Union
 from abc import ABC
 
 from numpy.random import SeedSequence
 
-if TYPE_CHECKING :
-    from ..base import Host
+from .host import Host
 from .random import Generator
+
+
+
+class ExperimentException (Exception) :
+    """ Exception that is triggered by an experiment. """
+    pass
 
 
 
 class Experiment (ABC) :
 
-    hosts: Set['Host']
+    hosts: Set[Host]
 
     # The experiment will hold an internal random generator to allow repeatability.
     rnd_gen: Generator
@@ -33,7 +34,7 @@ class Experiment (ABC) :
 
 
 
-    def bind_host ( self, host:'Host' ) -> None :
+    def bind_host ( self, host:Host ) -> None :
         self.hosts.add(host)
 
 

@@ -9,10 +9,8 @@ Modules may add to it. In addition to the usual forwarding methods, the Host is 
 observable that can be used by each module to communicate with other modules.
 """
 
-from __future__ import annotations
 from typing import List, Callable, NamedTuple, Optional, Type
 
-from .experiment import Experiment
 from .events import Event
 from .random import Generator
 from .utils import coalesce
@@ -39,21 +37,6 @@ class ListenerEntry ( NamedTuple ) :
 
 class Host :
 
-    # modules: Dict[str,Module]
-    # def __init__ ( self, exp: Experiment, module_defs: Optional[List[Type[Module]]], ref: Optional[Host] ) :
-    #     self.exp = exp
-    #     self.listeners = []
-    #     if module_defs is not None : # Create new with requested Module types.
-    #         for ModDef in module_defs :
-    #             self.modules[ ModDef( host=self ) ]
-    #     elif ref is not None : # Duplicate given a reference Host.
-    #         for mod in ref.modules :
-    #             self.modules[ type(mod) ] = mod.clone(self)
-    #     else :
-    #         raise Exception("Attempted to initialize an Host without a Module definitions nor a reference Host.")
-
-    exp: 'Experiment'
-
     name: str
 
     listeners: List[ListenerEntry]
@@ -61,32 +44,37 @@ class Host :
     # The event_log holds small messages of all events that occured to the host.
     event_log: List[str]
 
+    # By specifying a seed, the same code will produce the same results.
     rnd_seed: Optional[int]
+
+    # A seed with an incremental counter provides a stable randomization were experiments can be
+    # run multiple times with different results.
+    rnd_counter: int
 
     # Number of clones made. This is used by the cloning method to generate new names.
     clone_counter: int
 
 
 
-    def __init__ ( self, exp:'Experiment', ref:Optional[Host] = None, name:str = None, seed:Optional[int] = None ) :
+    def __init__ ( self, ref:Optional['Host'] = None, name:str = None, seed:Optional[int] = None ) :
         """
         Init is responsible to initialize all modules of an host, may it be new from scratch or
         by using another host as a reference.
 
         Code from derived classes should be:
 
-            super().__init__( exp=exp, ref=ref )
+            super().__init__( ref, name, seed )
 
             self.moduleA = Module( host=self )
             self.moduleB = Module( host=self, depModule=self.moduleA )
         """
-        exp.bind_host(self)
-        self.exp = exp
         self.listeners = []
         self.event_log = []
         self.clone_counter = 0
         self.name = 'unnamed' # start unnamed and get a name later in this constructor
         self.rnd_seed = None
+        self.rnd_counter = 0
+
 
         # Creating with ref puts some defaults on hierarchical names and stable seeds.
         if ref is not None :
@@ -135,4 +123,5 @@ class Host :
 
     def make_generator ( self ) -> Generator :
         """ Construct a random number generator with the same seed stored in the host. """
-        return Generator(self.rnd_seed)
+        self.rnd_counter += 1
+        return Generator( self.rnd_seed + self.rnd_counter )

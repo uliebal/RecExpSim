@@ -101,7 +101,7 @@ class GrowthBehaviour ( Module ) :
         # computing of biomass data and updating of DataFrame
         for i in range(len(CultTemps)):
 
-            if rnd.pick_uniform(0,1) > self.host.exp.suc_rate: # TODO: Too nested. # experiment failure depending on investment to equipment
+            if rnd.pick_uniform(0,1) > exp_suc_rate: # TODO: Too nested. # experiment failure depending on investment to equipment
                 r = Help_GrowthConstant(OptTemp, CultTemps[i])
                 # the result can reach very small values, which poses downstream problems, hence the lowest value is set to 0.05
                 if r > 0.05: # under process conditions it might be realistic, source : https://www.thieme-connect.de/products/ebooks/pdf/10.1055/b-0034-10021.pdf

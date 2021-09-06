@@ -116,4 +116,4 @@ class Generator () :
         return self.gen.exponential( beta )
 
     def pick_seed ( self ) -> int :
-        return self.gen.integers(sys.maxsize)
+        return int(self.gen.integers(sys.maxsize))

@@ -12,9 +12,10 @@ from Bio.Seq import Seq
 import pandas as pd
 
 from ..config import DATADIR
-from ..experiment import Experiment
+from ..experiment import Experiment, ExperimentException
 from ..host import Host, HostException
 from ..utils import alldef
+from ..random import Generator
 from ..outcome import DataOutcome, DataWithPlotOutcome
 from ..extensions.events import InsertGeneEvent
 from ..extensions.modules.growth_behaviour import GrowthBehaviour
@@ -33,10 +34,13 @@ class RecExperiment (Experiment) :
     Has a budget system to limit bruteforcing.
     """
 
+    budget: int
+
     suc_rate: float
 
-    # Keep track of how many hosts were created.
+    # Keep track of how many hosts were created
     host_counter: int
+
 
 
     def __init__ ( self, seed:Optional[int] = None, equipment_investment:int = 0, max_budget:int = 10000 ) :
@@ -45,8 +49,10 @@ class RecExperiment (Experiment) :
             raise Exception("Investment cost is higher than maximal budget.")
 
         super().__init__(seed=seed)
+        self.budget = max_budget - equipment_investment
         self.suc_rate = ErrorRate(equipment_investment, max_budget)
         self.host_counter = 0
+
 
 
     def create_host ( self, species:Literal['ecol','pput'] ) :
@@ -55,16 +61,116 @@ class RecExperiment (Experiment) :
         new_host = None
 
         if species == 'ecol' :
-            new_host = Ecol( exp=self, name="ecol." + str(self.host_counter), seed=seed )
+            new_host = Ecol( name="ecol." + str(self.host_counter), seed=seed )
         elif species == 'pput' :
-            new_host = Pput( exp=self, name="pput." + str(self.host_counter), seed=seed )
+            new_host = Pput( name="pput." + str(self.host_counter), seed=seed )
 
         if species is None :
             raise Exception("Invalid species provided. The possible species are: 'ecol', 'pput'")
 
-        self.hosts.add(new_host)
+        self.bind_host(new_host)
         return new_host
 
+
+
+    def spend_budget_or_abort ( self, amount:int ) -> None :
+        """
+        Each operation may use up a certain amount of the budget.
+        When the budget is not sufficient those operations will all fail.
+        By using error handling via raised exceptions we don't need to check each method for a
+        success flag on their return value.
+        """
+        if amount > self.budget :
+            raise ExperimentException("Experiment has surpassed its budget. No more operations are allowed.")
+        self.budget -= amount
+
+
+
+    def simulate_growth ( self, host:RecHost, temps:List[int] ) -> GrowthOutcome :
+        """ Simulate a growth under multiple temperatures and return expected biomasses over time. """
+        self.spend_budget_or_abort(100)
+        ( df, pauses ) = host.growth.Make_TempGrowthExp(CultTemps=temps, exp_suc_rate=self.suc_rate)
+
+        wait = 0.001 # has to be adjusted, waiting time for loading bar
+        for pause in pauses :
+            loading_time = wait * pause.loading_len
+            Help_Progressbar(45, loading_time, pause.exp)
+
+        return GrowthOutcome(value=df)
+
+
+
+    def clone_with_recombination ( self, host:RecHost, primer:Seq, gene:Gene, tm:int ) -> Tuple[RecHost,str] :
+        """
+        Clone the host while trying to insert a gene. The Clone might or might not contain
+        the added Gene.
+        Returns: ( new_host, outcome_message )
+        """
+        self.spend_budget_or_abort(200)
+
+        # A clone is always made.
+        # TODO: Maybe there is a failure to clone and the return should be `Optional[RecHost]`
+        new_host = RecHost( ref=host ) # Clone the host but with different seed.
+
+        primer_integrity = check_primer_integrity_and_recombination(
+            gene.prom, primer, tm, RecHost.ref_prom, host.genexpr.opt_primer_len
+        )
+        if not primer_integrity.succeeded :
+            return ( new_host, "Primer Failed: " + primer_integrity.error )
+
+        # Both primer integrity and recombination succeeded. Insert the new gene into the clone.
+        new_host.insert_gene(gene)
+        self.bind_host(new_host)
+        return ( new_host, "Cloning with recombination succeeded." )
+
+
+
+    def measure_promoter_strength ( self, host:RecHost, gene:Gene ) -> DataOutcome :
+        self.spend_budget_or_abort(100)
+        prom_str = host.genexpr.calc_prom_str( gene, RecHost.ref_prom )
+        return DataOutcome( value=pd.Series({
+            'Host': host.name,
+            'GeneName': gene.name,
+            'GenePromoter': str(gene.prom),
+            'PromoterStrength': prom_str
+        }) )
+
+
+
+    def simulate_vaccine_production ( self, host:RecHost, gene:Gene, cult_temp:int, growth_rate:float, biomass:int ) -> DataOutcome :
+        self.spend_budget_or_abort(500)
+        if self.rnd_gen.pick_uniform(0,1) > self.suc_rate : # success depends on the experiment level
+            outcome = host.growth.Make_ProductionExperiment(
+                gene=gene,
+                CultTemp=cult_temp,
+                GrowthRate=growth_rate,
+                Biomass=biomass,
+                ref_prom=RecHost.ref_prom,
+                accuracy_Test=.9
+            )
+            return DataOutcome(
+                error=outcome.error,
+                value=pd.Series({
+                    'Host': host.name,
+                    'Gene_Name': gene.name,
+                    'Promoter_Sequence': str(gene.prom),
+                    'Promoter_GC-content': (gene.prom.count('C') + gene.prom.count('G')) / len(gene.prom),
+                    'Expression_Temperature': cult_temp,
+                    'Expression_Biomass': biomass,
+                    'Expression_Rate': outcome.value,
+                })
+            )
+        else:
+            return DataOutcome( None, 'Experiment failed, bad equipment.' )
+
+
+
+    def print_status ( self ) -> None :
+        print("Experiment:")
+        print("  budget = {}".format( self.budget ))
+        print("  failure rate = {}".format( self.suc_rate ))
+        print("  no. hosts = {}".format( len(self.hosts) ))
+        # Could display the status of each host if wanted.
 
 
 
@@ -81,7 +187,7 @@ class RecHost (Host) :
 
 
     def __init__ (
-        self, exp:Experiment, ref:Optional[RecHost] = None, name:Optional[str] = None, seed:Optional[int] = None,
+        self, ref:Optional[RecHost] = None, name:Optional[str] = None, seed:Optional[int] = None,
         opt_growth_temp = None,
         max_biomass = None,
         infl_prom_str = None,
@@ -90,7 +196,7 @@ class RecHost (Host) :
         regressor_file = None,
         addparams_file = None
     ) :
-        super().__init__(exp=exp, ref=ref, name=name, seed=seed)
+        super().__init__(ref=ref, name=name, seed=seed)
 
         # Init Clone
         if ref is not None :
@@ -136,11 +242,17 @@ class RecHost (Host) :
 
 
 
+    def insert_gene ( self, gene:Gene ) -> None :
+        self.emit( InsertGeneEvent( gene=gene, locus=0 ) )
+
+
+
     def print_status ( self ) -> None :
-        print("Host Information:")
-        print("  opt_growth_temp = {}".format( self.growth.opt_growth_temp ))
-        print("  max_biomass = {}".format( self.growth.max_biomass ))
-        print("  opt_primer_len = {}".format( self.genexpr.opt_primer_len ))
+        print("Host [{}]:".format( self.name ))
+        print("  seed plus counter = {} + {}".format( self.rnd_seed, self.rnd_counter ))
+        print("  optimal growth temperature = {}".format( self.growth.opt_growth_temp ))
+        print("  max biomass = {}".format( self.growth.max_biomass ))
+        print("  optimal primer length = {}".format( self.genexpr.opt_primer_len ))
         print("  Gene List: {} genes".format(len(self.genome.genes)))
         for gene in self.genome.genes :
             print("  - {} = {} * {}".format(gene.name, gene.prom, gene.orf))
@@ -150,91 +262,17 @@ class RecHost (Host) :
 
 
 
-    def insert_gene ( self, gene:Gene ) -> None :
-        self.emit( InsertGeneEvent( gene=gene, locus=0 ) )
-
-
-
-    def simulate_growth ( self, temps:List[int] ) -> GrowthOutcome :
-        """ Simulate a growth under multiple temperatures and return expected biomasses over time. """
-        ( df, pauses ) = self.growth.Make_TempGrowthExp(CultTemps=temps, exp_suc_rate=self.exp.suc_rate)
-
-        wait = 0.001 # has to be adjusted, waiting time for loading bar
-        for pause in pauses :
-            loading_time = wait * pause.loading_len
-            Help_Progressbar(45, loading_time, pause.exp)
-
-        return GrowthOutcome(value=df)
-
-
-
-    def clone_with_recombination ( self, primer:Seq, gene:Gene, tm:int ) -> Tuple[RecHost,str] :
-        """
-        Clone the host while trying to insert a gene. The Clone might or might not contain
-        the added Gene.
-        Returns: ( new_host, outcome_message )
-        """
-
-        # A clone is always made.
-        # TODO: Maybe there is a failure to clone and the return should be `Optional[RecHost]`
-        new_host = RecHost( exp=self.exp, ref=self ) # Clone the host but with different seed.
-
-        primer_integrity = check_primer_integrity_and_recombination(gene.prom, primer, tm, RecHost.ref_prom, self.genexpr.opt_primer_len)
-        if not primer_integrity.succeeded :
-            return ( new_host, "Primer Failed: " + primer_integrity.error )
-
-        # Both primer integrity and recombination succeeded. Insert the new gene into the clone.
-        new_host.insert_gene(gene)
-        return ( new_host, "Cloning with recombination succeeded." )
-
-
-
-    def measure_promoter_strength ( self, gene:Gene ) -> DataOutcome :
-        prom_str = self.genexpr.calc_prom_str( gene, RecHost.ref_prom )
-        return DataOutcome( value=pd.Series({
-            'Host': self.name,
-            'GeneName': gene.name,
-            'GenePromoter': str(gene.prom),
-            'PromoterStrength': prom_str
-        }) )
-
-
-
-    def simulate_vaccine_production ( self, gene:Gene, cult_temp:int, growth_rate:float, biomass:int ) -> DataOutcome :
-        rnd = self.exp.rnd_gen # the success rate of the experiment is used here (needs variability at the exp level)
-        if rnd.pick_uniform(0,1) > self.exp.suc_rate :
-            outcome = self.growth.Make_ProductionExperiment(
-                gene=gene,
-                CultTemp=cult_temp,
-                GrowthRate=growth_rate,
-                Biomass=biomass,
-                ref_prom=RecHost.ref_prom,
-                accuracy_Test=.9
-            )
-            return DataOutcome( value=pd.Series({
-                'Host': self.name,
-                'Gene_Name': gene.name,
-                'Promoter_Sequence': str(gene.prom),
-                'Promoter_GC-content': (gene.prom.count('C') + gene.prom.count('G')) / len(gene.prom),
-                'Expression_Temperature': cult_temp,
-                'Expression_Biomass': biomass,
-                'Expression_Rate': outcome.value,
-            }) )
-        else:
-            return DataOutcome( None, 'Experiment failed, bad equipment.' )
-
-
 
 class Ecol (RecHost) :
-    def __init__ ( self, exp, name, seed ) :
-        opt_growth_temp = exp.rnd_gen.pick_integer(25,40)  # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
-        infl_prom_str = exp.rnd_gen.pick_integer(30,50) # explanation see Plot_ExpressionRate
-        opt_primer_len = exp.rnd_gen.pick_integer(16,28) # unit: nt, source: https://link.springer.com/article/10.1007/s10529-013-1249-8
-        max_biomass = exp.rnd_gen.pick_integer(30,100) # unit: in gDCW/l, source (german): https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&cad=rja&uact=8&ved=2ahUKEwjzt_aJ9pzpAhWGiqQKHb1jC6MQFjABegQIAhAB&url=https%3A%2F%2Fwww.repo.uni-hannover.de%2Fbitstream%2Fhandle%2F123456789%2F3512%2FDissertation.pdf%3Fsequence%3D1&usg=AOvVaw2XfGH11P9gK2F2B63mY4IM
+    def __init__ ( self, name, seed ) :
+        gen = Generator( seed )
+        opt_growth_temp = gen.pick_integer(25,40)  # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
+        infl_prom_str = gen.pick_integer(30,50) # explanation see Plot_ExpressionRate
+        opt_primer_len = gen.pick_integer(16,28) # unit: nt, source: https://link.springer.com/article/10.1007/s10529-013-1249-8
+        max_biomass = gen.pick_integer(30,100) # unit: in gDCW/l, source (german): https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&cad=rja&uact=8&ved=2ahUKEwjzt_aJ9pzpAhWGiqQKHb1jC6MQFjABegQIAhAB&url=https%3A%2F%2Fwww.repo.uni-hannover.de%2Fbitstream%2Fhandle%2F123456789%2F3512%2FDissertation.pdf%3Fsequence%3D1&usg=AOvVaw2XfGH11P9gK2F2B63mY4IM
         regressor_file = DATADIR / 'expression_predictor' / 'Ecol-Promoter-predictor.pkl'
         addparams_file = DATADIR / 'expression_predictor' / 'Ecol-Promoter-AddParams.pkl'
         super().__init__(
-            exp=exp,
             name=name,
             seed=seed,
             opt_growth_temp=opt_growth_temp,
@@ -249,15 +287,15 @@ class Ecol (RecHost) :
 
 
 class Pput (RecHost) :
-    def __init__ ( self, exp, name, seed ) :
-        opt_growth_temp = exp.rnd_gen.pick_integer(25,40)  # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
-        infl_prom_str = exp.rnd_gen.pick_integer(30,50) # explanation see Plot_ExpressionRate
-        opt_primer_len = exp.rnd_gen.pick_integer(16,28) # unit: nt, source: https://link.springer.com/article/10.1007/s10529-013-1249-8
-        max_biomass = exp.rnd_gen.pick_integer(45,145) # unit: in gDCW/l, source 1: https://onlinelibrary.wiley.com/doi/pdf/10.1002/bit.25474, source 2: https://link.springer.com/article/10.1385/ABAB:119:1:51
+    def __init__ ( self, name, seed ) :
+        gen = Generator( seed )
+        opt_growth_temp = gen.pick_integer(25,40)  # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
+        infl_prom_str = gen.pick_integer(30,50) # explanation see Plot_ExpressionRate
+        opt_primer_len = gen.pick_integer(16,28) # unit: nt, source: https://link.springer.com/article/10.1007/s10529-013-1249-8
+        max_biomass = gen.pick_integer(45,145) # unit: in gDCW/l, source 1: https://onlinelibrary.wiley.com/doi/pdf/10.1002/bit.25474, source 2: https://link.springer.com/article/10.1385/ABAB:119:1:51
         regressor_file = DATADIR / 'expression_predictor' / 'Ptai-Promoter-predictor.pkl'
         addparams_file = DATADIR / 'expression_predictor' / 'Ptai-Promoter-AddParams.pkl'
         super().__init__(
-            exp=exp,
             name=name,
             seed=seed,
             opt_growth_temp=opt_growth_temp,
