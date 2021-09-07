@@ -65,6 +65,7 @@ class DataOutcome (Outcome) :
 
     def export_data ( self, filepath ) -> None :
         abs_filepath = pathlib.Path(filepath).resolve()
+        abs_filepath.parent.mkdir(parents=True, exist_ok=True) # Build non-existing parent dirs.
         self.value.to_csv( abs_filepath, index=False )
         print("Data exported to: {}".format(abs_filepath))
 
@@ -91,6 +92,7 @@ class DataWithPlotOutcome (DataOutcome) :
 
     def export_plot ( self, filepath ) -> None :
         abs_filepath = pathlib.Path(filepath).resolve()
+        abs_filepath.parent.mkdir(parents=True, exist_ok=True) # Build non-existing parent dirs.
         plt.rcdefaults()
         fig = self.make_plot()
         plt.savefig(abs_filepath)

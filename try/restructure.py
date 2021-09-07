@@ -1,3 +1,4 @@
+# Small (outdated) script to test gene insertion with primer matching.
 
 from __future__ import annotations
 from Bio.Seq import Seq
