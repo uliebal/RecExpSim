@@ -1,4 +1,10 @@
 
+# Use biolabsim from parent folder.
+import os
+import sys
+sys.path.append( os.path.abspath(os.path.join('.')) )
+sys.path.append( os.path.abspath(os.path.join('..')) )
+
 from biolabsim.simulation.host import Host
 from biolabsim.simulation.strain import Strain
 from biolabsim.simulation.metabolism import Help_StrainCharacterizer

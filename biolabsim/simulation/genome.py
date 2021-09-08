@@ -74,7 +74,7 @@ def make_ORF(Model):
 
     # we want to represent codon triplicates, we calculate the next highest divisor of three
     Gene_Length = int(np.ceil(Gen_Minimum/3))
-    CodonFile = 'CodonTriplets.csv'
+    CodonFile = 'CodonTriplets.csv' # TODO: Maybe not found, could be in data folder.
     CodonTriplets = pd.read_csv(CodonFile, delimiter=';', skipinitialspace=True)
     CodonStop = CodonTriplets[['Stop' in s for s in CodonTriplets['Name']]].reset_index()
     CodonCoding = CodonTriplets.drop(CodonStop.index).reset_index()
