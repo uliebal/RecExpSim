@@ -56,8 +56,8 @@ class GenomeExpression ( Module ) :
 
 
     def calc_prom_str ( self, gene:Gene, ref_prom:str ) -> float :
-        final_prom_str = 0
-
+        final_prom_str = 'NaN' # 0
+        
         if gene in self.genome.genes :
             prom_str = Help_PromoterStrength(
                 PromSequence=gene.prom,
