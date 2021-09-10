@@ -1,0 +1,10 @@
+matplotlib
+numpy
+joblib
+IPython
+pandas
+scipy
+scikit-learn
+watermark
+openpyxl
+batchslopes
