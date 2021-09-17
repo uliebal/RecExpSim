@@ -46,22 +46,24 @@ def check_primer_integrity_and_recombination (Promoter:Seq, Primer:Seq, Tm:int, 
     Primer_nT = Primer.count('T')
     Primer_GC_content = ((Primer_nC + Primer_nG) / Primer_Length)*100 # unit needs to be percent
 
-    Primer_Tm_1 = 81.5 + 16.6*np.log10(NaConc) + 0.41*Primer_GC_content - 600/Primer_Length # source: https://www.genelink.com/Literature/ps/R26-6400-MW.pdf (previous: https://core.ac.uk/download/pdf/35391868.pdf#page=190)
-    Primer_Tm_2 = (Primer_nT + Primer_nA)*2 + (Primer_nG + Primer_nC)*4
+    if OptPrimerLen > 25:
+        Primer_Tm = 81.5 + 16.6*np.log10(NaConc) + 0.41*Primer_GC_content - 600/Primer_Length # source: https://www.genelink.com/Literature/ps/R26-6400-MW.pdf (previous: https://core.ac.uk/download/pdf/35391868.pdf#page=190)
+    else:
+        Primer_Tm = (Primer_nT + Primer_nA)*2 + (Primer_nG + Primer_nC)*4
     # Product_Tm = 0.41*(Primer_GC_content) + 16.6*np.log10(NaConc) - 675/Product_Length
     # Ta_Opt = 0.3*Primer_Tm + 0.7*Product_Tm - 14.9
     # source Product_Tm und Ta: https://academic.oup.com/nar/article/18/21/6409/2388653
     # Product_Length would be the length of the promoter (40)? too small -> negative number comes out for Product_Tm
-
-    error_1 = pick_uniform(-1,1)*0.1*Primer_Tm_1
-    error_2 = pick_uniform(-1,1)*0.1*Primer_Tm_2
-    Primer_Tm_err_1 = error_1 + Primer_Tm_1
-    Primer_Tm_err_2 = error_2 + Primer_Tm_2
+    print('Reference primer T:{}'.format(Primer_Tm))
+    error = pick_uniform(-1,1)*0.1*Primer_Tm
+#     error_2 = pick_uniform(-1,1)*0.1*Primer_Tm_2
+    Primer_Tm_err = error + Primer_Tm
+#     Primer_Tm_err_2 = error_2 + Primer_Tm_2
 
     DeviLen = np.absolute(OptPrimerLen - Primer_Length)/OptPrimerLen
-    DeviTm_1 = np.absolute(Primer_Tm_err_1 - Tm)/Primer_Tm_err_1
-    DeviTm_2 = np.absolute(Primer_Tm_err_2 - Tm)/Primer_Tm_err_2
-    DeviTm = min(DeviTm_1, DeviTm_2)
+    DeviTm = np.absolute(Primer_Tm_err - Tm)/Primer_Tm_err
+#     DeviTm_2 = np.absolute(Primer_Tm_err_2 - Tm)/Primer_Tm_err_2
+#     DeviTm = min(DeviTm_1, DeviTm_2)
 
     # create the complementary sequence of the primer to check for mistakes:
     PrimerComp = Primer.complement()

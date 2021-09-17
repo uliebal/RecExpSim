@@ -107,15 +107,20 @@ class RecExperiment (Experiment) :
         Returns: ( new_host, outcome_message )
         """
         self.spend_budget_or_abort(200)
-
+        rnd = host.make_generator()
+        
         # A clone is always made.
         # TODO: Maybe there is a failure to clone and the return should be `Optional[RecHost]`
         new_host = RecHost( ref=host ) # Clone the host but with different seed.
-
+#         myRand = rnd.pick_uniform(0,1)
+#         print('Random cloning decision: {}'.format(myRand))
+        if rnd.pick_uniform(0,1) < self.suc_rate: # experiment failure depending on investment to equipment
+            return( new_host, 'Cloning failed: Bad Equipment' )
+        
         primer_integrity = check_primer_integrity_and_recombination(
             gene.prom, primer, tm, RecHost.ref_prom, host.genexpr.opt_primer_len
         )
-        if not primer_integrity.succeeded :
+        if not primer_integrity.value :
             return ( new_host, "Primer Failed: " + primer_integrity.error )
 
         # Both primer integrity and recombination succeeded. Insert the new gene into the clone.
