@@ -14,9 +14,9 @@ import pandas as pd
 from ..config import DATADIR
 from ..experiment import Experiment, ExperimentException
 from ..host import Host, HostException
-from ..utils import alldef
+from ..utils import alldef, coalesce, first
 from ..random import Generator
-from ..outcome import DataOutcome, DataWithPlotOutcome
+from ..outcome import DataOutcome, DataWithPlotOutcome, combine_data
 from ..extensions.events import InsertGeneEvent
 from ..extensions.modules.growth_behaviour import GrowthBehaviour
 from ..extensions.modules.genome_list import GenomeList
@@ -55,15 +55,16 @@ class RecExperiment (Experiment) :
 
 
 
-    def create_host ( self, species:Literal['ecol','pput'] ) :
+    def create_host ( self, species:Literal['ecol','pput'], name:Optional[str] ) -> RecHost:
         self.host_counter += 1
         seed = self.rnd_gen.pick_seed() # The experiment provides stable seed generation for hosts.
         new_host = None
 
+        chosen_name = coalesce( name, species + str(self.host_counter) )
         if species == 'ecol' :
-            new_host = Ecol( name="ecol." + str(self.host_counter), seed=seed )
+            new_host = Ecol( name=chosen_name, seed=seed )
         elif species == 'pput' :
-            new_host = Pput( name="pput." + str(self.host_counter), seed=seed )
+            new_host = Pput( name=chosen_name, seed=seed )
 
         if species is None :
             raise Exception("Invalid species provided. The possible species are: 'ecol', 'pput'")
@@ -73,12 +74,26 @@ class RecExperiment (Experiment) :
 
 
 
+    def find_host_or_abort ( self, host_name:str ) -> RecHost :
+        """
+        Find a host by a given name or abort with an exception.
+        Throws: ExperimentException
+        """
+        host:Optional[RecHost] = first( self.hosts, lambda h: h.name == host_name )
+            # Find the first host matching the name.
+        if host is None :
+            raise ExperimentException("Experiment has not found the host '{}'".format(host_name))
+        return host
+
+
+
     def spend_budget_or_abort ( self, amount:int ) -> None :
         """
         Each operation may use up a certain amount of the budget.
         When the budget is not sufficient those operations will all fail.
         By using error handling via raised exceptions we don't need to check each method for a
         success flag on their return value.
+        Throws: ExperimentException
         """
         if amount > self.budget :
             raise ExperimentException("Experiment has surpassed its budget. No more operations are allowed.")
@@ -86,9 +101,10 @@ class RecExperiment (Experiment) :
 
 
 
-    def simulate_growth ( self, host:RecHost, temps:List[int] ) -> GrowthOutcome :
+    def simulate_growth ( self, host_name:str, temps:List[int] ) -> GrowthOutcome :
         """ Simulate a growth under multiple temperatures and return expected biomasses over time. """
         self.spend_budget_or_abort(100)
+        host = self.find_host_or_abort(host_name)
         ( df, pauses ) = host.growth.Make_TempGrowthExp(CultTemps=temps, exp_suc_rate=self.suc_rate)
 
         wait = 0.001 # has to be adjusted, waiting time for loading bar
@@ -100,23 +116,23 @@ class RecExperiment (Experiment) :
 
 
 
-    def clone_with_recombination ( self, host:RecHost, primer:Seq, gene:Gene, tm:int ) -> Tuple[RecHost,str] :
+    def clone_with_recombination ( self, host_name:str, primer:Seq, gene:Gene, tm:int ) -> Tuple[RecHost,str] :
         """
         Clone the host while trying to insert a gene. The Clone might or might not contain
         the added Gene.
         Returns: ( new_host, outcome_message )
         """
         self.spend_budget_or_abort(200)
+        host = self.find_host_or_abort(host_name)
         rnd = host.make_generator()
-        
+
         # A clone is always made.
         # TODO: Maybe there is a failure to clone and the return should be `Optional[RecHost]`
         new_host = RecHost( ref=host ) # Clone the host but with different seed.
-#         myRand = rnd.pick_uniform(0,1)
-#         print('Random cloning decision: {}'.format(myRand))
+        self.bind_host(new_host)
         if rnd.pick_uniform(0,1) < self.suc_rate: # experiment failure depending on investment to equipment
             return( new_host, 'Cloning failed: Bad Equipment' )
-        
+
         primer_integrity = check_primer_integrity_and_recombination(
             gene.prom, primer, tm, RecHost.ref_prom, host.genexpr.opt_primer_len
         )
@@ -125,27 +141,65 @@ class RecExperiment (Experiment) :
 
         # Both primer integrity and recombination succeeded. Insert the new gene into the clone.
         new_host.insert_gene(gene)
-        self.bind_host(new_host)
         return ( new_host, "Cloning with recombination succeeded." )
 
 
 
-    def measure_promoter_strength ( self, host:RecHost, gene:Gene ) -> DataOutcome :
+    def measure_promoter_strength ( self, host_name:str, gene_name:str ) -> DataOutcome :
+        """
+        Measure the promoter strength of gene `gene_name` inside host `host_name`.
+        """
         self.spend_budget_or_abort(100)
-        prom_str = host.genexpr.calc_prom_str( gene, RecHost.ref_prom )
+        host = self.find_host_or_abort(host_name)
+
+        # Calculate the cumulative promoter strength of all genes with the same name.
+        matching_genes = [g for g in host.genome.genes if g.name == gene_name]
+        prom_str = 0
+        for mg in matching_genes :
+            prom_str += host.genexpr.calc_prom_str( gene=mg, ref_prom=RecHost.ref_prom )
+
         return DataOutcome( value=pd.Series({
             'Host': host.name,
-            'GeneName': gene.name,
-            'GenePromoter': str(gene.prom),
+            'GeneName': gene_name,
+            'GenePromoter': str(matching_genes[0].prom if len(matching_genes) > 0 else None),
+                # TODO: Only the promoter from the first matching gene is output. This might be
+                #   slightly incorrect if multiple genes with same name have different promoter seqs.
             'PromoterStrength': prom_str
         }) )
 
 
 
-    def simulate_vaccine_production ( self, host:RecHost, gene:Gene, cult_temp:int, growth_rate:float, biomass:int ) -> DataOutcome :
+    def simulate_vaccine_production (
+        self, host_names:List[str], gene_name:Gene, cult_temp:int, growth_rate:float, biomass:int
+    ) -> DataOutcome :
+        """
+        Simulate the protein production of multiple host cultures.
+        """
         self.spend_budget_or_abort(500)
-        if self.rnd_gen.pick_uniform(0,1) > self.suc_rate : # success depends on the experiment level
-            outcome = host.growth.Make_ProductionExperiment(
+
+        # Equipment failure can prematurely end the simulation.
+        if self.rnd_gen.pick_uniform(0,1) < self.suc_rate :
+            return DataOutcome( None, 'Experiment failed, bad equipment.' )
+
+        all_outcomes:List[DataOutcome] = []
+        for host_name in host_names :
+
+            # Skip this host if it does not exist.
+            host = first( self.hosts, lambda h: h.name == host_name )
+            if host is None :
+                outcome = DataOutcome( pd.Series({ 'Host': host_name }), 'Host does not exist.' )
+                all_outcomes.append(outcome)
+                continue
+
+            # Skip this host if no matching gene is found.
+            gene = first( host.genome.genes, lambda g: g.name == gene_name )
+            if gene is None :
+                outcome = DataOutcome( pd.Series({ 'Host': host.name, 'Gene_Name': gene_name }), 'Gene does not exist.' )
+                all_outcomes.append(outcome)
+                continue
+
+            # Simulate the production for this host.
+            production = host.growth.Make_ProductionExperiment(
                 gene=gene,
                 CultTemp=cult_temp,
                 GrowthRate=growth_rate,
@@ -153,8 +207,7 @@ class RecExperiment (Experiment) :
                 ref_prom=RecHost.ref_prom,
                 accuracy_Test=.9
             )
-            return DataOutcome(
-                error=outcome.error,
+            outcome = DataOutcome(
                 value=pd.Series({
                     'Host': host.name,
                     'Gene_Name': gene.name,
@@ -162,11 +215,13 @@ class RecExperiment (Experiment) :
                     'Promoter_GC-content': (gene.prom.count('C') + gene.prom.count('G')) / len(gene.prom),
                     'Expression_Temperature': cult_temp,
                     'Expression_Biomass': biomass,
-                    'Expression_Rate': outcome.value,
-                })
+                    'Expression_Rate': production.value,
+                }),
+                error=production.error
             )
-        else:
-            return DataOutcome( None, 'Experiment failed, bad equipment.' )
+            all_outcomes.append(outcome)
+
+        return combine_data(all_outcomes)
 
 
 
@@ -174,7 +229,7 @@ class RecExperiment (Experiment) :
         print("Experiment:")
         print("  budget = {}".format( self.budget ))
         print("  failure rate = {}".format( self.suc_rate ))
-        print("  no. hosts = {}".format( len(self.hosts) ))
+        print("  hosts = [ {} ]".format( " , ".join([h.name for h in self.hosts]) ))
         # Could display the status of each host if wanted.
 
 
@@ -244,6 +299,19 @@ class RecHost (Host) :
         # Failed Init
         else :
             raise HostException("Host not initialized. Reason: incomplete arguments.")
+
+
+
+    def find_gene_or_abort ( self, gene_name:str ) -> Gene :
+        """
+        Find a gene by a given name or abort with an exception.
+        Throws: HostException
+        """
+        gene:Optional[Gene] = first( self.genome.genes, lambda g: g.name == gene_name )
+            # Find the first gene matching the name.
+        if gene is None :
+            raise HostException("Host has not found the gene '{}'".format(gene_name))
+        return gene
 
 
 

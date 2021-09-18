@@ -102,6 +102,20 @@ class DataWithPlotOutcome (DataOutcome) :
 
 
 def combine_data ( outcomes:List[DataOutcome] ) -> DataOutcome :
-    cout = pd.concat([ pd.DataFrame([outcome.value]) for outcome in outcomes ])
+    """
+    Combine multiple DataOutcome into one big table. Can combine multiple Series and Dataframes.
+    TODO: Should it extract the error of each outcome? Right now it is being ignored.
+    """
+
+    # First convert all outcomes into dataframes (convert Series and pass DataFrames)
+    dfs = []
+    for outcome in outcomes :
+        if isinstance( outcome.value, pd.DataFrame ) :
+            dfs.append( outcome.value )
+        elif isinstance( outcome.value, pd.Series ) :
+            dfs.append( pd.DataFrame([outcome.value]) )
+
+    # Make the join and outcome a dataframe.
+    cout = pd.concat(dfs)
     cout.reset_index( drop=True, inplace=True )
     return DataOutcome( value=cout )

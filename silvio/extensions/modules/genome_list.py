@@ -1,6 +1,7 @@
 """
 GenomeList is a module that stores the multiple genes an Host may have.
 
+TODO: Add support for adding the same gene twice (probably multisets)
 """
 
 from __future__ import annotations

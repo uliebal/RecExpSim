@@ -2,7 +2,9 @@
 Contains various utility methods.
 """
 
-from typing import Any
+from typing import Any, TypeVar, List, Callable, Optional
+
+T = TypeVar('T')
 
 
 
@@ -19,3 +21,11 @@ def alldef ( *arg ) -> bool :
     Returns true if all arguments are non-None.
     """
     return all([ a is not None for a in arg ])
+
+
+
+def first ( array:List[T], criteria:Callable[[T],bool] ) -> Optional[T] :
+    """
+    Return the first item that validates the criteria.
+    """
+    return next( (item for item in array if criteria(item)), None )
