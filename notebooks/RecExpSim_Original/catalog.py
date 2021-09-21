@@ -45,7 +45,7 @@ class RecExperiment (Experiment) :
     def __init__ ( self, seed:Optional[int] = None, equipment_investment:int = 0, max_budget:int = 10000 ) :
 
         if equipment_investment > max_budget :
-            raise Exception("Investment cost is higher than maximal budget.")
+            raise ExperimentException("Investment cost is higher than maximal budget.")
 
         super().__init__(seed=seed)
         self.budget = max_budget - equipment_investment
@@ -66,7 +66,7 @@ class RecExperiment (Experiment) :
             new_host = Pput( name=chosen_name, seed=seed )
 
         if species is None :
-            raise Exception("Invalid species provided. The possible species are: 'ecol', 'pput'")
+            raise ExperimentException("Invalid species provided. The possible species are: 'ecol', 'pput'")
 
         self.bind_host(new_host)
         return new_host
