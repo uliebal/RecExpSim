@@ -6,7 +6,8 @@ FROM ${BASE_IMAGE}
 RUN conda create -n py39 python=3.9
 
 # Activate py39 Environment
-SHELL ["conda", "run", "--no-capture-output", "-n", "py39", "/bin/bash", "-c"]
+# May include argument "--no-capture-output" but it only exists on conda >=4.9
+SHELL ["conda", "run", "-n", "py39", "/bin/bash", "-c"]
 
 # Install iPyKernel
 RUN pip install ipykernel && ipython kernel install --user --name=py39
