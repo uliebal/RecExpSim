@@ -5,6 +5,8 @@ An experiment that uses hosts which implements all currently existing modules.
 from __future__ import annotations
 from typing import Optional
 
+from Bio.Seq import Seq
+
 from silvio import (
     DATADIR, # config
     Experiment, ExperimentException, Host, HostException, # base classes
@@ -38,7 +40,9 @@ class SeqExperiment (Experiment) :
         self.host_counter += 1
         seed = self.rnd_gen.pick_seed() # The experiment provides stable seed generation for hosts.
         chosen_name = coalesce( name, "host" + str(self.host_counter) )
-        new_host = SeqHost( name=chosen_name, seed=seed, bg_size=bg_size, bg_gc_content=bg_gc_content )
+        new_host = SeqHost( name=chosen_name, seed=seed )
+        new_host.make( bg_size=bg_size, bg_gc_content=bg_gc_content )
+        new_host.sync()
         self.bind_host(new_host)
         return new_host
 
@@ -96,6 +100,7 @@ class SeqExperiment (Experiment) :
         """
         host = self.find_host_or_abort(host_name)
         new_host = SeqHost( ref=host ) # Clone the host but with different seed.
+        new_host.copy( ref=host )
         self.bind_host(new_host)
         return new_host
 
@@ -116,24 +121,22 @@ class SeqHost (Host) :
 
 
 
-    def __init__ (
-        self, ref:Optional[SeqHost] = None, name:Optional[str] = None, seed:Optional[int] = None,
-        bg_size:Optional[int] = None,
-        bg_gc_content:Optional[float] = None
-    ) :
-        super().__init__(ref=ref, name=name, seed=seed)
+    def make ( self, bg_size:int = None, bg_gc_content:float = None ) -> None :
+        self.genome = GenomeLibrary()
+        self.genome.make( bg_size=bg_size, bg_gc_content=bg_gc_content, bg_rnd=self.make_generator() )
+        self.genome.bind( host=self )
 
-        # Init Clone
-        if ref is not None :
-            self.genome = GenomeLibrary( host=self, sequence=ref.genome.sequence ) # same sequence
 
-        # Init New
-        elif alldef( bg_size, bg_gc_content ) :
-            self.genome = GenomeLibrary( host=self, bg_size=bg_size, bg_gc_content=bg_gc_content )
 
-        # Failed Init
-        else :
-            raise HostException("Host not initialized. Reason: incomplete arguments.")
+    def copy ( self, ref:SeqHost ) -> None :
+        self.genome = GenomeLibrary()
+        self.genome.copy( ref=ref.genome )
+        self.genome.bind( host=self )
+
+
+
+    def sync ( self ) -> None :
+        self.sync_modules([ self.genome ])
 
 
 

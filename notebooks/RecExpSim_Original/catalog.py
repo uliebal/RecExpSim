@@ -4,7 +4,7 @@ An experiment that uses hosts which implements all currently existing modules.
 
 from __future__ import annotations
 from typing import Optional, List, Tuple, Literal
-from copy import copy
+from pathlib import Path
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -61,15 +61,49 @@ class RecExperiment (Experiment) :
 
         chosen_name = coalesce( name, species + str(self.host_counter) )
         if species == 'ecol' :
-            new_host = Ecol( name=chosen_name, seed=seed )
+            new_host = self.build_ecol_host( name=chosen_name, seed=seed )
         elif species == 'pput' :
-            new_host = Pput( name=chosen_name, seed=seed )
+            new_host = self.build_ecol_host( name=chosen_name, seed=seed )
 
         if species is None :
             raise ExperimentException("Invalid species provided. The possible species are: 'ecol', 'pput'")
 
         self.bind_host(new_host)
         return new_host
+
+
+
+    def build_ecol_host ( self, name:str, seed:int ) -> RecHost :
+        gen = Generator( seed )
+        host = RecHost( name=name, seed=seed )
+        host.make(
+            opt_growth_temp= gen.pick_integer(25,40), # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
+            max_biomass= gen.pick_integer(30,100), # unit: in gDCW/l, source (german): https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&cad=rja&uact=8&ved=2ahUKEwjzt_aJ9pzpAhWGiqQKHb1jC6MQFjABegQIAhAB&url=https%3A%2F%2Fwww.repo.uni-hannover.de%2Fbitstream%2Fhandle%2F123456789%2F3512%2FDissertation.pdf%3Fsequence%3D1&usg=AOvVaw2XfGH11P9gK2F2B63mY4IM
+            infl_prom_str= gen.pick_integer(30,50), # explanation see Plot_ExpressionRate
+            species_prom_str= 0.057,
+            opt_primer_len= gen.pick_integer(16,28), # unit: nt, source: https://link.springer.com/article/10.1007/s10529-013-1249-8
+            regressor_file= DATADIR / 'expression_predictor' / 'Ecol-Promoter-predictor.pkl',
+            addparams_file= DATADIR / 'expression_predictor' / 'Ecol-Promoter-AddParams.pkl',
+        )
+        host.sync()
+        return host
+
+
+
+    def build_pput_host ( self, name:str, seed:int ) -> RecHost :
+        gen = Generator( seed )
+        host = RecHost( name=name, seed=seed )
+        host.make(
+            opt_growth_temp= gen.pick_integer(25,40), # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
+            max_biomass= gen.pick_integer(45,145), # unit: in gDCW/l, source 1: https://onlinelibrary.wiley.com/doi/pdf/10.1002/bit.25474, source 2: https://link.springer.com/article/10.1385/ABAB:119:1:51
+            infl_prom_str= gen.pick_integer(30,50), # explanation see Plot_ExpressionRate
+            species_prom_str= 0.04,
+            opt_primer_len= gen.pick_integer(16,28), # unit: nt, source: https://link.springer.com/article/10.1007/s10529-013-1249-8
+            regressor_file= DATADIR / 'expression_predictor' / 'Ptai-Promoter-predictor.pkl',
+            addparams_file= DATADIR / 'expression_predictor' / 'Ptai-Promoter-AddParams.pkl',
+        )
+        host.sync()
+        return host
 
 
 
@@ -128,6 +162,7 @@ class RecExperiment (Experiment) :
         # A clone is always made.
         # TODO: Maybe there is a failure to clone and the return should be `Optional[RecHost]`
         new_host = RecHost( ref=host ) # Clone the host but with different seed.
+        new_host.copy( ref=host )
         self.bind_host(new_host)
         if rnd.pick_uniform(0,1) < self.suc_rate: # experiment failure depending on investment to equipment
             return( new_host, 'Cloning failed: Bad Equipment' )
@@ -245,59 +280,62 @@ class RecHost (Host) :
 
 
 
-    def __init__ (
-        self, ref:Optional[RecHost] = None, name:Optional[str] = None, seed:Optional[int] = None,
-        opt_growth_temp = None,
-        max_biomass = None,
-        infl_prom_str = None,
-        species_prom_str = None,
-        opt_primer_len = None,
-        regressor_file = None,
-        addparams_file = None
-    ) :
-        super().__init__(ref=ref, name=name, seed=seed)
+    def make ( self,
+        opt_growth_temp:int, max_biomass:int,
+        infl_prom_str:int, species_prom_str:int, opt_primer_len:int,
+        regressor_file:Path, addparams_file:Path
+    ) -> None :
 
-        # Init Clone
-        if ref is not None :
-            self.genome = GenomeList( host=self, genes=copy(ref.genome.genes) )
-            self.genexpr = GenomeExpression(
-                host=self,
-                genome=self.genome,
-                opt_primer_len=ref.genexpr.opt_primer_len,
-                infl_prom_str=ref.genexpr.infl_prom_str,
-                species_prom_str=ref.genexpr.species_prom_str,
-                regressor_file=ref.genexpr.regressor_file,
-                addparams_file=ref.genexpr.addparams_file
-            )
-            self.growth = GrowthBehaviour(
-                host=self,
-                genexpr=self.genexpr,
-                opt_growth_temp=ref.growth.opt_growth_temp,
-                max_biomass=ref.growth.max_biomass
-            )
-
-        # Init New
-        elif alldef( opt_growth_temp, max_biomass, infl_prom_str, species_prom_str, opt_primer_len, regressor_file, addparams_file ) :
-            self.genome = GenomeList( host=self )
-            self.genexpr = GenomeExpression(
-                host=self,
-                genome=self.genome,
-                opt_primer_len=opt_primer_len,
-                infl_prom_str=infl_prom_str,
-                species_prom_str=species_prom_str,
-                regressor_file=regressor_file,
-                addparams_file=addparams_file
-            )
-            self.growth = GrowthBehaviour(
-                host=self,
-                genexpr=self.genexpr,
-                opt_growth_temp=opt_growth_temp,
-                max_biomass=max_biomass
-            )
-
-        # Failed Init
-        else :
+        if not alldef( opt_growth_temp, max_biomass, infl_prom_str, species_prom_str, opt_primer_len, regressor_file, addparams_file ) :
             raise HostException("Host not initialized. Reason: incomplete arguments.")
+
+        # Setup GenomeList module
+        self.genome = GenomeList()
+        self.genome.make()
+        self.genome.bind( host=self )
+
+        # Setup GenomeExpression module
+        self.genexpr = GenomeExpression()
+        self.genexpr.make(
+            opt_primer_len=opt_primer_len,
+            infl_prom_str=infl_prom_str,
+            species_prom_str=species_prom_str,
+            regressor_file=regressor_file,
+            addparams_file=addparams_file
+        )
+        self.genexpr.bind( host=self, genome=self.genome )
+
+        # Setup GrowthBehaviour module
+        self.growth = GrowthBehaviour()
+        self.growth.make(
+            opt_growth_temp=opt_growth_temp,
+            max_biomass=max_biomass
+        )
+        self.growth.bind( host=self, genexpr=self.genexpr )
+
+
+
+    def copy ( self, ref:RecHost ) -> None :
+
+        # Setup GenomeList module using the ref
+        self.genome = GenomeList()
+        self.genome.copy( ref=ref.genome )
+        self.genome.bind( host=self )
+
+        # Setup GenomeExpression module using the ref
+        self.genexpr = GenomeExpression()
+        self.genexpr.copy( ref=ref.genexpr )
+        self.genexpr.bind( host=self, genome=self.genome )
+
+        # Setup GrowthBehaviour module using the ref
+        self.growth = GrowthBehaviour()
+        self.growth.copy( ref=ref.growth )
+        self.growth.bind( host=self, genexpr=self.genexpr )
+
+
+
+    def sync ( self ) -> None :
+        self.sync_modules([ self.genome, self.genexpr, self.growth ])
 
 
 
@@ -331,53 +369,6 @@ class RecHost (Host) :
         print("  Event History: {} events".format(len(self.event_log)))
         for el in self.event_log :
             print("  - {}".format(el))
-
-
-
-
-class Ecol (RecHost) :
-    def __init__ ( self, name, seed ) :
-        gen = Generator( seed )
-        opt_growth_temp = gen.pick_integer(25,40)  # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
-        infl_prom_str = gen.pick_integer(30,50) # explanation see Plot_ExpressionRate
-        opt_primer_len = gen.pick_integer(16,28) # unit: nt, source: https://link.springer.com/article/10.1007/s10529-013-1249-8
-        max_biomass = gen.pick_integer(30,100) # unit: in gDCW/l, source (german): https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&cad=rja&uact=8&ved=2ahUKEwjzt_aJ9pzpAhWGiqQKHb1jC6MQFjABegQIAhAB&url=https%3A%2F%2Fwww.repo.uni-hannover.de%2Fbitstream%2Fhandle%2F123456789%2F3512%2FDissertation.pdf%3Fsequence%3D1&usg=AOvVaw2XfGH11P9gK2F2B63mY4IM
-        regressor_file = DATADIR / 'expression_predictor' / 'Ecol-Promoter-predictor.pkl'
-        addparams_file = DATADIR / 'expression_predictor' / 'Ecol-Promoter-AddParams.pkl'
-        super().__init__(
-            name=name,
-            seed=seed,
-            opt_growth_temp=opt_growth_temp,
-            infl_prom_str=infl_prom_str,
-            opt_primer_len=opt_primer_len,
-            max_biomass=max_biomass,
-            regressor_file=regressor_file,
-            addparams_file=addparams_file,
-            species_prom_str=0.057,
-        )
-
-
-
-class Pput (RecHost) :
-    def __init__ ( self, name, seed ) :
-        gen = Generator( seed )
-        opt_growth_temp = gen.pick_integer(25,40)  # unit: degree celsius, source: https://application.wiley-vch.de/books/sample/3527335153_c01.pdf
-        infl_prom_str = gen.pick_integer(30,50) # explanation see Plot_ExpressionRate
-        opt_primer_len = gen.pick_integer(16,28) # unit: nt, source: https://link.springer.com/article/10.1007/s10529-013-1249-8
-        max_biomass = gen.pick_integer(45,145) # unit: in gDCW/l, source 1: https://onlinelibrary.wiley.com/doi/pdf/10.1002/bit.25474, source 2: https://link.springer.com/article/10.1385/ABAB:119:1:51
-        regressor_file = DATADIR / 'expression_predictor' / 'Ptai-Promoter-predictor.pkl'
-        addparams_file = DATADIR / 'expression_predictor' / 'Ptai-Promoter-AddParams.pkl'
-        super().__init__(
-            name=name,
-            seed=seed,
-            opt_growth_temp=opt_growth_temp,
-            infl_prom_str=infl_prom_str,
-            opt_primer_len=opt_primer_len,
-            max_biomass=max_biomass,
-            regressor_file=regressor_file,
-            addparams_file=addparams_file,
-            species_prom_str=0.04
-        )
 
 
 
