@@ -1,13 +1,15 @@
 .ipynb_checkpoints/
 __pycache__/
 *~*
-Strain_characterization*
-Production_Experiments*
-RelExpress*
-PromoterStrength-Versus*
-PromoterStrength-Versus-GCcontent.png
 *.gz
+.vscode
+output/
+bin/
+lib/
+lib64
 pyvenv.cfg
-WT-Seq.fasta
 GitHub_Token.txt
 
+# Ignore the generated API files and build output of sphinx documentation.
+docs/_build
+docs/api/*
