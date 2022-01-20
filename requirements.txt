@@ -14,3 +14,4 @@ scipy~=1.4
 sphinx-rtd-theme~=0.5
 Sphinx~=3.4
 watermark~=2.0
+zipfile~=3.2
