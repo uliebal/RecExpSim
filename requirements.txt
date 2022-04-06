@@ -1,4 +1,5 @@
-batchslopes~=0.0.7
+#batchslopes~=0.0.7
+silvio
 biopython~=1.79
 cobra~=0.22
 Escher~=1.7
@@ -9,9 +10,9 @@ numpy~=1.18
 openpyxl~=3.0
 pandas~=1.0
 recordclass
-scikit-learn~=0.22
+sklearn~=0.22
 scipy~=1.4
 sphinx-rtd-theme~=0.5
 Sphinx~=3.4
 watermark~=2.0
-zipfile~=3.2
+#zipfile
