@@ -1,7 +1,7 @@
 #batchslopes~=0.0.7
 silvio
 biopython~=1.79
-cobra~=0.22
+#cobra~=0.22
 Escher~=1.7
 IPython~=7.20
 joblib>=0.14
