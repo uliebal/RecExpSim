@@ -4,7 +4,7 @@
 
 To run BioLabSim directly choose among the following JupyterHubs:
 
-- RWTHjupyter: RWTH Aachen University JupyterHub: [![](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/uliebal/RecExpSim/HEAD)
+- RWTHjupyter: RWTH Aachen University JupyterHub: [![](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/uliebal/RecExpSim/RecExpSimV0.1.0)
 
 - RWTHjupyter: RWTH Aachen University JupyterHub: [![](https://jupyter.pages.rwth-aachen.de/documentation/images/badge-launch-rwth-jupyter.svg)](https://jupyter.rwth-aachen.de/hub/spawn?profile=biolabsim)
 
