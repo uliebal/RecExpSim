@@ -9,6 +9,7 @@ lib/
 lib64
 pyvenv.cfg
 GitHub_Token.txt
+*.code-workspace
 
 # Ignore the generated API files and build output of sphinx documentation.
 docs/_build
