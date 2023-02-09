@@ -14,7 +14,8 @@ Current Members:
 | ------------------ | --------------------- | ---------------------------- | ----------------- |
 | Ulf Liebal         | Joachim Fensterle     | Frank Eiden                  | Malte Persike     |
 | Constantin Schedel | Sylvia Moenickes      | Florian Dymek                | Alina Vogelgesang |
-| Lars Blank         |                       |                              | Philipp Weyers    |
+| Lars Blank         | Bhavya Dutta          |                              | Philipp Weyers               | 
+|                    | Sven Bröcking         |                              |           |
 
 Former Collaborators:
 
@@ -35,5 +36,3 @@ Lars Küpfer, Systemmedizin, RWTH
 Helen Rosenkranz, Biology, RWTH
 
 Karsten Braun, Biology, RWTH
-
-Josefine Mendez, CLS, RWTH
