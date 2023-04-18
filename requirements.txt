@@ -9,6 +9,7 @@ numpy~=1.22
 openpyxl~=3.0
 pandas>=1.0
 recordclass
+charset-normalizer~=2.0
 scikit-learn>=1.0
 scipy~=1.9
 #sphinx-rtd-theme~=0.5
@@ -16,3 +17,7 @@ scipy~=1.9
 watermark~=2.0
 #zipfile
 iambcodes
+# biomotifsim
+jupyter_bokeh~=3.0
+biocircuits==0.1.8
+panel~=0.14
