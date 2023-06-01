@@ -18,6 +18,6 @@ watermark~=2.0
 #zipfile
 iambcodes
 # biomotifsim
-jupyter_bokeh~=3.0
-biocircuits==0.1.8
-panel~=0.14
+# jupyter_bokeh~=3.1.1
+bokeh~=3.1.1
+biocircuits==0.1.11
