@@ -1,0 +1,194 @@
+format: jb-book
+root: README # intro
+parts:
+- caption: Kursmaterial
+  numbered: 4
+  chapters:
+# Kap 1 Einführung, Kursorga, Grundbegriffe, Gruppenfindung, Methodik (Tasse Tee)
+  - file: files/01/01SYE # 
+    sections:
+    - file: files/01/SYE-thkoeln
+    - file: files/01/SYE-syseng #
+    - file: files/01/SYE-method-with-cup-of-tea # 
+    - file: files/01/SYE-physical-optimum-method
+    - file: files/01/jupyterhub-intro # 
+    - file: files/01/SYE-orga # 
+
+# Kap 2 Methodik detaillierter (für Projekte): Anforderungen, Systemgrenzen, Energieflüsse, Energieloggerausleihe und planen: wo messen (später ggf. auch raspi ausleihen)
+  - file: files/02/02SYE #
+    sections:
+    - file: files/02/RISE-intro
+    - file: files/02/SYE-specs #
+
+# Kap 3 python-Kurs: Installation, erste Datenanalysen und -erstellungen (für Tasse Tee), jupyterhub, dos and don'ts (Leerzeichen in Dateinamen etc.), öffentliche Datenquellen
+  - file: files/03/03SYE
+    sections:
+    - file: files/03/dateiorga-thk-jupyterhub
+    - file: files/03/SYE-python-intro # 
+    - file: files/03/Beispiel_Datenanalyse # 
+    - file: files/03/Hochaufgeloeste_Daten_downsamplen # 
+    - file: files/03/SYE-first-energydata-analysis # 
+
+# Kap 4 mit Daten kritisch umgehen
+  - file: files/04/04SYE #
+    sections:
+    - file: files/04/SYE-plausible-data #
+    - file: files/04/SYE-data #
+
+# Kap 5 elektrische Energie messen: Messgrößen, Messgenauigkeit, Normen
+  - file: files/05/05SYE #
+    sections:
+    - file: files/05/SYE-electricalenergy #
+    - file: files/05/SYE-measure-electrical-energy #
+    - file: files/05/SYE-lab-energy-logger #
+    - file: files/05/SYE-lab-electrical-energy # 
+
+# Kap 6 Messmethode Thermografie für Systemüberblick inkl. Kontaktthermometrie, mit Beispiel-Thermografien zum Analysieren (SW von FLIR, python-Analyse, raspi-Thermografie-Kamera für 80 Euro?)
+  - file: files/06/06SYE #
+    sections:
+    - file: files/06/SYE-temperature-eneff #
+    - file: files/06/SYE-contact-temp-sens #
+    - file: files/06/SYE-thermography #
+    - file: files/06/SYE-lab-thermography #
+
+# Kap 7 /Meilenstein 1: erste Messung mit Energielogger zeigen und erste Analyse der entstandenen Dauerlinie/
+# am besten onepager - ein Bildschirm voll / eine Folie - auf der das gezeigt wird, dann reicht die Zeit
+  - file: files/07/07SYE
+
+# Kap 8 Daten modellieren: Datenblätter auslesen (ginput), Effizienzen verrechnen, Zeitstempel richtig berechnen am Beispiel energieeffiziente Beleuchtung inkl. Messung mit luxmeter, Lebenszyklus-Aspekte (Sondermüll)
+  - file: files/08/08SYE
+    sections:
+    - file: files/08/SYE-generate-reference
+    - file: files/08/SYE-model-nameplate
+    - file: files/08/SYE-appliances
+    - file: files/08/SYE-model-reactive-power-comp
+    - file: files/08/SYE-efficiencycurve
+    - file: files/08/SYE-linearregression
+
+# Kap 9 Fallstudie: Elektronik (z. B. IT) vergleichen, auch über Lebenszyklus (was ist Lebenszyklus ökologisch?), Evaluation
+  - file: files/09/09SYE
+    sections:
+    - file: files/09/SYE-lca
+    - file: files/09/SYE-energyfootprint-gwp
+    - file: files/09/SYE-lca-dc-grid
+    - file: files/09/SYE-usb-c-losses
+    - file: files/09/SYE-eneff-software # 
+    - file: files/09/SYE-efficiencystandards #
+
+# Kap 10 Energieeffiziente Systeme mit Batteriespeicher und energieeffiziente Beleuchtung
+  - file: files/10/10SYE
+    sections:
+    - file: files/10/SYE-batteries
+    - file: files/10/SYE-battery-efficiency
+    - file: files/10/SYE-lighting
+    - file: files/10/SYE-lighting-smps
+
+# Kap 11 /Meilenstein 2: erste Einsparmaßnahme modelliert und Effekte gezeigt anhand heatmap oder boxplot
+# Struktur s.o.
+  - file: files/11/11SYE
+
+# Kap 12 Wirtschaftlichkeit nach VDI xy, #Kritik an einseitigen Energieeffizienzanalysen (auf Projekte beziehen): Lebenszyklusbetrachtungen, #globale vs. lokale Optimierungen, Ebenen der Energieeffizienz, Politik, Orga mündl. Prüfung
+  - file: files/12/12SYE
+    sections:
+    - file: files/12/SYE-economicviability
+    - file: files/12/SYE-funding
+    - file: files/12/SYE-holistic
+
+# Kap 13 Fallstudie z. B. Druckluft an PV: erneuerbare Energien für mehr Energieeffizienz und Nachhaltigkeit einsetzen
+  - file: files/13/13SYE
+    sections:
+    - file: files/13/SYE-compressed-air
+    - file: files/13/SYE-casestudy-plasticsprocessing
+    - file: files/13/SYE-casestudy-lasercutting
+
+# Kap 14 Zusammenhang Energieeffizienz mit Ressourceneffizienz aus Fallstudien o.ä. #Fallstudie: Abwärmenutzung im Bereich Kunststofftechnologie o.ä., mit Daten zum selber analysieren (mind. plotly), daran generelle Methoden zeigen für Energiesparen
+  - file: files/14/14SYE
+    sections: 
+    - file: files/14/SYE-evaluation
+    - file: files/14/SYE-obsoleszenz
+    - file: files/14/SYE-reparatur
+    - file: files/14/SYE-jupyterhub-upload
+
+# Kap 15-17a /Präsentation/
+# ggf. hier nochmal Tipps für Präsentation und Regeln (wie lange, alle zeigen was aus Team, ...)
+  - file: files/15/SYE-presi
+
+# Kap 18 Feedback, Tipps zur mündlichen Prüfung, Sichern von Daten für öffentliche Weiterverwendung
+# Anleitungen für obiges bzw. Verweis (nicht doppelt ...)
+  - file: files/18/SYE-orga-oral
+
+# aktuelle Projektaufgabe
+- caption: "Aktuelle Projektaufgabe"
+  numbered: False
+  chapters:
+  - file: files/proj/2022_SYE_projektaufgabe
+
+- caption: "Öffentlich verfügbare Energiedaten (nicht prüfungsrelevant, aber ggf. projektrelevant)"
+  numbered: 3
+  chapters:
+  - file: files/nb/SYE-energydatasources
+#     sections:
+#     - file: files/nb/visualization_datasources/visualization_DWD
+#     - file: files/nb/visualization_datasources/visualization_openMeter
+#     - file: files/nb/visualization_datasources/visualization_PLEXOS
+#     - file: files/nb/visualization_datasources/visualization_IEEE-8years
+#     - file: files/nb/visualization_datasources/visualization_OPSD-Timeseries
+#     - file: files/nb/visualization_datasources/visualization_SMARD
+#     - file: files/nb/visualization_datasources/visualization_JERICHO-E
+#     - file: files/nb/visualization_datasources/visualization_OPSD-Wheather-Data
+#     - file: files/nb/visualization_datasources/visualization_OEP
+#     - file: files/nb/visualization_datasources/visualization_OPSD-When2Heat
+# # #  - file: files/18/SYE-opendata
+
+- caption: "Zusatzinfos (nicht prüfungsrelevant)"
+  numbered: 3
+  chapters:
+  - file: files/nb/SYE-energymodels
+#   - file: files/nb/SYE-IT
+#   - file: files/nb/SYE-further-labels
+#   - file: files/nb/SYE-efficiency-electric-motor # kann nächstes Jahr auch in Kap8 mit rein
+#   - file: files/nb/SYE-compensate-reactive-power-capacitor-sizing # kann nächstes Jahr auch in Kap8 rein (oder verlinken)
+#   - file: files/nb/SYE-lighting-colour # kann nächstses Jahr auch in Kap10 oder so rein (oder verlinken)
+#   - file: files/nb/SYE-diagrams
+
+# # # #  - file: files/nb/SYE-motor-DE
+# # # #  - file: files/nb/SYE-pumps-DE
+# # # #  - file: files/nb/SYE-efficientbuildings-DE # noch nicht fertig (bei weitem)
+# # # #  - file: files/nb/SYE-efficientindustry-DE # noch nicht fertig (bei weitem)
+# # # #  - file: files/nb/nbdime_Guide
+# # # #  - file: files/nb/SYE-householdappliances-DE.ipynb
+# # # #  - file: files/nb/OER4EEtodos # muss noch weg (nach Durchsehen)
+
+- caption: "jupyter und git Tricks und Tipps (nicht prüfungsrelevant)"
+  numbered: 3
+  chapters: 
+  - file: files/jup/jupyterhub-howto
+  - file: files/nb/conda_environment
+  - file: files/nb/SYE-copy-gitlab-to-jupyterhub #
+  - file: files/nb/SYE-git-intro
+  - file: files/nb/SYE-git-howto
+  - file: files/nb/Datenanalyse_pandas #
+  - file: files/jup/SYE-save-dataframe-interim-status-to-csv
+
+- caption: Dozentenmaterial
+  numbered: 3
+  chapters:
+  - file: files/teach/SYE-teach
+  - file: files/teach/SYE-layout
+  - file: files/teach/SYE-materialliste-dozenten
+  - file: files/teach/ms1/check_files
+# #   - file: files/proj/2020_SYE_projektaufgabe  
+# #   - file: files/proj/2021_SYE_projektaufgabe
+# #   - file: files/proj/2022_SYE_projektaufgabe
+
+# # # #- caption: Weitere Ideen für Fallstudien
+# # # #  numbered: 3
+# # # #  chapters:
+# # # #  - file: cases/SYE-casestudybuildings
+# # # #    title: Energieeffiziente Gebäude
+# # # #    sections:
+# # # #    - file: cases/SYE-casestudyventilation
+# # # #    - file: cases/SYE-solargains
+# # # #    - file: cases/SYE-efficientshower
+
+

@@ -1,0 +1,111 @@
+###################################################
+# Bucheinstellungen
+title: Systemtechnik für Energieeffizienz
+author: Johanna Friederike May
+logo: files/img/label-SYE.png
+exclude_patterns: ["files/_build", "files/**.ipynb_checkpoints","files/teach/ms1","files/teach/ms2", "files/teach/pr"]
+only_build_toc_files: true
+
+###################################################
+# Ausführungseinstellungen
+execute:
+  execute_notebooks         : auto  # Whether to execute notebooks at build time. Must be one of ("auto", "force", "cache", "off")
+  cache                     : ""    # A path to the jupyter cache that will be used to store execution artifacts. Defaults to `_build/.jupyter_cache/`
+  exclude_patterns          : []    # A list of patterns to *skip* in execution (e.g. a notebook that takes a really long time)
+  timeout                   : 120    # The maximum time (in seconds) each notebook cell is allowed to run.
+  run_in_temp               : false # If `True`, then a temporary directory will be created and used as the command working directory (cwd),
+                                    # otherwise the notebook's parent directory will be the cwd.
+  allow_errors              : false # If `False`, when a code cell raises an error the execution is stopped, otherwise all cells are always run.
+  stderr_output             : show  # One of 'show', 'remove', 'remove-warn', 'warn', 'error', 'severe'
+
+###################################################
+# Formateinstellungen
+parse:
+  myst_enable_extensions:  # default extensions to enable in the myst parser. See https://myst-parser.readthedocs.io/en/latest/using/syntax-optional.html
+    - amsmath
+    - colon_fence
+    - deflist
+    - dollarmath
+    - html_admonition
+    - html_image
+    - linkify
+    - replacements
+    # - smartquotes
+#    - substitution
+#    - tasklist
+
+  myst_url_schemes          : [mailto, http, https]  # URI schemes that will be recognised as external URLs in Markdown links
+
+###################################################
+# HTML 
+html:
+  html_theme: sphinx_book_theme
+  favicon: "" # a path to a favicon image
+  use_repository_button     : true  # Whether to add a link to your repository button
+  use_issues_button: true
+  use_edit_page_button: true
+  use_fullscreen_button: true
+  extra_navbar              : Powered by <a href="https://jupyterbook.org">Jupyter Book</a>  # Will be displayed underneath the left navbar.
+  extra_footer              : | 
+    <p>
+    <a href="https://www.th-koeln.de/hochschule/digitale-lehr--und-lernmaterialien-zur-energiewende_75182.php"><img src="https://gitlab.com/oer4renewables/systemtechnik-fuer-energieeffizienz/-/raw/master/files/img/OER4EE_Logos_CC_Lizenz_schmal.jpg" alt="OER4EE Lizenzhinweis und Danksagung"></a>
+    </p>
+# style="padding:5px;height:33px;"
+#    <img src="img/OER4EE_Logos_CC_Lizenz_schmal.jpg" alt="Lizenz OER4EE">
+#     <p>Die Inhalte dürfen, soweit nicht anders angegeben, weiterverwendet werden unter <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/legalcode.de"><img alt="Creative Commons Namensnennung - Weitergabe unter gleichen Bedingungen 4.0 International Lizenz" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" /> Creative Commons Namensnennung - Weitergabe unter gleichen Bedingungen 4.0 International Lizenz</a>. <br>Ich bitte um folgende Zitierweise: <i>Johanna F. May "Unterlagen Systemtechnik für Energieeffizienz", https://gitlab.com/jfmay/systemtechnik-fuer-energieeffizienz </i><br>Die Weiterentwicklung der Lehrmaterialien wird dankenswerter Weise mithilfe der <a href="https://mkw.nrw/pesse/OERContent">Förderung im Programm OERcontent.nrw"</a> im Vorhaben <a href="https://www.th-koeln.de/hochschule/digitale-lehr--und-lernmaterialien-zur-energiewende_75182.php">OER4EE Offene Bildungsmaterialien zu Technologien für die Energiewende</a> gefördert.<br> <img src="img/OER4EE_Logos_CC_Lizenz_schmal.jpg" alt="Lizenz OER44EE"> <br>Besonderer Dank geht auch an meine Studierenden, die mit ihren Fragen und ihren guten Ideen dazu beitragen, dass ich jedes Jahr etwas an den Materialien verbessern darf.</p>
+  home_page_in_navbar       : true  # Whether to include your home page in the left Navigation Bar
+  baseurl                   : ""  # The base URL where your book will be hosted. Used for creating image previews and social links. e.g.: https://mypage.com/mybook/
+  comments:
+    hypothesis              : false
+    utterances              : false
+
+###################################################
+# LaTeX
+latex: 
+  latex_engine: xelatex # one of 'pdflatex', 'xelatex' (recommended for unicode), 'luatex', 'platex', 'uplatex'  
+  use_jupyterbook_latex: true # use jupyterbook-latex for pdf builds as default  
+  latex_logo: ["files/img/OER4EE_Logos_CC_Lizenz_Outro.png"]
+  latex_show_urls: 'inline'
+  latex_use_xindy: true
+
+  latex_documents:
+    targetname: sye.tex
+
+extensions: ["sphinxcontrib.bibtex"]
+bibtex_bibfiles:
+  - files/sye.bib
+bibtex_encoding: latin
+bibtex_reference_style: ieee
+
+
+###################################################
+# Knöpfe
+launch_buttons:
+  notebook_interface        : classic  # The interface interactive links will activate ["classic", "jupyterlab"]
+#  binderhub_url             : https://mybinder.org  # The URL of the BinderHub (e.g., https://mybinder.org)
+  jupyterhub_url            : "https://jupyterhub.th-koeln.de"  # 
+#  thebe                     : false  # Add a thebe button to pages (requires the repository to run on Binder)
+
+repository:
+  url: https://gitlab.com/oer4renewables/systemtechnik-fuer-energieeffizienz # 
+  path_to_book: ""  # An optional path to your book, defaults to repo root
+  branch: master  # An optional branch, defaults to `master`
+
+###################################################
+# Fortgeschrittene Einstellungen
+sphinx:
+  extra_extensions          :   # A list of extra extensions to load by Sphinx (added to those already used by JB).
+  local_extensions          :   # A list of local extensions to load by sphinx specified by "name: path" items
+  config                    :   # key-value pairs to directly over-ride the Sphinx configuration
+    html_js_files:              # plotly anzeigbar machen
+    - https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js
+    mathjax_path: https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js # Mathjax Version 3
+    html_show_copyright: false
+    latex_elements:
+      # Note this line cheats the table parameter into the documentclass[] parameter
+      papersize: a4paper,table
+      # These lines add the desired packages to the latex build
+      preamble: |+
+        \usepackage{xcolor}
+        \usepackage{booktabs}
+        \usepackage{multirow}
