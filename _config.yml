@@ -100,7 +100,7 @@ sphinx:
     html_show_copyright: false
     latex_elements:
       # Note this line cheats the table parameter into the documentclass[] parameter
-      # papersize: a4paper,table
+      papersize: a4paper,table
       # These lines add the desired packages to the latex build
       preamble: |+
         \usepackage{xcolor}
