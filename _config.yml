@@ -84,10 +84,10 @@ launch_buttons:
   jupyterhub_url            : "https://jupyter.rwth-aachen.de/hub/home"  # 
 #  thebe                     : false  # Add a thebe button to pages (requires the repository to run on Binder)
 
-repository:
-  url: https://git.rwth-aachen.de/ulf.liebal/biolabsim # 
-  path_to_book: ""  # An optional path to your book, defaults to repo root
-  branch: master  # An optional branch, defaults to `master`
+# repository:
+#   url: https://git.rwth-aachen.de/ulf.liebal/biolabsim # 
+#   path_to_book: ""  # An optional path to your book, defaults to repo root
+#   branch: master  # An optional branch, defaults to `master`
 
 ###################################################
 # Fortgeschrittene Einstellungen
