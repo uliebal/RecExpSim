@@ -1,9 +1,9 @@
 ###################################################
 # Bucheinstellungen
-title: Systemtechnik für Energieeffizienz
-author: Johanna Friederike May
-logo: files/img/label-SYE.png
-exclude_patterns: ["files/_build", "files/**.ipynb_checkpoints","files/teach/ms1","files/teach/ms2", "files/teach/pr"]
+title: 'BioLabSim: Data Analysis for Biotechnology'
+author: Ulf Liebal and BioLabSim Consortium
+logo: Figures/Jupyter/BLS_Icon-New0623.png
+# exclude_patterns: ["files/_build", "files/**.ipynb_checkpoints","files/teach/ms1","files/teach/ms2", "files/teach/pr"]
 only_build_toc_files: true
 
 ###################################################
@@ -48,10 +48,8 @@ html:
   extra_navbar              : Powered by <a href="https://jupyterbook.org">Jupyter Book</a>  # Will be displayed underneath the left navbar.
   extra_footer              : | 
     <p>
-    <a href="https://www.th-koeln.de/hochschule/digitale-lehr--und-lernmaterialien-zur-energiewende_75182.php"><img src="https://gitlab.com/oer4renewables/systemtechnik-fuer-energieeffizienz/-/raw/master/files/img/OER4EE_Logos_CC_Lizenz_schmal.jpg" alt="OER4EE Lizenzhinweis und Danksagung"></a>
+    <a href="https://www.iamb.rwth-aachen.de"><img src="hhttps://git.rwth-aachen.de/ulf.liebal/biolabsim/-/blob/master/Figures/Logos/BLS_ProjectFooter.png" alt="BioLabSim Lizenzhinweis und Danksagung"></a>
     </p>
-# style="padding:5px;height:33px;"
-#    <img src="img/OER4EE_Logos_CC_Lizenz_schmal.jpg" alt="Lizenz OER4EE">
 #     <p>Die Inhalte dürfen, soweit nicht anders angegeben, weiterverwendet werden unter <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/legalcode.de"><img alt="Creative Commons Namensnennung - Weitergabe unter gleichen Bedingungen 4.0 International Lizenz" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" /> Creative Commons Namensnennung - Weitergabe unter gleichen Bedingungen 4.0 International Lizenz</a>. <br>Ich bitte um folgende Zitierweise: <i>Johanna F. May "Unterlagen Systemtechnik für Energieeffizienz", https://gitlab.com/jfmay/systemtechnik-fuer-energieeffizienz </i><br>Die Weiterentwicklung der Lehrmaterialien wird dankenswerter Weise mithilfe der <a href="https://mkw.nrw/pesse/OERContent">Förderung im Programm OERcontent.nrw"</a> im Vorhaben <a href="https://www.th-koeln.de/hochschule/digitale-lehr--und-lernmaterialien-zur-energiewende_75182.php">OER4EE Offene Bildungsmaterialien zu Technologien für die Energiewende</a> gefördert.<br> <img src="img/OER4EE_Logos_CC_Lizenz_schmal.jpg" alt="Lizenz OER44EE"> <br>Besonderer Dank geht auch an meine Studierenden, die mit ihren Fragen und ihren guten Ideen dazu beitragen, dass ich jedes Jahr etwas an den Materialien verbessern darf.</p>
   home_page_in_navbar       : true  # Whether to include your home page in the left Navigation Bar
   baseurl                   : ""  # The base URL where your book will be hosted. Used for creating image previews and social links. e.g.: https://mypage.com/mybook/
@@ -83,11 +81,11 @@ bibtex_reference_style: ieee
 launch_buttons:
   notebook_interface        : classic  # The interface interactive links will activate ["classic", "jupyterlab"]
 #  binderhub_url             : https://mybinder.org  # The URL of the BinderHub (e.g., https://mybinder.org)
-  jupyterhub_url            : "https://jupyterhub.th-koeln.de"  # 
+  jupyterhub_url            : "https://jupyter.rwth-aachen.de/hub/home"  # 
 #  thebe                     : false  # Add a thebe button to pages (requires the repository to run on Binder)
 
 repository:
-  url: https://gitlab.com/oer4renewables/systemtechnik-fuer-energieeffizienz # 
+  url: https://git.rwth-aachen.de/ulf.liebal/biolabsim # 
   path_to_book: ""  # An optional path to your book, defaults to repo root
   branch: master  # An optional branch, defaults to `master`
 
