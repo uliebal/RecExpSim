@@ -2,7 +2,7 @@
 # Bucheinstellungen
 title: 'BioLabSim:<br> Data Analysis for Biotechnology'
 author: Ulf Liebal and BioLabSim Consortium
-logo: Figures/Jupyter/BLS_Icon-New0623.png
+logo: Figures/Logos/BLS_Icon-medium.png
 # exclude_patterns: ["files/_build", "files/**.ipynb_checkpoints","files/teach/ms1","files/teach/ms2", "files/teach/pr"]
 only_build_toc_files: true
 
@@ -46,10 +46,11 @@ html:
   use_edit_page_button: false # true
   use_fullscreen_button: true
   extra_navbar: Powered by <a href="https://jupyterbook.org">Jupyter Book</a>  # Will be displayed underneath the left navbar.
-  extra_footer: | 
-    <p>
-    <a href="https://www.iamb.rwth-aachen.de"><img src="https://git.rwth-aachen.de/ulf.liebal/biolabsim/-/raw/master/Figures/Logos/BLS_ProjectFooter.png" alt="BioLabSim Lizenzhinweis und Danksagung"></a>
-    </p>
+  # extra_footer: | 
+  #   <p>
+  #   <a href="https://www.iamb.rwth-aachen.de"><img src="https://git.rwth-aachen.de/ulf.liebal/biolabsim/-/raw/master/Figures/Logos/BLS_ProjectFooter.png" alt="BioLabSim Lizenzhinweis und Danksagung" width='250'></a>
+  #   </p>
+  # <img src='Figures/Logos/Footer_FundingLicence.png' alt='BioLabSim Lizenzhinweis und Danksagung'  width='50'/><br>
   home_page_in_navbar       : true  # Whether to include your home page in the left Navigation Bar
   baseurl                   : ""  # The base URL where your book will be hosted. Used for creating image previews and social links. e.g.: https://mypage.com/mybook/
   comments:
@@ -66,7 +67,7 @@ latex:
   latex_use_xindy: true
 
   latex_documents:
-    targetname: sye.tex
+    targetname: BioLabSim.tex
 
 extensions: ["sphinxcontrib.bibtex"]
 bibtex_bibfiles:
