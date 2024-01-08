@@ -11,7 +11,9 @@ pyvenv.cfg
 GitHub_Token.txt
 *.code-workspace
 Historic/*
+Data/*
 _build
+
 
 # Ignore the generated API files and build output of sphinx documentation.
 docs/_build
